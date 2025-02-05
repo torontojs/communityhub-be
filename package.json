@@ -12,8 +12,8 @@
 		"lint:js": "eslint --fix",
 		"lint": "npm run typecheck && npm run lint:js",
 		"db:setup": "migration/wrangler-development-script.sh",
-		"db:setup:linux-file-auth":"chmod +x migration/wrangler-development-script.sh && ./migration/wrangler-development-script.sh",
-		"db:get:profiles":"wrangler d1 execute vms-local-db --local --command 'SELECT * FROM profile'"
+		"db:setup:linux-file-auth": "chmod +x migration/wrangler-development-script.sh && ./migration/wrangler-development-script.sh",
+		"db:get:profiles": "wrangler d1 execute vms-local-db --local --command 'SELECT * FROM profile'"
 	},
 	"dependencies": {
 		"hono": "^4.6.17"
