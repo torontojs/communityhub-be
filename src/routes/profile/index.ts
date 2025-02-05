@@ -91,7 +91,7 @@ profileRoutes.post('/', async (context: Context<EnvironmentBindings>) => {
 	}
 });
 
-profileRoutes.patch('/:id', async function updateProfileById(context: Context<EnvironmentBindings>) {
+profileRoutes.patch('/:id', async (context: Context<EnvironmentBindings>) => {
 	const body: UpdateProfileRequestBody = await context.req.json();
 	let parsedBody;
 
@@ -109,9 +109,9 @@ profileRoutes.patch('/:id', async function updateProfileById(context: Context<En
 		);
 	}
 
-	const totalFieldsToUpdate = Object.keys(parsedBody).length;
-	/**  Body only has happenedAt */
-	if (totalFieldsToUpdate <= 1) {
+	const onlyHasHappenedAt = Object.keys(parsedBody).length === 1 && parsedBody.happenedAt !== undefined;
+
+	if (onlyHasHappenedAt) {
 		return context.json<StatusResponse>(
 			{ message: 'No fields to update' },
 			StatusCodes.BAD_REQUEST
