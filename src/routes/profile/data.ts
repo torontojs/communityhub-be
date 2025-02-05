@@ -1,9 +1,9 @@
-import { SCHEMA_VERSION } from '../../constants/db.ts';
+import { DBTables, SCHEMA_VERSION } from '../../constants/db.ts';
 import type { Profile } from './validation.ts';
 
 export async function getProfileById(database: D1Database, profileId: string) {
 	const { results } = await database
-		.prepare('SELECT * FROM profiles WHERE id = ?')
+		.prepare(`SELECT * FROM ${DBTables.PROFILE} WHERE id = ?`)
 		.bind(profileId)
 		.run<Profile>();
 
@@ -11,14 +11,14 @@ export async function getProfileById(database: D1Database, profileId: string) {
 }
 
 export async function getAllProfiles(database: D1Database) {
-	const { results } = await database.prepare('SELECT * FROM profiles').run<Profile>();
+	const { results } = await database.prepare(`SELECT * FROM ${DBTables.PROFILE}`).run<Profile>();
 
 	return results;
 }
 
 export async function deleteProfileById(database: D1Database, profileId: string) {
 	const { success } = await database
-		.prepare('DELETE FROM profiles WHERE id = ?')
+		.prepare(`DELETE FROM ${DBTables.PROFILE} WHERE id = ?`)
 		.bind(profileId)
 		.run();
 
@@ -28,13 +28,13 @@ export async function deleteProfileById(database: D1Database, profileId: string)
 interface InsertProfileParams {
 	payload: Pick<
 		Profile,
-		'description' | 'email' | 'happenedAt' | 'links' | 'name' | 'password'
+		'description' | 'email' | 'links' | 'name' | 'password'
 	>;
 	database: D1Database;
 }
 
 export async function insertProfile({
-	payload: { email, name, password, description, links, happenedAt },
+	payload: { email, name, password, description, links },
 	database
 }: InsertProfileParams) {
 	const insertedAt = new Date().toISOString();
@@ -42,7 +42,7 @@ export async function insertProfile({
 
 	const { success } = await database
 		.prepare(`
-			INSERT INTO profile (id, email, password, name, description, links, happenedAt, insertedAt, schemaVersion)
+			INSERT INTO ${DBTables.PROFILE} (id, email, password, name, description, links, happenedAt, insertedAt, schemaVersion)
 			VALUES (?,?,?,?,?,?,?,?,?)
 		`)
 		.bind(
@@ -52,11 +52,39 @@ export async function insertProfile({
 			password,
 			description ?? null,
 			links ?? null,
-			happenedAt,
+			insertedAt,
 			insertedAt,
 			SCHEMA_VERSION
 		)
 		.run();
 
 	return { success, id };
+}
+
+interface UpdateProfileParams {
+	id: string;
+	data: Partial<{
+		name: string,
+		description: string,
+		links: string,
+		happenedAt: string
+	}>;
+	database: D1Database;
+}
+
+export async function updateProfile({
+	id,
+	data,
+	database
+}: UpdateProfileParams) {
+	const entries = Object.entries(data).filter(
+		([, value]) => value !== undefined
+	);
+	const setClause = entries.map(([key]) => `${key} = ?`).join(', ');
+	const query = `UPDATE ${DBTables.PROFILE} SET ${setClause} WHERE id = ?`;
+
+	return database
+		.prepare(query)
+		.bind(...entries.map(([, value]) => value), id)
+		.run();
 }
