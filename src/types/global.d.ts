@@ -7,3 +7,5 @@ interface EnvironmentBindings {
 		database: D1Database
 	};
 }
+
+type ISODate = string;

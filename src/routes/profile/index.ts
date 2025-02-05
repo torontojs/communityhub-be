@@ -1,7 +1,10 @@
 import { type Context, Hono } from 'hono';
+import { ZodError } from 'zod';
 import { IdSchema } from '../../utils/id-validation.ts';
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
-import { deleteProfileById, getAllProfiles, getProfileById } from './data.ts';
+import { validateProfileId } from '../../validator/profile.ts';
+import { deleteProfileById, getAllProfiles, getProfileById, insertProfile, updateProfile } from './data.ts';
+import { type CreateProfileRequestBody, CreateProfileSchema, type UpdateProfileRequestBody, UpdateProfileSchema } from './validation.ts';
 
 export const profileRoutes = new Hono();
 
@@ -52,5 +55,102 @@ profileRoutes.delete('/:id', async (context: Context<EnvironmentBindings>) => {
 		return context.json({ message: 'Profile deleted successfully' }, StatusCodes.OKAY);
 	} catch (err) {
 		return context.json({ error: err.message }, StatusCodes.INTERNAL_SERVER_ERROR);
+	}
+});
+
+profileRoutes.post('/', async (context: Context<EnvironmentBindings>) => {
+	const body: CreateProfileRequestBody = await context.req.json();
+
+	try {
+		const parsedBody = CreateProfileSchema.parse(body);
+		const { success, id } = await insertProfile({
+			payload: parsedBody,
+			database: context.env.database
+		});
+
+		if (!success) {
+			throw new Error('Insertion failed');
+		}
+
+		return context.json(
+			{ message: 'Profile created successfully', createdId: id },
+			StatusCodes.CREATED
+		);
+	} catch (error) {
+		if (error instanceof ZodError) {
+			return context.json<StatusResponse>(
+				{ message: error.issues.map((issue) => issue.message).join(', ') },
+				StatusCodes.BAD_REQUEST
+			);
+		}
+
+		return context.json<StatusResponse>(
+			{ message: error.message },
+			StatusCodes.INTERNAL_SERVER_ERROR
+		);
+	}
+});
+
+profileRoutes.patch('/:id', async (context: Context<EnvironmentBindings>) => {
+	const body: UpdateProfileRequestBody = await context.req.json();
+	let parsedBody;
+
+	try {
+		parsedBody = UpdateProfileSchema.parse(body);
+	} catch (error) {
+		console.log(error);
+		return context.json<StatusResponse>(
+			{
+				message: (error as ZodError).issues
+					.map((issue) => issue.message)
+					.join(', ')
+			},
+			StatusCodes.BAD_REQUEST
+		);
+	}
+
+	const onlyHasHappenedAt = Object.keys(parsedBody).length === 1 && parsedBody.happenedAt !== undefined;
+
+	if (onlyHasHappenedAt) {
+		return context.json<StatusResponse>(
+			{ message: 'No fields to update' },
+			StatusCodes.BAD_REQUEST
+		);
+	}
+
+	const profileId = context.req.param('id');
+	const isProfileIdValid = await validateProfileId({
+		id: profileId,
+		database: context.env.database
+	});
+
+	if (!isProfileIdValid) {
+		return context.json<StatusResponse>(
+			{ message: 'Profile id is not found' },
+			StatusCodes.NOT_FOUND
+		);
+	}
+
+	try {
+		const { success } = await updateProfile({
+			id: profileId,
+			data: parsedBody,
+			database: context.env.database
+		});
+
+		if (!success) {
+			throw new Error('Update Failed');
+		}
+
+		return context.json<StatusResponse>(
+			{ message: 'Profile updated successfully' },
+			StatusCodes.OKAY
+		);
+	} catch (error) {
+		console.log(error);
+		return context.json<StatusResponse>(
+			{ message: error.meesage },
+			StatusCodes.INTERNAL_SERVER_ERROR
+		);
 	}
 });
