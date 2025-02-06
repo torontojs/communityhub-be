@@ -155,7 +155,7 @@ const rules = {
 	'no-undef-init': 'warn',
 	'no-undef': 'off', // Typescript provides better support
 	'no-undefined': 'off',
-	'no-underscore-dangle': ['error', { allow: ['_errors'] }],
+	'no-underscore-dangle': ['warn', { allow: ['_errors', '_links'] }],
 	'no-unexpected-multiline': 'error',
 	'no-unmodified-loop-condition': 'error',
 	'no-unneeded-ternary': 'error',
