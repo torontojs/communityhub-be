@@ -2,6 +2,11 @@ import { z } from 'zod';
 
 export const SCHEMA_VERSION = 1;
 
+export enum DBTables {
+	PROFILE = 'profile',
+	TEAM = 'team'
+}
+
 export const IdAndSchemaVersionSchema = z.object({
 	id: z.string().uuid().describe('The entity UUID.'),
 	schemaVersion: z.number().describe('The schema version that this entity is using.')

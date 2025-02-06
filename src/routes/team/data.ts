@@ -1,4 +1,4 @@
-import { SCHEMA_VERSION } from '../../constants/db.ts';
+import { DBTables, SCHEMA_VERSION } from '../../constants/db.ts';
 import type { NewTeamData, Team, UpdateTeamData } from './validation.ts';
 
 export async function createNewTeam(database: D1Database, body: NewTeamData) {
@@ -7,7 +7,7 @@ export async function createNewTeam(database: D1Database, body: NewTeamData) {
 	const happenedAt = insertedAt;
 
 	const { success } = await database.prepare(`
-		INSERT INTO team (
+		INSERT INTO ${DBTables.TEAM} (
 			id, schemaVersion,
 			happenedAt, insertedAt,
 			${Object.keys(body).join(', ')}
@@ -27,7 +27,7 @@ export async function createNewTeam(database: D1Database, body: NewTeamData) {
 export async function updateTeamById(database: D1Database, teamId: string, body: UpdateTeamData) {
 	const { success } = await database
 		.prepare(`
-			UPDATE team
+			UPDATE ${DBTables.TEAM}
 			SET ${Object.keys(body).join(', ')}
 			WHERE id = ?
 		`)
@@ -38,14 +38,14 @@ export async function updateTeamById(database: D1Database, teamId: string, body:
 }
 
 export async function getAllTeams(database: D1Database) {
-	const { results } = await database.prepare('SELECT * FROM team').run<Team>();
+	const { results } = await database.prepare(`SELECT * FROM ${DBTables.TEAM}`).run<Team>();
 
 	return results;
 }
 
 export async function getTeamById(database: D1Database, id: string) {
 	const { results } = await database
-		.prepare('SELECT * FROM team WHERE id = ?')
+		.prepare(`SELECT * FROM ${DBTables.TEAM} WHERE id = ?`)
 		.bind(id)
 		.run<Team>();
 
@@ -54,7 +54,7 @@ export async function getTeamById(database: D1Database, id: string) {
 
 export async function deleteTeamById(database: D1Database, teamId: string) {
 	const { success } = await database
-		.prepare('DELETE FROM team WHERE id = ?')
+		.prepare(`DELETE FROM ${DBTables.TEAM} WHERE id = ?`)
 		.bind(teamId)
 		.run();
 
