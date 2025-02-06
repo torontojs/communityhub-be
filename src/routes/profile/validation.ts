@@ -8,6 +8,7 @@ export const ProfileSchema = BaseDbEntitySchema.merge(z.object({
 		.describe('The email used for this profile, it must be unique on the database.'),
 	name: z
 		.string()
+		.trim()
 		.min(1, 'Name should be 1 or more characters long.')
 		.describe('The name this person would like to be refered to.'),
 	description: z
@@ -27,6 +28,10 @@ export type CreateProfileData = z.infer<typeof CreateProfileSchema>;
 
 export const UpdateProfileSchema = CreateProfileSchema
 	.omit({ email: true })
-	.partial();
+	.partial()
+	.refine(
+		(data) => Object.keys(data).length === 0,
+		{ message: 'At least one property is requires' }
+	);
 
 export type UpdateProfileData = z.infer<typeof UpdateProfileSchema>;

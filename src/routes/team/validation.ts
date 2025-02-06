@@ -4,13 +4,14 @@ import { BaseDbEntitySchema, BaseDBFieldsToOmit } from '../../constants/db.ts';
 export const TeamSchema = BaseDbEntitySchema.merge(z.object({
 	name: z
 		.string()
+		.trim()
 		.min(1, 'Name is required')
 		.describe("The team's name."),
 	description: z
 		.string()
 		.optional()
 		.describe('A description for the team. It may include markdown content.')
-})).required();
+}));
 
 export type Team = z.infer<typeof TeamSchema>;
 
@@ -19,5 +20,10 @@ export const CreateTeamSchema = TeamSchema.omit(BaseDBFieldsToOmit);
 export type CreateTeamData = z.infer<typeof CreateTeamSchema>;
 
 export const UpdateTeamSchema = CreateTeamSchema
+	.partial()
+	.refine(
+		(data) => Object.keys(data).length === 0,
+		{ message: 'At least one property is requires' }
+	);
 
 export type UpdateTeamData = z.infer<typeof UpdateTeamSchema>;
