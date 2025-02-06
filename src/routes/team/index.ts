@@ -48,15 +48,15 @@ teamRoutes.openapi(
 	async (context) => {
 		try {
 			const body = context.req.valid('json');
-			const isSaved = await insertTeam(context.env.database, body);
+			const { success } = await insertTeam(context.env.database, body);
 
-			if (!isSaved) {
+			if (!success) {
 				return context.json({ message: 'Team not saved' } satisfies StatusResponse, StatusCodes.FORBIDDEN);
 			}
 
 			return context.json({ message: 'Team created successfully' } satisfies StatusResponse, StatusCodes.CREATED);
-		} catch (err) {
-			return context.json({ message: err?.message ?? 'An error has occurred' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		} catch (error) {
+			return context.json({ message: error?.message ?? 'An error has occurred' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 	}
 );
@@ -110,8 +110,8 @@ teamRoutes.openapi(
 			}
 
 			return context.json({ message: 'Team updated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
-		} catch (err) {
-			return context.json({ message: err?.message ?? 'An error has occurred' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		} catch (error) {
+			return context.json({ message: error?.message ?? 'An error has occurred' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 	}
 );
@@ -164,8 +164,8 @@ teamRoutes.openapi(
 			}
 
 			return context.json({ data: team, _links: { self: { href: context.req.url } } } satisfies DataResponse<typeof team>, StatusCodes.OKAY);
-		} catch (err) {
-			return context.json({ message: err?.message ?? 'An error has occurred' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		} catch (error) {
+			return context.json({ message: error?.message ?? 'An error has occurred' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 	}
 );
@@ -211,8 +211,8 @@ teamRoutes.openapi(
 				} satisfies PaginatedResponse<typeof teams>,
 				StatusCodes.OKAY
 			);
-		} catch (err) {
-			return context.json({ message: err?.message ?? 'An error has occurred' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		} catch (error) {
+			return context.json({ message: error?.message ?? 'An error has occurred' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 	}
 );
@@ -264,8 +264,8 @@ teamRoutes.openapi(
 			}
 
 			return context.json({ message: 'Team deleted successfully' } satisfies StatusResponse, StatusCodes.OKAY);
-		} catch (err) {
-			return context.json({ message: err?.message ?? 'An error has occurred' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		} catch (error) {
+			return context.json({ message: error?.message ?? 'An error has occurred' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 	}
 );
