@@ -58,7 +58,7 @@ profileRoutes.delete('/:id', async (context) => {
 	}
 });
 
-profileRoutes.post('/', async (context: Context<EnvironmentBindings>) => {
+profileRoutes.post('/', async (context) => {
 	const body: CreateProfileRequestBody = await context.req.json();
 
 	try {
@@ -91,7 +91,7 @@ profileRoutes.post('/', async (context: Context<EnvironmentBindings>) => {
 	}
 });
 
-profileRoutes.patch('/:id', async (context: Context<EnvironmentBindings>) => {
+profileRoutes.patch('/:id', async (context) => {
 	const body: UpdateProfileRequestBody = await context.req.json();
 	let parsedBody;
 
