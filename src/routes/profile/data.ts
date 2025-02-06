@@ -60,3 +60,12 @@ export async function deleteProfileById(database: D1Database, id: string) {
 
 	return success;
 }
+
+export async function validateExistingEmail(database: D1Database, email: string) {
+	const { email: existingEmail } = await database
+		.prepare(`SSELECT email FROM ${DBTables.PROFILE} WHERE email = ? LIMIT 1`)
+		.bind(email)
+		.first<{ email: string }>() ?? {};
+
+	return Boolean(existingEmail);
+}
