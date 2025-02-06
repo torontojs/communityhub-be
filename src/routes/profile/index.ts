@@ -4,7 +4,7 @@ import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { IdParamSchema } from '../../utils/validation.ts';
 import { validateProfileId } from '../../validator/profile.ts';
 import { deleteProfileById, getAllProfiles, getProfileById, insertProfile, updateProfile } from './data.ts';
-import { type CreateProfileRequestBody, CreateProfileSchema, type UpdateProfileRequestBody, UpdateProfileSchema } from './validation.ts';
+import { type CreateProfileData, CreateProfileSchema, type UpdateProfileData, UpdateProfileSchema } from './validation.ts';
 
 export const profileRoutes = new Hono<EnvironmentBindings>();
 
@@ -59,7 +59,7 @@ profileRoutes.delete('/:id', async (context) => {
 });
 
 profileRoutes.post('/', async (context) => {
-	const body: CreateProfileRequestBody = await context.req.json();
+	const body: CreateProfileData = await context.req.json();
 
 	try {
 		const parsedBody = CreateProfileSchema.parse(body);
@@ -92,7 +92,7 @@ profileRoutes.post('/', async (context) => {
 });
 
 profileRoutes.patch('/:id', async (context) => {
-	const body: UpdateProfileRequestBody = await context.req.json();
+	const body: UpdateProfileData = await context.req.json();
 	let parsedBody;
 
 	try {

@@ -24,3 +24,10 @@ export type InsertionTimestamps = z.infer<typeof InsertionTimestampsSchema>;
 export const BaseDbEntitySchema = IdAndSchemaVersionSchema.merge(InsertionTimestampsSchema);
 
 export type BaseDBEntity = z.infer<typeof BaseDbEntitySchema>;
+
+export const BaseDBFieldsToOmit: Record<keyof BaseDBEntity, true> = {
+	id: true,
+	schemaVersion: true,
+	happenedAt: true,
+	insertedAt: true
+};
