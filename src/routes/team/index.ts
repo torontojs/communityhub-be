@@ -222,7 +222,7 @@ teamRoutes.openapi(
 		method: 'delete',
 		path: '/{id}',
 		operationId: 'deleteTeam',
-		summary: 'Delete team by id',
+		summary: 'Delete team by ID',
 		description: "Deletes a single team based on it's id",
 		tags: ['Team'],
 		request: {
