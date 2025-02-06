@@ -1,5 +1,6 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { z } from 'zod';
+import { DBTables } from '../../constants/db.ts';
 import {
 	type DataResponse,
 	generateDataResponeSchema,
@@ -10,7 +11,7 @@ import {
 	statusResponseFormatter,
 	StatusResponseSchema
 } from '../../utils/responses.ts';
-import { IdParamSchema } from '../../utils/validation.ts';
+import { IdParamSchema, validateExistingId } from '../../utils/validation.ts';
 import { deleteTeamById, getAllTeams, getTeamById, insertTeam, updateTeamById } from './data.ts';
 import { CreateTeamSchema, TeamSchema, UpdateTeamSchema } from './validation.ts';
 
@@ -81,6 +82,10 @@ teamRoutes.openapi(
 				description: 'Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
+			[StatusCodes.BAD_REQUEST]: {
+				description: 'Error response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
 			[StatusCodes.INTERNAL_SERVER_ERROR]: {
 				description: 'Server error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
@@ -91,6 +96,13 @@ teamRoutes.openapi(
 		try {
 			const { id } = context.req.valid('param');
 			const body = context.req.valid('json');
+
+			const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
+
+			if (!isTeamIdValid) {
+				return context.json({ message: 'Invalid profile ID' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+			}
+
 			const isUpdated = await updateTeamById(context.env.database, id, body);
 
 			if (!isUpdated) {
@@ -125,6 +137,10 @@ teamRoutes.openapi(
 				description: 'Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
+			[StatusCodes.BAD_REQUEST]: {
+				description: 'Error response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
 			[StatusCodes.INTERNAL_SERVER_ERROR]: {
 				description: 'Server error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
@@ -134,6 +150,13 @@ teamRoutes.openapi(
 	async (context) => {
 		try {
 			const { id } = context.req.valid('param');
+
+			const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
+
+			if (!isTeamIdValid) {
+				return context.json({ message: 'Invalid profile ID' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+			}
+
 			const team = await getTeamById(context.env.database, id);
 
 			if (!team) {
@@ -214,6 +237,10 @@ teamRoutes.openapi(
 				description: 'Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
+			[StatusCodes.BAD_REQUEST]: {
+				description: 'Error response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
 			[StatusCodes.INTERNAL_SERVER_ERROR]: {
 				description: 'Server error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
@@ -223,6 +250,13 @@ teamRoutes.openapi(
 	async (context) => {
 		try {
 			const { id } = context.req.valid('param');
+
+			const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
+
+			if (!isTeamIdValid) {
+				return context.json({ message: 'Invalid profile ID' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+			}
+
 			const isDeleted = await deleteTeamById(context.env.database, id);
 
 			if (!isDeleted) {
