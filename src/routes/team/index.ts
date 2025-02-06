@@ -62,7 +62,7 @@ teamRoutes.openapi(
 
 teamRoutes.openapi(
 	createRoute({
-		method: 'put',
+		method: 'patch',
 		path: '/{id}',
 		operationId: 'updateTeam',
 		summary: 'Update existing team',
