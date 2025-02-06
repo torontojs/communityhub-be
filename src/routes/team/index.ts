@@ -11,8 +11,8 @@ import {
 	StatusResponseSchema
 } from '../../utils/responses.ts';
 import { IdParamSchema } from '../../utils/validation.ts';
-import { createNewTeam, deleteTeamById, getAllTeams, getTeamById, updateTeamById } from './data.ts';
-import { NewTeamSchema, TeamSchema, UpdateTeamSchema } from './validation.ts';
+import { deleteTeamById, getAllTeams, getTeamById, insertTeam, updateTeamById } from './data.ts';
+import { CreateTeamSchema, TeamSchema, UpdateTeamSchema } from './validation.ts';
 
 export const teamRoutes = new OpenAPIHono<EnvironmentBindings>({
 	defaultHook: statusResponseFormatter
@@ -27,7 +27,7 @@ teamRoutes.openapi(
 		description: 'Add a new team to the VMS including basic information about this team.',
 		tags: ['Team'],
 		request: {
-			body: { content: { 'application/json': { schema: NewTeamSchema } }, required: true }
+			body: { content: { 'application/json': { schema: CreateTeamSchema } }, required: true }
 		},
 		responses: {
 			[StatusCodes.CREATED]: {
@@ -47,7 +47,7 @@ teamRoutes.openapi(
 	async (context) => {
 		try {
 			const body = context.req.valid('json');
-			const isSaved = await createNewTeam(context.env.database, body);
+			const isSaved = await insertTeam(context.env.database, body);
 
 			if (!isSaved) {
 				return context.json({ message: 'Team not saved' } satisfies StatusResponse, StatusCodes.FORBIDDEN);

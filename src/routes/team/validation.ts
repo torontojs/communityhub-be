@@ -14,10 +14,10 @@ export const TeamSchema = BaseDbEntitySchema.merge(z.object({
 
 export type Team = z.infer<typeof TeamSchema>;
 
-export const NewTeamSchema = TeamSchema.omit(BaseDBFieldsToOmit);
+export const CreateTeamSchema = TeamSchema.omit(BaseDBFieldsToOmit);
 
-export type NewTeamData = z.infer<typeof NewTeamSchema>;
+export type CreateTeamData = z.infer<typeof CreateTeamSchema>;
 
-export const UpdateTeamSchema = NewTeamSchema.partial();
+export const UpdateTeamSchema = CreateTeamSchema
 
 export type UpdateTeamData = z.infer<typeof UpdateTeamSchema>;

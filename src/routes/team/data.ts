@@ -1,7 +1,7 @@
 import { DBTables, SCHEMA_VERSION } from '../../constants/db.ts';
-import type { NewTeamData, Team, UpdateTeamData } from './validation.ts';
+import type { CreateTeamData, Team, UpdateTeamData } from './validation.ts';
 
-export async function createNewTeam(database: D1Database, body: NewTeamData) {
+export async function insertTeam(database: D1Database, data: CreateTeamData) {
 	const id = crypto.randomUUID();
 	const insertedAt = new Date().toISOString();
 	const happenedAt = insertedAt;
@@ -10,37 +10,31 @@ export async function createNewTeam(database: D1Database, body: NewTeamData) {
 		INSERT INTO ${DBTables.TEAM} (
 			id, schemaVersion,
 			happenedAt, insertedAt,
-			${Object.keys(body).join(', ')}
+			${Object.keys(data).join(', ')}
 		)
 		VALUES (
 			?, ?,
 			?, ?,
-			${Object.keys(body).fill('?').join(', ')}
+			${Object.keys(data).fill('?').join(', ')}
 		)
 	`)
-		.bind(id, SCHEMA_VERSION, happenedAt, insertedAt, ...Object.values(body))
+		.bind(id, SCHEMA_VERSION, happenedAt, insertedAt, ...Object.values(data))
 		.run();
 
-	return success;
+	return { success, id };
 }
 
-export async function updateTeamById(database: D1Database, teamId: string, body: UpdateTeamData) {
+export async function updateTeamById(database: D1Database, id: string, data: UpdateTeamData) {
 	const { success } = await database
 		.prepare(`
 			UPDATE ${DBTables.TEAM}
-			SET ${Object.keys(body).join(', ')}
+			SET ${Object.keys(data).join(', ')}
 			WHERE id = ?
 		`)
-		.bind(...Object.values(body), teamId)
+		.bind(...Object.values(data), id)
 		.run();
 
 	return success;
-}
-
-export async function getAllTeams(database: D1Database) {
-	const { results } = await database.prepare(`SELECT * FROM ${DBTables.TEAM}`).run<Team>();
-
-	return results;
 }
 
 export async function getTeamById(database: D1Database, id: string) {
@@ -52,10 +46,16 @@ export async function getTeamById(database: D1Database, id: string) {
 	return results?.[0];
 }
 
-export async function deleteTeamById(database: D1Database, teamId: string) {
+export async function getAllTeams(database: D1Database) {
+	const { results } = await database.prepare(`SELECT * FROM ${DBTables.TEAM}`).run<Team>();
+
+	return results;
+}
+
+export async function deleteTeamById(database: D1Database, id: string) {
 	const { success } = await database
 		.prepare(`DELETE FROM ${DBTables.TEAM} WHERE id = ?`)
-		.bind(teamId)
+		.bind(id)
 		.run();
 
 	return success;

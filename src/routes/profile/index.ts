@@ -3,7 +3,7 @@ import { ZodError } from 'zod';
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { IdParamSchema } from '../../utils/validation.ts';
 import { validateProfileId } from '../../validator/profile.ts';
-import { deleteProfileById, getAllProfiles, getProfileById, insertProfile, updateProfile } from './data.ts';
+import { deleteProfileById, getAllProfiles, getProfileById, insertProfile, updateProfileById } from './data.ts';
 import { type CreateProfileData, CreateProfileSchema, type UpdateProfileData, UpdateProfileSchema } from './validation.ts';
 
 export const profileRoutes = new Hono<EnvironmentBindings>();
@@ -132,7 +132,7 @@ profileRoutes.patch('/:id', async (context) => {
 	}
 
 	try {
-		const { success } = await updateProfile({
+		const { success } = await updateProfileById({
 			id: profileId,
 			data: parsedBody,
 			database: context.env.database
