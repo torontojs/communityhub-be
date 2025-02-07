@@ -16,6 +16,7 @@
 		"db:get:profiles": "wrangler d1 execute vms-local-db --local --command 'SELECT * FROM profile'"
 	},
 	"dependencies": {
+		"@sendgrid/mail": "^8.1.4",
 		"hono": "^4.6.17"
 	},
 	"devDependencies": {

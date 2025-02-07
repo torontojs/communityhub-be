@@ -1,12 +1,8 @@
-interface Env {
-	DB_DEV: D1Database;
-	KV_STORE: KVNamespace;
-}
-
 interface EnvironmentBindings {
 	Bindings: {
 		database: D1Database,
-		kv: KVNamespace
+		kv: KVNamespace,
+		SENDGRID_API_KEY: string
 	};
 }
 

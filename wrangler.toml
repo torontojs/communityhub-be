@@ -1,7 +1,7 @@
 # Top-level configuration
 name = "vms-local"
 main = "src/index.ts"
-compatibility_date = "2022-07-12"
+compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
 vars = { NODE_ENV = "development", NODE_VERSION = "22.12.0" }
