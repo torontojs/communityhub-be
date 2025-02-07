@@ -1,10 +1,16 @@
 import type { SignInData } from './validate.ts';
 
-export async function authenticate(database: D1Database, body: SignInData) {
+export async function authenticate(database: D1Database, body: SignInData): Promise<string> {
 	const { results } = await database
-		.prepare('SELECT id FROM profile WHERE email = ? AND password = ?')
-		.bind(body.email, body.password)
+		.prepare('SELECT password FROM profile WHERE email = ?')
+		.bind(body.email)
 		.run();
 
-	return results?.[0];
+	const password = results[0];
+
+	if (typeof password !== 'string') {
+		throw new Error('Password not found or is not a string');
+	}
+
+	return password;
 }
