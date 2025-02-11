@@ -14,9 +14,9 @@ CREATE TABLE IF NOT EXISTS team (
 	-- The date when this team was created, saved as an ISO timestamp
 	happenedAt TEXT NOT NULL,
 	-- The date when this team was added to the database, saved as an ISO timestamp
-	insertedAt TEXT NOT NULL,
+	insertedAt DATETIME NOT NULL,
 	-- The date this team was closed/deleted, saved as an ISO timestamp
-	deletedAt TEXT,
+	deletedAt DATETIME DEFAULT NULL,
 
 	PRIMARY KEY (id)
 );
