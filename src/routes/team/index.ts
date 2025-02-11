@@ -100,7 +100,7 @@ teamRoutes.openapi(
 			const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
 
 			if (!isTeamIdValid) {
-				return context.json({ message: 'Invalid profile ID' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+				return context.json({ message: 'Invalid team ID' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
 			}
 
 			const isUpdated = await updateTeamById(context.env.database, id, body);
@@ -154,7 +154,7 @@ teamRoutes.openapi(
 			const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
 
 			if (!isTeamIdValid) {
-				return context.json({ message: 'Invalid profile ID' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+				return context.json({ message: 'Invalid team ID' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
 			}
 
 			const team = await getTeamById(context.env.database, id);
@@ -254,7 +254,7 @@ teamRoutes.openapi(
 			const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
 
 			if (!isTeamIdValid) {
-				return context.json({ message: 'Invalid profile ID' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+				return context.json({ message: 'Invalid team ID' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
 			}
 
 			const isDeleted = await deleteTeamById(context.env.database, id);

@@ -23,7 +23,7 @@ export const UpdateTeamSchema = CreateTeamSchema
 	.partial()
 	.refine(
 		(data) => Object.keys(data).length === 0,
-		{ message: 'At least one property is requires' }
+		{ message: 'At least one property is required' }
 	);
 
 export type UpdateTeamData = z.infer<typeof UpdateTeamSchema>;
