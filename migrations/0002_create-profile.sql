@@ -30,13 +30,13 @@ CREATE TABLE IF NOT EXISTS profile (
 	avatar TEXT,
 	-- The avatar may be a url, or an id for a file hosted on the platform
 	avatarSource TEXT DEFAULT 'id' CHECK(avatarSource IS NULL OR avatarSource IN ('id', 'url')),
-	-- The date this person has joined Toronto JS
+	-- The date this person has joined Toronto JS, saved as an ISO timestamp
 	happenedAt TEXT NOT NULL,
-	-- The date this profile was added to the database
+	-- The date this profile was added to the database, saved as an ISO timestamp
 	insertedAt TEXT NOT NULL,
-	-- The date this profile was activated
+	-- The date this profile was activated, saved as an ISO timestamp
 	activatedAt TEXT DEFAULT NULL
-	-- The date this person has left the community or has their profile deleted
+	-- The date this person has left the community or has their profile deleted, saved as an ISO timestamp
 	-- TODO: we need to decide on a data retention/exclusion policy
 	deletedAt TEXT DEFAULT NULL
 

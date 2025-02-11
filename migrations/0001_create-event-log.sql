@@ -21,9 +21,9 @@ CREATE TABLE IF NOT EXISTS event_log (
 	object TEXT NOT NULL COLLATE BINARY,
 	-- The source where the object comes from
 	objectSource TEXT NOT NULL DEFAULT 'special' CHECK(objectSource IN ('profile', 'team', 'role', 'special')),
-	-- The date where this log happened
+	-- The date where this log happened, saved as an ISO timestamp
 	happenedAt TEXT NOT NULL,
-	-- The date where this log was added to the database
+	-- The date where this log was added to the database, saved as an ISO timestamp
 	insertedAt TEXT NOT NULL,
 
 	PRIMARY KEY (id)

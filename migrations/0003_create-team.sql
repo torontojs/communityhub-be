@@ -11,12 +11,12 @@ CREATE TABLE IF NOT EXISTS team (
 	name TEXT NOT NULL,
 	-- Description of the team
 	description TEXT,
-	-- The date when this team was created
+	-- The date when this team was created, saved as an ISO timestamp
 	happenedAt TEXT NOT NULL,
-	-- The date when this team was added to the database
+	-- The date when this team was added to the database, saved as an ISO timestamp
 	insertedAt TEXT NOT NULL,
-	-- The date this team was closed
-	closedAt TEXT,
+	-- The date this team was closed/deleted, saved as an ISO timestamp
+	deletedAt TEXT,
 
 	PRIMARY KEY (id)
 );
