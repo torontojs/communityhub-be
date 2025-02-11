@@ -34,6 +34,12 @@ CREATE TABLE IF NOT EXISTS profile (
 	happenedAt TEXT NOT NULL,
 	-- The date this profile was added to the database
 	insertedAt TEXT NOT NULL,
+	-- The date this profile was activated
+	activatedAt TEXT DEFAULT NULL
+	-- The date this person has left the community or has their profile deleted
+	-- TODO: we need to decide on a data retention/exclusion policy
+	deletedAt TEXT DEFAULT NULL
+
 
 	PRIMARY KEY (id)
 );
