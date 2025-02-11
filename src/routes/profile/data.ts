@@ -1,27 +1,23 @@
-import { DBTables, SCHEMA_VERSION } from '../../constants/db.ts';
+import { DBTables, generateBaseDBfields } from '../../constants/db.ts';
 import type { CreateProfileData, Profile, UpdateProfileData } from './validation.ts';
 
 export async function insertProfile(database: D1Database, body: CreateProfileData) {
-	const id = crypto.randomUUID();
-	const insertedAt = new Date().toISOString();
-	const happenedAt = insertedAt;
+	const baseDbfields = generateBaseDBfields();
 
 	const { success } = await database.prepare(`
 		INSERT INTO ${DBTables.PROFILE} (
-			id, schemaVersion,
-			happenedAt, insertedAt,
+			${Object.keys(baseDbfields).join(', ')},
 			${Object.keys(body).join(', ')}
 		)
 		VALUES (
-			?, ?,
-			?, ?,
-			${Object.keys(body).fill('?').join(', ')}
+			${[...Object.keys(baseDbfields)].fill('?').join(', ')},
+			${[...Object.keys(body)].fill('?').join(', ')}
 		)
 	`)
-		.bind(id, SCHEMA_VERSION, happenedAt, insertedAt, ...Object.values(body))
+		.bind(...Object.values(baseDbfields), ...Object.values(body))
 		.run();
 
-	return { success, id };
+	return { success, id: baseDbfields.id };
 }
 
 export async function updateProfileById(database: D1Database, id: string, data: UpdateProfileData) {

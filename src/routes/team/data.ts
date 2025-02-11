@@ -1,27 +1,23 @@
-import { DBTables, SCHEMA_VERSION } from '../../constants/db.ts';
+import { DBTables, generateBaseDBfields } from '../../constants/db.ts';
 import type { CreateTeamData, Team, UpdateTeamData } from './validation.ts';
 
 export async function insertTeam(database: D1Database, data: CreateTeamData) {
-	const id = crypto.randomUUID();
-	const insertedAt = new Date().toISOString();
-	const happenedAt = insertedAt;
+	const baseDbfields = generateBaseDBfields();
 
 	const { success } = await database.prepare(`
 		INSERT INTO ${DBTables.TEAM} (
-			id, schemaVersion,
-			happenedAt, insertedAt,
+			${Object.keys(baseDbfields).join(', ')},
 			${Object.keys(data).join(', ')}
 		)
 		VALUES (
-			?, ?,
-			?, ?,
-			${Object.keys(data).fill('?').join(', ')}
+			${[...Object.keys(baseDbfields)].fill('?').join(', ')},
+			${[...Object.keys(data)].fill('?').join(', ')}
 		)
 	`)
-		.bind(id, SCHEMA_VERSION, happenedAt, insertedAt, ...Object.values(data))
+		.bind(...Object.values(baseDbfields), ...Object.values(data))
 		.run();
 
-	return { success, id };
+	return { success, id: baseDbfields.id };
 }
 
 export async function updateTeamById(database: D1Database, id: string, data: UpdateTeamData) {

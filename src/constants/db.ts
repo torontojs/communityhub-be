@@ -31,3 +31,14 @@ export const BaseDBFieldsToOmit: Record<keyof BaseDBEntity, true> = {
 	happenedAt: true,
 	insertedAt: true
 };
+
+export function generateBaseDBfields() {
+	const newTimestamp = new Date();
+
+	return {
+		id: crypto.randomUUID(),
+		schemaVersion: SCHEMA_VERSION,
+		insertedAt: newTimestamp.toISOString(),
+		happenedAt: newTimestamp.toISOString()
+	} satisfies BaseDBEntity;
+}
