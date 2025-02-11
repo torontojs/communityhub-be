@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS profile (
 	-- The pronouns the person identifies with
 	pronouns TEXT,
 	-- The person's birthday, saved as month and day only
-	-- In the format: YYYY-MM
+	-- In the format: MM-DD
 	birthday TEXT,
 	-- The user avatar reference,
 	avatar TEXT,
