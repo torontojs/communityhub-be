@@ -35,10 +35,6 @@ profileRoutes.openapi(
 				description: 'Successful response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
-			[StatusCodes.FORBIDDEN]: {
-				description: 'Error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			},
 			[StatusCodes.BAD_REQUEST]: {
 				description: 'Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
@@ -62,7 +58,7 @@ profileRoutes.openapi(
 			const { success } = await insertProfile(context.env.database, body);
 
 			if (!success) {
-				return context.json({ message: 'Profile not created' } satisfies StatusResponse, StatusCodes.FORBIDDEN);
+				return context.json({ message: 'Profile not created' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
 			}
 
 			return context.json({ message: 'Profile created successfully' } satisfies StatusResponse, StatusCodes.CREATED);
@@ -89,15 +85,7 @@ profileRoutes.openapi(
 				description: 'Successful response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
-			[StatusCodes.FORBIDDEN]: {
-				description: 'Error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			},
 			[StatusCodes.NOT_FOUND]: {
-				description: 'Error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			},
-			[StatusCodes.BAD_REQUEST]: {
 				description: 'Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
@@ -115,13 +103,13 @@ profileRoutes.openapi(
 			const isProfileIdValid = await validateExistingId(context.env.database, DBTables.PROFILE, id);
 
 			if (!isProfileIdValid) {
-				return context.json({ message: 'Invalid profile ID' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+				return context.json({ message: 'Profile not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 			}
 
 			const isUpdated = await updateProfileById(context.env.database, id, body);
 
 			if (!isUpdated) {
-				return context.json({ message: 'Profile not updated' } satisfies StatusResponse, StatusCodes.FORBIDDEN);
+				return context.json({ message: 'Profile not updated' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
 			}
 
 			return context.json({ message: 'Profile updated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
@@ -151,10 +139,6 @@ profileRoutes.openapi(
 				description: 'Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
-			[StatusCodes.BAD_REQUEST]: {
-				description: 'Error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			},
 			[StatusCodes.INTERNAL_SERVER_ERROR]: {
 				description: 'Server Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
@@ -164,12 +148,6 @@ profileRoutes.openapi(
 	async (context) => {
 		try {
 			const { id } = context.req.valid('param');
-
-			const isProfileIdValid = await validateExistingId(context.env.database, DBTables.PROFILE, id);
-
-			if (!isProfileIdValid) {
-				return context.json({ message: 'Invalid profile ID' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
-			}
 
 			const profile = await getProfileById(context.env.database, id);
 
@@ -247,11 +225,7 @@ profileRoutes.openapi(
 				description: 'Successful response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
-			[StatusCodes.FORBIDDEN]: {
-				description: 'Error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			},
-			[StatusCodes.BAD_REQUEST]: {
+			[StatusCodes.NOT_FOUND]: {
 				description: 'Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
@@ -268,13 +242,13 @@ profileRoutes.openapi(
 			const isProfileIdValid = await validateExistingId(context.env.database, DBTables.PROFILE, id);
 
 			if (!isProfileIdValid) {
-				return context.json({ message: 'Invalid profile ID' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+				return context.json({ message: 'Profile not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 			}
 
 			const isDeleted = await deleteProfileById(context.env.database, id);
 
 			if (!isDeleted) {
-				return context.json({ message: 'Profile not deleted' } satisfies StatusResponse, StatusCodes.FORBIDDEN);
+				return context.json({ message: 'Profile not deleted' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
 			}
 
 			return context.json({ message: 'Profile deleted successfully' } satisfies StatusResponse, StatusCodes.OKAY);

@@ -35,10 +35,6 @@ teamRoutes.openapi(
 				description: 'Successful response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
-			[StatusCodes.FORBIDDEN]: {
-				description: 'Error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			},
 			[StatusCodes.INTERNAL_SERVER_ERROR]: {
 				description: 'Server Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
@@ -51,7 +47,7 @@ teamRoutes.openapi(
 			const { success } = await insertTeam(context.env.database, body);
 
 			if (!success) {
-				return context.json({ message: 'Team not saved' } satisfies StatusResponse, StatusCodes.FORBIDDEN);
+				return context.json({ message: 'Team not saved' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
 			}
 
 			return context.json({ message: 'Team created successfully' } satisfies StatusResponse, StatusCodes.CREATED);
@@ -78,11 +74,7 @@ teamRoutes.openapi(
 				description: 'Successful response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
-			[StatusCodes.FORBIDDEN]: {
-				description: 'Error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			},
-			[StatusCodes.BAD_REQUEST]: {
+			[StatusCodes.NOT_FOUND]: {
 				description: 'Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
@@ -100,13 +92,13 @@ teamRoutes.openapi(
 			const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
 
 			if (!isTeamIdValid) {
-				return context.json({ message: 'Invalid team ID' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+				return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 			}
 
 			const isUpdated = await updateTeamById(context.env.database, id, body);
 
 			if (!isUpdated) {
-				return context.json({ message: 'Team not updated' } satisfies StatusResponse, StatusCodes.FORBIDDEN);
+				return context.json({ message: 'Team not updated' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
 			}
 
 			return context.json({ message: 'Team updated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
@@ -137,10 +129,6 @@ teamRoutes.openapi(
 				description: 'Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
-			[StatusCodes.BAD_REQUEST]: {
-				description: 'Error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			},
 			[StatusCodes.INTERNAL_SERVER_ERROR]: {
 				description: 'Server error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
@@ -154,7 +142,7 @@ teamRoutes.openapi(
 			const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
 
 			if (!isTeamIdValid) {
-				return context.json({ message: 'Invalid team ID' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+				return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 			}
 
 			const team = await getTeamById(context.env.database, id);
@@ -233,11 +221,7 @@ teamRoutes.openapi(
 				description: 'Successful response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
-			[StatusCodes.FORBIDDEN]: {
-				description: 'Error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			},
-			[StatusCodes.BAD_REQUEST]: {
+			[StatusCodes.NOT_FOUND]: {
 				description: 'Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
@@ -254,13 +238,13 @@ teamRoutes.openapi(
 			const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
 
 			if (!isTeamIdValid) {
-				return context.json({ message: 'Invalid team ID' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+				return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 			}
 
 			const isDeleted = await deleteTeamById(context.env.database, id);
 
 			if (!isDeleted) {
-				return context.json({ message: 'Team not deleted' } satisfies StatusResponse, StatusCodes.FORBIDDEN);
+				return context.json({ message: 'Team not deleted' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
 			}
 
 			return context.json({ message: 'Team deleted successfully' } satisfies StatusResponse, StatusCodes.OKAY);
