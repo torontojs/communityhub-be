@@ -4,7 +4,7 @@ import { type Context, Hono } from 'hono';
 import sgMail from '@sendgrid/mail';
 import argon2 from 'argon2';
 import { ZodError } from 'zod';
-import { emailHtmlTemplate } from '../../email-templates/confirm-email.ts';
+import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { insertProfile } from '../profile/data.ts';
 import { CreateProfileSchema } from '../profile/validation.ts';
@@ -30,6 +30,10 @@ authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
 	// Send email
 	try {
 		sgMail.setApiKey(context.env.SENDGRID_API_KEY);
+
+		const token = '';
+		const emailHtmlTemplate = generateEmailHtml(context, token);
+
 		const msg = {
 			to: parsedBody.email,
 			// TODO : Change to your verified sender
