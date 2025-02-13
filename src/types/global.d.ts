@@ -1,7 +1,8 @@
 interface EnvironmentBindings {
 	Bindings: {
 		database: D1Database,
-		kv: KVNamespace,
+		SESSION_TOKENS: KVNamespace,
+		ACTIVATION_TOKENS: KVNamespace,
 		SENDGRID_API_KEY: string
 	};
 }

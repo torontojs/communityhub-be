@@ -15,9 +15,15 @@ database_name = "vms-local-db"
 database_id = "vms-local-db"
 
 [[kv_namespaces]]
-binding = "kv"
-id ="e807e1c2091b47ab8b963d1da8ca630f"
-preview_id = "kv-store-dev-preview"
+binding = "SESSION_TOKENS"
+id = "cdaa5de8aaa9471697f014631d8f41a0"
+preview_id = "kv-session-token-dev"
+
+[[kv_namespaces]]
+binding = "ACTIVATION_TOKENS"
+id = "c9a8ccde35684c3fb605416bc43737ff"
+preview_id = "kv-activation-token-dev"
+
 
 [env.dev]
 name = "vms-dev"

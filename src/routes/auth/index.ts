@@ -47,8 +47,7 @@ authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
 
 		const msg = {
 			to: parsedBody.email,
-			// TODO : Change to your verified sender
-			from: 'jsi04049@gmail.com',
+			from: 'admin@torontojs.com',
 			subject: '[TorontoJS] Confirm your account',
 			html: emailHtmlTemplate
 		};
@@ -91,8 +90,11 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 
 		const sessionToken = crypto.randomUUID();
 		const hoursAhead = 1;
-		const futureTimestamp = String(Date.now() + hoursAhead * 60 * 60 * 1000);
-		await context.env.kv.put(sessionToken, futureTimestamp);
+		const tokenExpiry = String(Date.now() + hoursAhead * 60 * 60 * 1000);
+		const expiryAndUserEmail = `${tokenExpiry} ${parsedBody.email}`;
+		await context.env.SESSION_TOKENS.put(sessionToken, expiryAndUserEmail);
+
+		context.header('Set-Cookie', `auth_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Expires=${tokenExpiry}; Path=/; Domain=torontojs.com`);
 
 		return context.json<StatusResponse>({ message: 'Authorized successfully', data: sessionToken }, StatusCodes.CREATED);
 	} catch (err) {
