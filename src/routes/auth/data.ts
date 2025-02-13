@@ -6,10 +6,10 @@ export async function authenticate(database: D1Database, body: SignInData): Prom
 		.bind(body.email)
 		.run();
 
-	const password = results[0];
+	const password = results[0]?.['password'] as string | undefined;
 
-	if (typeof password !== 'string') {
-		throw new Error('Password not found or is not a string');
+	if (!password) {
+		throw new Error('Password not found');
 	}
 
 	return password;
