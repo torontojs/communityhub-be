@@ -48,8 +48,8 @@ export async function insertProfile({
 		.bind(
 			id,
 			email,
-			name,
 			password,
+			name,
 			description ?? null,
 			links ?? null,
 			insertedAt,
