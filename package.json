@@ -17,7 +17,6 @@
 	},
 	"dependencies": {
 		"@sendgrid/mail": "^8.1.4",
-		"argon2": "^0.41.1",
 		"hono": "^4.6.17"
 	},
 	"devDependencies": {

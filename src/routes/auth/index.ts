@@ -2,9 +2,9 @@ import { type Context, Hono } from 'hono';
 
 // Import { setCookie } from 'hono/cookie';
 import sgMail from '@sendgrid/mail';
-import argon2 from 'argon2';
 import { ZodError } from 'zod';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
+import { hashPasswordPBKDF2 } from '../../utils/hashPassword.ts';
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { insertProfile } from '../profile/data.ts';
 import { CreateProfileSchema } from '../profile/validation.ts';
@@ -16,11 +16,22 @@ export const authRoutes = new Hono();
 authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
 	const body = await context.req.json();
 	const parsedBody = CreateProfileSchema.parse(body);
-	// TODO Check BAD_REQUEST
+	// TODO : check ZodError and return BAD_REQUEST
+	// TODO : Check duplicate email
+
 	// Create Profile
 	try {
-		const hashedPassword = await argon2.hash(parsedBody.password);
-		parsedBody.password = hashedPassword;
+		// Generate salt (16 bytes)
+		const salt = crypto.getRandomValues(new Uint8Array(16));
+
+		// Hash password with PBKDF2
+		const hashedPassword = await hashPasswordPBKDF2(parsedBody.password, salt);
+
+		// Convert salt to Base64 for storage
+		const saltBase64 = btoa(String.fromCharCode(...salt));
+
+		// Store the hashed password and salt in the database
+		parsedBody.password = `${saltBase64}:${hashedPassword}`;
 		await insertProfile({ payload: parsedBody, database: context.env.database });
 	} catch (error) {
 		console.error('Error creating profile', error);
@@ -57,15 +68,24 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 		const body = await context.req.json();
 		const parsedBody = SignInSchema.parse(body);
 
-		const hashedPassword = await authenticate(context.env.database, parsedBody);
+		const storedPassword = await authenticate(context.env.database, parsedBody);
 
-		if (!hashedPassword) {
+		if (!storedPassword) {
 			return context.json<StatusResponse>({ message: 'Unauthorized requests' }, StatusCodes.UNAUTHORIZED);
 		}
 
-		const isVerified = await argon2.verify(hashedPassword, parsedBody.password);
+		// Extract salt and hashed password from stored format
+		const [saltBase64, storedHashedPassword] = storedPassword.split(':');
+		if (saltBase64 === undefined) {
+			throw new Error('Salt not found');
+		}
+		const salt = new Uint8Array([...atob(saltBase64)].map((c) => c.charCodeAt(0)));
 
-		if (!isVerified) {
+		// Hash input password with the same salt
+		const inputHashedPassword = await hashPasswordPBKDF2(parsedBody.password, salt);
+
+		// Verify if the input password matches the stored password
+		if (inputHashedPassword !== storedHashedPassword) {
 			return context.json<StatusResponse>({ message: 'Unauthorized' }, StatusCodes.UNAUTHORIZED);
 		}
 
