@@ -41,9 +41,10 @@ CREATE TABLE IF NOT EXISTS profile (
 	insertedAt DATETIME NOT NULL,
 	-- The date this profile was activated, saved as an ISO timestamp
 	activatedAt DATETIME DEFAULT NULL
-	-- The date this person has left the community or had their profile was deactivated, saved as an ISO timestamp.
+	-- The date this person has left the community or had their profile deactivated, saved as an ISO timestamp.
 	-- This provides a way to retain information without deleting data from the database.
 	-- It is used for checking if a user can log-in to the vms or not.
+	-- A profile with this flag set will not be able to login to the vms.
 	--
 	-- In case a user returns to the community and wants to reactivate their account,
 	-- that must be done manually by one of the organizers by removing this information.
