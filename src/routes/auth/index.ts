@@ -1,7 +1,5 @@
-import { type Context, Hono } from 'hono';
-
-// Import { setCookie } from 'hono/cookie';
 import sgMail from '@sendgrid/mail';
+import { type Context, Hono } from 'hono';
 import { ZodError } from 'zod';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
 import { hashPasswordPBKDF2 } from '../../utils/hashPassword.ts';

@@ -5,7 +5,8 @@ interface EnvironmentBindings {
 		ACTIVATION_TOKENS: KVNamespace,
 		BASE_URL: string,
 		SENDER_EMAIL: string,
-		SENDGRID_API_KEY: string
+		SENDGRID_API_KEY: string,
+		ASSETS: Fetcher
 	};
 }
 
