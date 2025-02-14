@@ -41,10 +41,18 @@ CREATE TABLE IF NOT EXISTS profile (
 	insertedAt DATETIME NOT NULL,
 	-- The date this profile was activated, saved as an ISO timestamp
 	activatedAt DATETIME DEFAULT NULL
-	-- The date this person has left the community or has their profile deleted, saved as an ISO timestamp
-	-- TODO: we need to decide on a data retention/exclusion policy
-	deletedAt DATETIME DEFAULT NULL
-
+	-- The date this person has left the community or had their profile was deactivated, saved as an ISO timestamp.
+	-- This provides a way to retain information without deleting data from the database.
+	-- It is used for checking if a user can log-in to the vms or not.
+	--
+	-- In case a user returns to the community and wants to reactivate their account,
+	-- that must be done manually by one of the organizers by removing this information.
+	--
+	-- In case a user is removed from the community, this flag is to be set, so their profile is deactivated.
+	--
+	-- In the future, we may use this flag as a potential "ban list" for spammers and similar situations.
+	-- If a person thinks it was mistakenly flagged as spam, then contatcing one of the organizers should resolve the issue.
+	deactivatedAt DATETIME DEFAULT NULL
 
 	PRIMARY KEY (id)
 );
