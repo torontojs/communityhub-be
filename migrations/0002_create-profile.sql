@@ -18,8 +18,13 @@ CREATE TABLE IF NOT EXISTS profile (
 	-- A text blurb the person can provide about themselves
 	description TEXT,
 	-- A flag indicating if the user is based on the Grater Toronto Area (GTA)
+	-- This and the following flags are a proxy for information if people can attend online and in person events.
+	-- It is enough to give us information if the person is around Toronto without needing to ask the actual location.
 	isBasedOnGTA INTEGER NOT NULL DEFAULT 1 CHECK(isBasedOnGTA IN (0, 1)),
 	-- A flag indicating if the user is available to join local/in-person events
+	-- This flag complements the previous one as they are not mutually exclusive.
+	-- E.g.: someone who lives in Ottawa and comes to Toronto frequently, can still join in person events.
+	-- E.g.: someone who lives in the GTA but has limitations could mark themselves as not able to attend in person events.
 	canJoinLocalEvents INTEGER NOT NULL DEFAULT 1 CHECK(canJoinLocalEvents IN (0, 1)),
 	-- The pronouns the person identifies with
 	pronouns TEXT,
