@@ -47,7 +47,7 @@ authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
 
 		const msg = {
 			to: parsedBody.email,
-			from: 'admin@torontojs.com',
+			from: context.env.SENDER_EMAIL,
 			subject: '[TorontoJS] Confirm your account',
 			html: emailHtmlTemplate
 		};
@@ -59,8 +59,6 @@ authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
 		return context.json<StatusResponse>({ message: 'Error sending email' }, StatusCodes.INTERNAL_SERVER_ERROR);
 	}
 });
-
-// Type UserIdExpiryTimeStampType;
 
 authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 	try {

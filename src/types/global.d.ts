@@ -3,6 +3,8 @@ interface EnvironmentBindings {
 		database: D1Database,
 		SESSION_TOKENS: KVNamespace,
 		ACTIVATION_TOKENS: KVNamespace,
+		BASE_URL: string,
+		SENDER_EMAIL: string,
 		SENDGRID_API_KEY: string
 	};
 }

@@ -4,7 +4,11 @@ main = "src/index.ts"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
-vars = { NODE_ENV = "development", NODE_VERSION = "22.12.0", BASE_URL = "http://localhost:8787" }
+[vars]
+NODE_ENV = "local"
+NODE_VERSION = "22.12.0"
+BASE_URL = "http://localhost:8787"
+SENDER_EMAIL = "jsi04049@gmail.com"
 
 workers_dev = true
 keep_vars = true
@@ -28,9 +32,15 @@ preview_id = "kv-activation-token-dev"
 [env.dev]
 name = "vms-dev"
 
-vars = { NODE_ENV = "development", NODE_VERSION = "22.12.0" }
+[env.dev.vars]
+NODE_ENV = "development"
+NODE_VERSION = "22.12.0"
 
 [env.production]
 name = "vms"
 
-vars = { NODE_ENV = "production", NODE_VERSION = "22.12.0" }
+[env.production.vars]
+NODE_ENV = "production"
+NODE_VERSION = "22.12.0"
+BASE_URL = "https://torontojs.com"
+SENDER_EMAIL = "organizers@torontojs.com"

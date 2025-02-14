@@ -1,6 +1,6 @@
 import type { Context } from 'hono';
 
-export function generateEmailHtml(context: Context, token: string) {
+export function generateEmailHtml(context: Context<EnvironmentBindings>, token: string) {
 	const activationLink = `${context.env.BASE_URL}/activate?token=${token}`;
 
 	return `
