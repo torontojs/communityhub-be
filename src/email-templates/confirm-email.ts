@@ -1,7 +1,8 @@
 import type { Context } from 'hono';
 
 export function generateEmailHtml(context: Context<EnvironmentBindings>, token: string) {
-	const activationLink = `${context.env.BASE_URL}/activate?token=${token}`;
+	const activationUrl = `${context.env.BASE_URL}/auth/activate?token=${token}`;
+	const logoUrl = `${context.env.BASE_URL}/assets/torontojs-logo.png`;
 
 	return `
     <!doctype html>
@@ -117,7 +118,7 @@ export function generateEmailHtml(context: Context<EnvironmentBindings>, token: 
                               <tbody>
                                 <tr>
                                   <td style="width:128px;">
-                                    <img alt="TorontoJS logo" height="auto" src="/assets/torontojs-logo.png" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="128">
+                                    <img alt="TorontoJS logo" height="auto" src="${logoUrl}" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="128">
                                   </td>
                                 </tr>
                               </tbody>
@@ -173,7 +174,7 @@ export function generateEmailHtml(context: Context<EnvironmentBindings>, token: 
                               <tbody>
                                 <tr>
                                   <td align="center" bgcolor="#ED342F" role="presentation" style="border:none;border-radius:8px;cursor:auto;mso-padding-alt:16px 32px;background:#ED342F;" valign="middle">
-                                    <a href="${activationLink}" style="display: inline-block; background: #ED342F; color: white; font-family: 'Source Sans 3', Helvetica, Arial, sans-serif; font-size: 16px; font-weight: bold; line-height: 120%; margin: 0; text-decoration: none; text-transform: none; padding: 16px 32px; mso-padding-alt: 0px; border-radius: 8px;">
+                                    <a href="${activationUrl}" style="display: inline-block; background: #ED342F; color: white; font-family: 'Source Sans 3', Helvetica, Arial, sans-serif; font-size: 16px; font-weight: bold; line-height: 120%; margin: 0; text-decoration: none; text-transform: none; padding: 16px 32px; mso-padding-alt: 0px; border-radius: 8px;">
                                       Confirm my e-mail
                                     </a>
                                   </td>

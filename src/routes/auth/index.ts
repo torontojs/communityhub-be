@@ -8,7 +8,7 @@ import { hashPasswordPBKDF2 } from '../../utils/hashPassword.ts';
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { insertProfile } from '../profile/data.ts';
 import { CreateProfileSchema } from '../profile/validation.ts';
-import { authenticate } from './data.ts';
+import { activateProfile, authenticate, validateEmail } from './data.ts';
 import { SignInSchema } from './validate.ts';
 
 export const authRoutes = new Hono();
@@ -42,9 +42,16 @@ authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
 	try {
 		sgMail.setApiKey(context.env.SENDGRID_API_KEY);
 
-		const token = '';
-		const emailHtmlTemplate = generateEmailHtml(context, token);
+		const salt = crypto.getRandomValues(new Uint8Array(16));
+		const token = await hashPasswordPBKDF2(parsedBody.email, salt);
+		const encodedToken = encodeURIComponent(token);
+		await context.env.ACTIVATION_TOKENS.put(
+			encodedToken,
+			parsedBody.email,
+			{ expirationTtl: 60 * 10 }
+		);
 
+		const emailHtmlTemplate = generateEmailHtml(context, encodedToken);
 		const msg = {
 			to: parsedBody.email,
 			from: context.env.SENDER_EMAIL,
@@ -57,6 +64,34 @@ authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
 	} catch (error) {
 		console.error('Error sending email', error);
 		return context.json<StatusResponse>({ message: 'Error sending email' }, StatusCodes.INTERNAL_SERVER_ERROR);
+	}
+});
+
+authRoutes.get('/activate', async (context: Context<EnvironmentBindings>) => {
+	try {
+		const token = context.req.query('token');
+		if (!token) {
+			return context.json({ message: 'Invalid or missing token' }, StatusCodes.BAD_REQUEST);
+		}
+
+		const email = await context.env.ACTIVATION_TOKENS.get(token);
+		if (!email) {
+			return context.json({ message: 'Invalid or expired token' }, StatusCodes.UNAUTHORIZED);
+		}
+
+		const emailExists = await validateEmail(context.env.database, email);
+		if (!emailExists) {
+			return context.json({ message: 'User not found' }, StatusCodes.NOT_FOUND);
+		}
+
+		await activateProfile(context.env.database, email);
+
+		// Remove token after successful activation
+		await context.env.ACTIVATION_TOKENS.delete(token);
+
+		return context.json({ message: 'Account activated successfully' }, StatusCodes.OKAY);
+	} catch (error) {
+		return context.json<StatusResponse>({ message: 'Error activating an account' }, StatusCodes.INTERNAL_SERVER_ERROR);
 	}
 });
 

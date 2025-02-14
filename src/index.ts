@@ -22,6 +22,5 @@ app.use(
 app.route('/profiles', profileRoutes);
 app.route('/teams', teamRoutes);
 app.route('/auth', authRoutes);
-app.get('/activate', (c) => c.text('Email is confirmed!'));
 
 export default app;
