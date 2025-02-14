@@ -15,7 +15,7 @@ export async function authenticate(database: D1Database, body: SignInData): Prom
 	return password;
 }
 
-export async function validateEmail(database: D1Database, email: string) {
+export async function checkEmail(database: D1Database, email: string) {
 	const { results } = await database
 		.prepare('SELECT email FROM profile WHERE email = ?')
 		.bind(email)

@@ -5,17 +5,26 @@ import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
 import { hashPasswordPBKDF2 } from '../../utils/hashPassword.ts';
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { insertProfile } from '../profile/data.ts';
-import { CreateProfileSchema } from '../profile/validation.ts';
-import { activateProfile, authenticate, validateEmail } from './data.ts';
+import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
+import { activateProfile, authenticate, checkEmail } from './data.ts';
 import { SignInSchema } from './validate.ts';
 
 export const authRoutes = new Hono();
 
 authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
 	const body = await context.req.json();
-	const parsedBody = CreateProfileSchema.parse(body);
-	// TODO : check ZodError and return BAD_REQUEST
-	// TODO : Check duplicate email
+	let parsedBody: CreateProfileRequestBody;
+
+	try {
+		parsedBody = CreateProfileSchema.parse(body);
+	} catch (error) {
+		return context.json<StatusResponse>({ message: error?.message ?? 'Invalid input' }, StatusCodes.BAD_REQUEST);
+	}
+
+	const emailExists = await checkEmail(context.env.database, parsedBody.email);
+	if (emailExists) {
+		return context.json({ message: 'Duplicate email' }, StatusCodes.CONFLICT);
+	}
 
 	// Create Profile
 	try {
@@ -77,7 +86,7 @@ authRoutes.get('/activate', async (context: Context<EnvironmentBindings>) => {
 			return context.json({ message: 'Invalid or expired token' }, StatusCodes.UNAUTHORIZED);
 		}
 
-		const emailExists = await validateEmail(context.env.database, email);
+		const emailExists = await checkEmail(context.env.database, email);
 		if (!emailExists) {
 			return context.json({ message: 'User not found' }, StatusCodes.NOT_FOUND);
 		}
