@@ -128,7 +128,7 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 			return context.json<StatusResponse>({ message: 'Unauthorized' }, StatusCodes.UNAUTHORIZED);
 		}
 
-		// generate session token
+		// Generate session token
 		const sessionToken = crypto.randomUUID();
 		const hoursAhead = 1;
 		const tokenExpiry = String(Date.now() + hoursAhead * 60 * 60 * 1000);

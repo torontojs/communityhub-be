@@ -1,8 +1,9 @@
+import { DBTables } from '../../constants/db.ts';
 import type { SignInData } from './validate.ts';
 
 export async function getPassword(database: D1Database, body: SignInData): Promise<string> {
 	const { results } = await database
-		.prepare('SELECT password FROM profile WHERE email = ? AND activatedAt IS NOT NULL')
+		.prepare(`SELECT password FROM ${DBTables.PROFILE} WHERE email = ? AND activatedAt IS NOT NULL`)
 		.bind(body.email)
 		.run();
 
@@ -17,7 +18,7 @@ export async function getPassword(database: D1Database, body: SignInData): Promi
 
 export async function checkEmail(database: D1Database, email: string) {
 	const { results } = await database
-		.prepare('SELECT email FROM profile WHERE email = ?')
+		.prepare(`SELECT email FROM ${DBTables.PROFILE} WHERE email = ?`)
 		.bind(email)
 		.run();
 
@@ -27,7 +28,7 @@ export async function checkEmail(database: D1Database, email: string) {
 export async function activateProfile(database: D1Database, email: string) {
 	const now = new Date().toISOString();
 	const { success } = await database
-		.prepare('UPDATE profile SET activatedAt = ? WHERE email = ?')
+		.prepare(`UPDATE ${DBTables.PROFILE} SET activatedAt = ? WHERE email = ?`)
 		.bind(now, email)
 		.run();
 

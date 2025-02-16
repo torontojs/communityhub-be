@@ -24,8 +24,6 @@ app.route('/teams', teamRoutes);
 app.route('/auth', authRoutes);
 
 // Handle static assets using Cloudflare Workers
-app.get('/assets/*', async (context: Context<EnvironmentBindings>) => {
-	return await context.env.ASSETS.fetch(context.req.raw);
-});
+app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.env.ASSETS.fetch(context.req.raw));
 
 export default app;
