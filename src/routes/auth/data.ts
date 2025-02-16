@@ -1,15 +1,15 @@
 import type { SignInData } from './validate.ts';
 
-export async function authenticate(database: D1Database, body: SignInData): Promise<string> {
+export async function getPassword(database: D1Database, body: SignInData): Promise<string> {
 	const { results } = await database
-		.prepare('SELECT password FROM profile WHERE email = ?')
+		.prepare('SELECT password FROM profile WHERE email = ? AND activatedAt IS NOT NULL')
 		.bind(body.email)
 		.run();
 
 	const password = results[0]?.['password'] as string | undefined;
 
 	if (!password) {
-		throw new Error('Password not found');
+		throw new Error('No active account found with the provided email');
 	}
 
 	return password;
