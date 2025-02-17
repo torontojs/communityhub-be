@@ -11,6 +11,9 @@ CREATE TABLE IF NOT EXISTS profile (
 	-- It is used as a reference for the user
 	-- And should be unique inside the system
 	email TEXT NOT NULL UNIQUE,
+	-- The person's account password
+	-- This should be propperly hashed and salted!
+	password TEXT NOT NULL,
 	-- Schema version to use
 	schemaVersion INTEGER NOT NULL DEFAULT 1,
 	-- The person's name, or how they like to be identified
@@ -40,7 +43,7 @@ CREATE TABLE IF NOT EXISTS profile (
 	-- The date this profile was added to the database, saved as an ISO timestamp
 	insertedAt DATETIME NOT NULL,
 	-- The date this profile was activated, saved as an ISO timestamp
-	activatedAt DATETIME DEFAULT NULL
+	activatedAt DATETIME DEFAULT NULL,
 	-- The date this person has left the community or had their profile deactivated, saved as an ISO timestamp.
 	-- This provides a way to retain information without deleting data from the database.
 	-- It is used for checking if a user can log-in to the vms or not.
@@ -53,7 +56,9 @@ CREATE TABLE IF NOT EXISTS profile (
 	--
 	-- In the future, we may use this flag as a potential "ban list" for spammers and similar situations.
 	-- If a person thinks it was mistakenly flagged as spam, then contatcing one of the organizers should resolve the issue.
-	deactivatedAt DATETIME DEFAULT NULL
+	deactivatedAt DATETIME DEFAULT NULL,
+	-- When a profile is deactivated, this fields enables us to keep notes for other organizers in a future moment.
+	deactivatedReason TEXT DEFAULT NULL
 
 	PRIMARY KEY (id)
 );
