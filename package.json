@@ -17,7 +17,8 @@
 	},
 	"dependencies": {
 		"@sendgrid/mail": "^8.1.4",
-		"hono": "^4.6.17"
+		"hono": "^4.6.17",
+		"vitest": "^2.1.9"
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.20250121.0",
