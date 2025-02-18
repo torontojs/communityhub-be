@@ -12,18 +12,25 @@ import { SignInSchema } from './validate.ts';
 export const authRoutes = new Hono();
 
 authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
-	const body = await context.req.json();
 	let parsedBody: CreateProfileRequestBody;
 
 	try {
+		const body = await context.req.json();
 		parsedBody = CreateProfileSchema.parse(body);
 	} catch (error) {
-		return context.json<StatusResponse>({ message: error?.message ?? 'Invalid input' }, StatusCodes.BAD_REQUEST);
+		if (error instanceof SyntaxError) {
+			return context.json<StatusResponse>({ message: `Invalid JSON format: ${error.message}` }, StatusCodes.BAD_REQUEST);
+		}
+		if (error instanceof ZodError) {
+			return context.json<StatusResponse>({ message: `Invalid input: ${error.message}` }, StatusCodes.BAD_REQUEST);
+		}
+		console.error('Unexpected error parsing request body', error);
+		throw error;
 	}
 
 	const emailExists = await checkEmail(context.env.database, parsedBody.email);
 	if (emailExists) {
-		return context.json({ message: 'Duplicate email' }, StatusCodes.CONFLICT);
+		return context.json<StatusResponse>({ message: 'Duplicate email' }, StatusCodes.CONFLICT);
 	}
 
 	// Create Profile
