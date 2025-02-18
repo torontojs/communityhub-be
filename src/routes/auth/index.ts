@@ -7,7 +7,7 @@ import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
 import { activateProfile, checkEmail, getPassword } from './data.ts';
-import { SignInSchema } from './validate.ts';
+import { type SignInData, SignInSchema } from './validate.ts';
 
 export const authRoutes = new Hono();
 
@@ -34,121 +34,108 @@ authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
 	}
 
 	// Create Profile
-	try {
-		// Generate salt (16 bytes)
-		const salt = crypto.getRandomValues(new Uint8Array(16));
+	const salt = crypto.getRandomValues(new Uint8Array(16));
+	const hashedPassword = await hashPasswordPBKDF2(parsedBody.password, salt);
+	// Convert salt to Base64 for storage
+	const saltBase64 = btoa(String.fromCharCode(...salt));
 
-		// Hash password with PBKDF2
-		const hashedPassword = await hashPasswordPBKDF2(parsedBody.password, salt);
-
-		// Convert salt to Base64 for storage
-		const saltBase64 = btoa(String.fromCharCode(...salt));
-
-		// Store the hashed password and salt in the database
-		parsedBody.password = `${saltBase64}:${hashedPassword}`;
-		await insertProfile({ payload: parsedBody, database: context.env.database });
-	} catch (error) {
-		console.error('Error creating profile', error);
-		return context.json<StatusResponse>({ message: 'Error creating profile' }, StatusCodes.INTERNAL_SERVER_ERROR);
-	}
+	// Store the hashed password and salt in the database
+	parsedBody.password = `${saltBase64}:${hashedPassword}`;
+	await insertProfile({ payload: parsedBody, database: context.env.database });
 
 	// Send email
-	try {
-		sgMail.setApiKey(context.env.SENDGRID_API_KEY);
+	sgMail.setApiKey(context.env.SENDGRID_API_KEY);
 
-		const salt = crypto.getRandomValues(new Uint8Array(16));
-		const token = await hashPasswordPBKDF2(parsedBody.email, salt);
-		const encodedToken = encodeURIComponent(token);
-		await context.env.ACTIVATION_TOKENS.put(
-			encodedToken,
-			parsedBody.email,
-			{ expirationTtl: 60 * 10 }
-		);
+	const token = await hashPasswordPBKDF2(parsedBody.email, salt);
+	const encodedToken = encodeURIComponent(token);
+	await context.env.ACTIVATION_TOKENS.put(
+		encodedToken,
+		parsedBody.email,
+		{ expirationTtl: 60 * 10 }
+	);
 
-		const emailHtmlTemplate = generateEmailHtml(context, encodedToken);
-		const msg = {
-			to: parsedBody.email,
-			from: context.env.SENDER_EMAIL,
-			subject: '[TorontoJS] Confirm your account',
-			html: emailHtmlTemplate
-		};
-		await sgMail.send(msg);
+	const emailHtmlTemplate = generateEmailHtml(context, encodedToken);
+	const msg = {
+		to: parsedBody.email,
+		from: context.env.SENDER_EMAIL,
+		subject: '[TorontoJS] Confirm your account',
+		html: emailHtmlTemplate
+	};
+	await sgMail.send(msg);
 
-		return context.json<StatusResponse>({ message: 'Sent an email successfully' }, StatusCodes.OKAY);
-	} catch (error) {
-		console.error('Error sending email', error);
-		return context.json<StatusResponse>({ message: 'Error sending email' }, StatusCodes.INTERNAL_SERVER_ERROR);
-	}
+	return context.json<StatusResponse>({ message: 'Created a new profile and sent an email for confirmation' }, StatusCodes.OKAY);
 });
 
 authRoutes.get('/activate', async (context: Context<EnvironmentBindings>) => {
-	try {
-		const token = context.req.query('token');
-		if (!token) {
-			return context.json({ message: 'Invalid or missing token' }, StatusCodes.BAD_REQUEST);
-		}
-
-		const email = await context.env.ACTIVATION_TOKENS.get(token);
-		if (!email) {
-			return context.json({ message: 'Invalid or expired token' }, StatusCodes.UNAUTHORIZED);
-		}
-
-		const emailExists = await checkEmail(context.env.database, email);
-		if (!emailExists) {
-			return context.json({ message: 'User not found' }, StatusCodes.NOT_FOUND);
-		}
-
-		await activateProfile(context.env.database, email);
-
-		// Remove token after successful activation
-		await context.env.ACTIVATION_TOKENS.delete(token);
-
-		return context.json({ message: 'Account activated successfully' }, StatusCodes.OKAY);
-	} catch (error) {
-		return context.json<StatusResponse>({ message: 'Error activating an account' }, StatusCodes.INTERNAL_SERVER_ERROR);
+	const token = context.req.query('token');
+	if (!token) {
+		return context.json({ message: 'Invalid or missing token' }, StatusCodes.BAD_REQUEST);
 	}
+
+	const email = await context.env.ACTIVATION_TOKENS.get(token);
+	if (!email) {
+		return context.json({ message: 'Invalid or expired token' }, StatusCodes.UNAUTHORIZED);
+	}
+
+	const emailExists = await checkEmail(context.env.database, email);
+	if (!emailExists) {
+		return context.json({ message: 'User not found' }, StatusCodes.NOT_FOUND);
+	}
+
+	await activateProfile(context.env.database, email);
+
+	// Remove token after successful activation
+	await context.env.ACTIVATION_TOKENS.delete(token);
+
+	return context.json({ message: 'Account activated successfully' }, StatusCodes.OKAY);
 });
 
 authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
+	let parsedBody: SignInData;
+
 	try {
 		const body = await context.req.json();
-		const parsedBody = SignInSchema.parse(body);
-
-		const storedPassword = await getPassword(context.env.database, parsedBody);
-
-		if (!storedPassword) {
-			return context.json<StatusResponse>({ message: 'Unauthorized requests' }, StatusCodes.UNAUTHORIZED);
+		parsedBody = SignInSchema.parse(body);
+	} catch (error) {
+		if (error instanceof SyntaxError) {
+			return context.json<StatusResponse>({ message: `Invalid JSON format: ${error.message}` }, StatusCodes.BAD_REQUEST);
 		}
-
-		// Extract salt and hashed password from stored format
-		const [saltBase64, storedHashedPassword] = storedPassword.split(':');
-		if (saltBase64 === undefined) {
-			throw new Error('Salt not found');
+		if (error instanceof ZodError) {
+			return context.json<StatusResponse>({ message: `Invalid input: ${error.message}` }, StatusCodes.BAD_REQUEST);
 		}
-		const salt = new Uint8Array([...atob(saltBase64)].map((c) => c.charCodeAt(0)));
-
-		// Hash input password with the same salt
-		const inputHashedPassword = await hashPasswordPBKDF2(parsedBody.password, salt);
-
-		// Verify if the input password matches the stored password
-		if (inputHashedPassword !== storedHashedPassword) {
-			return context.json<StatusResponse>({ message: 'Unauthorized' }, StatusCodes.UNAUTHORIZED);
-		}
-
-		// Generate session token
-		const sessionToken = crypto.randomUUID();
-		const hoursAhead = 1;
-		const tokenExpiry = String(Date.now() + hoursAhead * 60 * 60 * 1000);
-		const expiryAndUserEmail = `${tokenExpiry} ${parsedBody.email}`;
-		await context.env.SESSION_TOKENS.put(sessionToken, expiryAndUserEmail);
-
-		context.header('Set-Cookie', `auth_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Expires=${tokenExpiry}; Path=/; Domain=torontojs.com`);
-
-		return context.json<StatusResponse>({ message: 'Authorized successfully', data: sessionToken }, StatusCodes.CREATED);
-	} catch (err) {
-		if (err instanceof ZodError) {
-			return context.json<StatusResponse>({ message: err?.message ?? 'Invalid input' }, StatusCodes.BAD_REQUEST);
-		}
-		return context.json<StatusResponse>({ message: err?.message ?? 'An error has occurred' }, StatusCodes.INTERNAL_SERVER_ERROR);
+		console.error('Unexpected error parsing request body', error);
+		throw error;
 	}
+
+	const storedPassword = await getPassword(context.env.database, parsedBody);
+
+	if (!storedPassword) {
+		return context.json<StatusResponse>({ message: 'Unauthorized requests' }, StatusCodes.UNAUTHORIZED);
+	}
+
+	// Extract salt and hashed password from stored format
+	const [saltBase64, storedHashedPassword] = storedPassword.split(':');
+	if (saltBase64 === undefined) {
+		throw new Error('Salt not found');
+	}
+	const salt = new Uint8Array([...atob(saltBase64)].map((c) => c.charCodeAt(0)));
+
+	// Hash input password with the same salt
+	const inputHashedPassword = await hashPasswordPBKDF2(parsedBody.password, salt);
+
+	// Verify if the input password matches the stored password
+	if (inputHashedPassword !== storedHashedPassword) {
+		return context.json<StatusResponse>({ message: 'Unauthorized' }, StatusCodes.UNAUTHORIZED);
+	}
+
+	// Generate session token
+	const sessionToken = crypto.randomUUID();
+	const hoursAhead = 1;
+	const tokenExpiry = String(Date.now() + hoursAhead * 60 * 60 * 1000);
+	const expiryAndUserEmail = `${tokenExpiry} ${parsedBody.email}`;
+	await context.env.SESSION_TOKENS.put(sessionToken, expiryAndUserEmail);
+
+	context.header('Set-Cookie', `auth_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Expires=${tokenExpiry}; Path=/; Domain=torontojs.com`);
+
+	return context.json<StatusResponse>({ message: 'Authorized successfully', data: sessionToken }, StatusCodes.CREATED);
 });
