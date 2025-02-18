@@ -11,9 +11,6 @@ CREATE TABLE IF NOT EXISTS profile (
 	-- It is used as a reference for the user
 	-- And should be unique inside the system
 	email TEXT NOT NULL UNIQUE,
-	-- The person's account password
-	-- This should be propperly hashed and salted!
-	password TEXT NOT NULL,
 	-- Schema version to use
 	schemaVersion INTEGER NOT NULL DEFAULT 1,
 	-- The person's name, or how they like to be identified
@@ -61,6 +58,21 @@ CREATE TABLE IF NOT EXISTS profile (
 	deactivatedReason TEXT DEFAULT NULL
 
 	PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS passwords;
+
+CREATE TABLE IF NOT EXISTS passwords (
+	-- The UUID of the profile this link belongs to
+	id TEXT NOT NULL UNIQUE COLLATE BINARY,
+	-- Schema version to use
+	-- Here it is useful if we update the password encryption algorithm in the future
+	schemaVersion INTEGER NOT NULL DEFAULT 1,
+	-- The person's account password
+	-- This should be propperly hashed and salted!
+	password TEXT NOT NULL,
+
+	FOREIGN KEY (id) REFERENCES profile(id)
 );
 
 DROP TABLE IF EXISTS profile_links;
