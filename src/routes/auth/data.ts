@@ -3,7 +3,7 @@ import type { SignInData } from './validate.ts';
 
 export async function getPassword(database: D1Database, body: SignInData): Promise<string> {
 	const { results } = await database
-		.prepare(`SELECT password FROM ${DBTables.PROFILE} WHERE email = ? AND activatedAt IS NOT NULL`)
+		.prepare(`SELECT password FROM ${DBTables.PROFILE} WHERE email = ? AND activatedAt IS NOT NULL LIMIT 1`)
 		.bind(body.email)
 		.run();
 
@@ -18,7 +18,7 @@ export async function getPassword(database: D1Database, body: SignInData): Promi
 
 export async function checkEmail(database: D1Database, email: string) {
 	const { results } = await database
-		.prepare(`SELECT email FROM ${DBTables.PROFILE} WHERE email = ?`)
+		.prepare(`SELECT email FROM ${DBTables.PROFILE} WHERE email = ? LIMIT 1`)
 		.bind(email)
 		.run();
 

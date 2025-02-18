@@ -9,7 +9,7 @@ export async function validateProfileId({
 }): Promise<boolean> {
 	try {
 		const { results } = await database
-			.prepare(`SELECT id FROM ${DBTables.PROFILE} WHERE id = ?`)
+			.prepare(`SELECT id FROM ${DBTables.PROFILE} WHERE id = ? LIMIT 1`)
 			.bind(id)
 			.run();
 

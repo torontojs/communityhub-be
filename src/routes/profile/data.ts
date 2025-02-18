@@ -3,7 +3,7 @@ import type { Profile } from './validation.ts';
 
 export async function getProfileById(database: D1Database, profileId: string) {
 	const { results } = await database
-		.prepare(`SELECT * FROM ${DBTables.PROFILE} WHERE id = ?`)
+		.prepare(`SELECT * FROM ${DBTables.PROFILE} WHERE id = ? LIMIT 1`)
 		.bind(profileId)
 		.run<Profile>();
 
