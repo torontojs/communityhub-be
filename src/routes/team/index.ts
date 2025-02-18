@@ -117,7 +117,6 @@ teamRoutes.openapi(
 		description: "Retrieves a single team based on it's id.",
 		tags: ['Team'],
 		request: {
-			body: { content: { 'application/json': { schema: TeamSchema } }, required: true },
 			params: IdParamSchema
 		},
 		responses: {
