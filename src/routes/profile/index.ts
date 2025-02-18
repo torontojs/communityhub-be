@@ -46,25 +46,21 @@ profileRoutes.openapi(
 		}
 	}),
 	async (context) => {
-		try {
-			const body = context.req.valid('json');
+		const body = context.req.valid('json');
 
-			const isEmailExisting = await validateExistingEmail(context.env.database, body.email);
+		const isEmailExisting = await validateExistingEmail(context.env.database, body.email);
 
-			if (isEmailExisting) {
-				return context.json({ message: 'Email already exists' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
-			}
-
-			const { success } = await insertProfile(context.env.database, body);
-
-			if (!success) {
-				return context.json({ message: 'Profile not created' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
-			}
-
-			return context.json({ message: 'Profile created successfully' } satisfies StatusResponse, StatusCodes.CREATED);
-		} catch (error) {
-			return context.json({ message: error?.message ?? 'An error has occurred' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		if (isEmailExisting) {
+			return context.json({ message: 'Email already exists' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
 		}
+
+		const { success } = await insertProfile(context.env.database, body);
+
+		if (!success) {
+			return context.json({ message: 'Profile not created' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		}
+
+		return context.json({ message: 'Profile created successfully' } satisfies StatusResponse, StatusCodes.CREATED);
 	}
 );
 
@@ -96,26 +92,22 @@ profileRoutes.openapi(
 		}
 	}),
 	async (context) => {
-		try {
-			const { id } = context.req.valid('param');
-			const body = context.req.valid('json');
+		const { id } = context.req.valid('param');
+		const body = context.req.valid('json');
 
-			const isProfileIdValid = await validateExistingId(context.env.database, DBTables.PROFILE, id);
+		const isProfileIdValid = await validateExistingId(context.env.database, DBTables.PROFILE, id);
 
-			if (!isProfileIdValid) {
-				return context.json({ message: 'Profile not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
-			}
-
-			const isUpdated = await updateProfileById(context.env.database, id, body);
-
-			if (!isUpdated) {
-				return context.json({ message: 'Profile not updated' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
-			}
-
-			return context.json({ message: 'Profile updated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
-		} catch (error) {
-			return context.json({ message: error?.message ?? 'An error has occurred' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		if (!isProfileIdValid) {
+			return context.json({ message: 'Profile not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
+
+		const isUpdated = await updateProfileById(context.env.database, id, body);
+
+		if (!isUpdated) {
+			return context.json({ message: 'Profile not updated' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		}
+
+		return context.json({ message: 'Profile updated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
 	}
 );
 
@@ -138,27 +130,19 @@ profileRoutes.openapi(
 			[StatusCodes.NOT_FOUND]: {
 				description: 'Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
-			},
-			[StatusCodes.INTERNAL_SERVER_ERROR]: {
-				description: 'Server Error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
 		}
 	}),
 	async (context) => {
-		try {
-			const { id } = context.req.valid('param');
+		const { id } = context.req.valid('param');
 
-			const profile = await getProfileById(context.env.database, id);
+		const profile = await getProfileById(context.env.database, id);
 
-			if (!profile) {
-				return context.json({ message: 'Profile not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
-			}
-
-			return context.json({ data: profile, _links: { self: { href: context.req.url } } } satisfies DataResponse<typeof profile>, StatusCodes.OKAY);
-		} catch (error) {
-			return context.json({ message: error?.message ?? 'An error has occurred' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		if (!profile) {
+			return context.json({ message: 'Profile not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
+
+		return context.json({ data: profile, _links: { self: { href: context.req.url } } } satisfies DataResponse<typeof profile>, StatusCodes.OKAY);
 	}
 );
 
@@ -174,38 +158,30 @@ profileRoutes.openapi(
 			[StatusCodes.OKAY]: {
 				description: 'Successful response',
 				content: { 'application/json': { schema: generatePaginatedResponseSchema(z.array(ProfileSchema)) } }
-			},
-			[StatusCodes.INTERNAL_SERVER_ERROR]: {
-				description: 'Server Error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
 		}
 	}),
 	async (context) => {
-		try {
-			const profiles = await getAllProfiles(context.env.database);
+		const profiles = await getAllProfiles(context.env.database);
 
-			return context.json(
-				// TODO: implement proper pagination
-				{
-					data: profiles,
-					start: 0,
-					end: profiles.length - 1,
-					total: profiles.length,
-					size: profiles.length,
-					currentPage: 1,
-					lastPage: 1,
-					_links: {
-						self: { href: context.req.url },
-						first: { href: context.req.url },
-						last: { href: context.req.url }
-					}
-				} satisfies PaginatedResponse<typeof profiles>,
-				StatusCodes.OKAY
-			);
-		} catch (error) {
-			return context.json({ message: error?.message ?? 'An error has occurred' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
-		}
+		return context.json(
+			// TODO: implement proper pagination
+			{
+				data: profiles,
+				start: 0,
+				end: profiles.length - 1,
+				total: profiles.length,
+				size: profiles.length,
+				currentPage: 1,
+				lastPage: 1,
+				_links: {
+					self: { href: context.req.url },
+					first: { href: context.req.url },
+					last: { href: context.req.url }
+				}
+			} satisfies PaginatedResponse<typeof profiles>,
+			StatusCodes.OKAY
+		);
 	}
 );
 
@@ -236,24 +212,20 @@ profileRoutes.openapi(
 		}
 	}),
 	async (context) => {
-		try {
-			const { id } = context.req.valid('param');
+		const { id } = context.req.valid('param');
 
-			const isProfileIdValid = await validateExistingId(context.env.database, DBTables.PROFILE, id);
+		const isProfileIdValid = await validateExistingId(context.env.database, DBTables.PROFILE, id);
 
-			if (!isProfileIdValid) {
-				return context.json({ message: 'Profile not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
-			}
-
-			const isDeleted = await deleteProfileById(context.env.database, id);
-
-			if (!isDeleted) {
-				return context.json({ message: 'Profile not deleted' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
-			}
-
-			return context.json({ message: 'Profile deleted successfully' } satisfies StatusResponse, StatusCodes.OKAY);
-		} catch (error) {
-			return context.json({ message: error?.message ?? 'An error has occurred' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		if (!isProfileIdValid) {
+			return context.json({ message: 'Profile not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
+
+		const isDeleted = await deleteProfileById(context.env.database, id);
+
+		if (!isDeleted) {
+			return context.json({ message: 'Profile not deleted' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		}
+
+		return context.json({ message: 'Profile deleted successfully' } satisfies StatusResponse, StatusCodes.OKAY);
 	}
 );

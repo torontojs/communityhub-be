@@ -2,12 +2,20 @@ import { OpenAPIHono } from '@hono/zod-openapi';
 import { cors } from 'hono/cors';
 import { profileRoutes } from './routes/profile/index.ts';
 import { teamRoutes } from './routes/team/index.ts';
-import { statusResponseFormatter } from './utils/responses.ts';
+import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
 
 import packageJson from '../package.json';
 
 const app = new OpenAPIHono<EnvironmentBindings>({
 	defaultHook: statusResponseFormatter
+});
+
+// Catch all error handler.
+app.onError((err, context) => {
+	// TODO: add better error logging?
+	console.error(err);
+
+	return context.json({ message: 'An error has occured' }, StatusCodes.INTERNAL_SERVER_ERROR);
 });
 
 // CORS middleware22

@@ -42,18 +42,14 @@ teamRoutes.openapi(
 		}
 	}),
 	async (context) => {
-		try {
-			const body = context.req.valid('json');
-			const { success } = await insertTeam(context.env.database, body);
+		const body = context.req.valid('json');
+		const { success } = await insertTeam(context.env.database, body);
 
-			if (!success) {
-				return context.json({ message: 'Team not saved' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
-			}
-
-			return context.json({ message: 'Team created successfully' } satisfies StatusResponse, StatusCodes.CREATED);
-		} catch (error) {
-			return context.json({ message: error?.message ?? 'An error has occurred' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		if (!success) {
+			return context.json({ message: 'Team not saved' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
+
+		return context.json({ message: 'Team created successfully' } satisfies StatusResponse, StatusCodes.CREATED);
 	}
 );
 
@@ -85,26 +81,22 @@ teamRoutes.openapi(
 		}
 	}),
 	async (context) => {
-		try {
-			const { id } = context.req.valid('param');
-			const body = context.req.valid('json');
+		const { id } = context.req.valid('param');
+		const body = context.req.valid('json');
 
-			const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
+		const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
 
-			if (!isTeamIdValid) {
-				return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
-			}
-
-			const isUpdated = await updateTeamById(context.env.database, id, body);
-
-			if (!isUpdated) {
-				return context.json({ message: 'Team not updated' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
-			}
-
-			return context.json({ message: 'Team updated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
-		} catch (error) {
-			return context.json({ message: error?.message ?? 'An error has occurred' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		if (!isTeamIdValid) {
+			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
+
+		const isUpdated = await updateTeamById(context.env.database, id, body);
+
+		if (!isUpdated) {
+			return context.json({ message: 'Team not updated' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		}
+
+		return context.json({ message: 'Team updated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
 	}
 );
 
@@ -127,33 +119,25 @@ teamRoutes.openapi(
 			[StatusCodes.NOT_FOUND]: {
 				description: 'Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
-			},
-			[StatusCodes.INTERNAL_SERVER_ERROR]: {
-				description: 'Server error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
 		}
 	}),
 	async (context) => {
-		try {
-			const { id } = context.req.valid('param');
+		const { id } = context.req.valid('param');
 
-			const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
+		const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
 
-			if (!isTeamIdValid) {
-				return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
-			}
-
-			const team = await getTeamById(context.env.database, id);
-
-			if (!team) {
-				return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
-			}
-
-			return context.json({ data: team, _links: { self: { href: context.req.url } } } satisfies DataResponse<typeof team>, StatusCodes.OKAY);
-		} catch (error) {
-			return context.json({ message: error?.message ?? 'An error has occurred' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		if (!isTeamIdValid) {
+			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
+
+		const team = await getTeamById(context.env.database, id);
+
+		if (!team) {
+			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
+		}
+
+		return context.json({ data: team, _links: { self: { href: context.req.url } } } satisfies DataResponse<typeof team>, StatusCodes.OKAY);
 	}
 );
 
@@ -169,38 +153,30 @@ teamRoutes.openapi(
 			[StatusCodes.OKAY]: {
 				description: 'Successful response',
 				content: { 'application/json': { schema: generatePaginatedResponseSchema(z.array(TeamSchema)) } }
-			},
-			[StatusCodes.INTERNAL_SERVER_ERROR]: {
-				description: 'Server error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
 		}
 	}),
 	async (context) => {
-		try {
-			const teams = await getAllTeams(context.env.database);
+		const teams = await getAllTeams(context.env.database);
 
-			return context.json(
-				// TODO: implement proper pagination
-				{
-					data: teams,
-					start: 0,
-					end: teams.length - 1,
-					total: teams.length,
-					size: teams.length,
-					currentPage: 1,
-					lastPage: 1,
-					_links: {
-						self: { href: context.req.url },
-						first: { href: context.req.url },
-						last: { href: context.req.url }
-					}
-				} satisfies PaginatedResponse<typeof teams>,
-				StatusCodes.OKAY
-			);
-		} catch (error) {
-			return context.json({ message: error?.message ?? 'An error has occurred' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
-		}
+		return context.json(
+			// TODO: implement proper pagination
+			{
+				data: teams,
+				start: 0,
+				end: teams.length - 1,
+				total: teams.length,
+				size: teams.length,
+				currentPage: 1,
+				lastPage: 1,
+				_links: {
+					self: { href: context.req.url },
+					first: { href: context.req.url },
+					last: { href: context.req.url }
+				}
+			} satisfies PaginatedResponse<typeof teams>,
+			StatusCodes.OKAY
+		);
 	}
 );
 
@@ -231,24 +207,20 @@ teamRoutes.openapi(
 		}
 	}),
 	async (context) => {
-		try {
-			const { id } = context.req.valid('param');
+		const { id } = context.req.valid('param');
 
-			const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
+		const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
 
-			if (!isTeamIdValid) {
-				return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
-			}
-
-			const isDeleted = await deleteTeamById(context.env.database, id);
-
-			if (!isDeleted) {
-				return context.json({ message: 'Team not deleted' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
-			}
-
-			return context.json({ message: 'Team deleted successfully' } satisfies StatusResponse, StatusCodes.OKAY);
-		} catch (error) {
-			return context.json({ message: error?.message ?? 'An error has occurred' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		if (!isTeamIdValid) {
+			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
+
+		const isDeleted = await deleteTeamById(context.env.database, id);
+
+		if (!isDeleted) {
+			return context.json({ message: 'Team not deleted' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		}
+
+		return context.json({ message: 'Team deleted successfully' } satisfies StatusResponse, StatusCodes.OKAY);
 	}
 );
