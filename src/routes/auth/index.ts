@@ -1,6 +1,5 @@
 import sgMail from '@sendgrid/mail';
 import { type Context, Hono } from 'hono';
-import { ZodError } from 'zod';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
 import { hashPasswordPBKDF2 } from '../../utils/hashPassword.ts';
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
@@ -21,10 +20,6 @@ authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
 		if (error instanceof SyntaxError) {
 			return context.json<StatusResponse>({ message: `Invalid JSON format: ${error.message}` }, StatusCodes.BAD_REQUEST);
 		}
-		if (error instanceof ZodError) {
-			return context.json<StatusResponse>({ message: `Invalid input: ${error.message}` }, StatusCodes.BAD_REQUEST);
-		}
-		console.error('Unexpected error parsing request body', error);
 		throw error;
 	}
 
@@ -100,10 +95,6 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 		if (error instanceof SyntaxError) {
 			return context.json<StatusResponse>({ message: `Invalid JSON format: ${error.message}` }, StatusCodes.BAD_REQUEST);
 		}
-		if (error instanceof ZodError) {
-			return context.json<StatusResponse>({ message: `Invalid input: ${error.message}` }, StatusCodes.BAD_REQUEST);
-		}
-		console.error('Unexpected error parsing request body', error);
 		throw error;
 	}
 
