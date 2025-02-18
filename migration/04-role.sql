@@ -6,8 +6,8 @@ CREATE TABLE IF NOT EXISTS role (
     description TEXT,
     teamId TEXT NOT NULL UNIQUE COLLATE BINARY,              -- UUID stored as TEXT
     profileId TEXT NOT NULL UNIQUE COLLATE BINARY,           -- UUID stored as TEXT
-    happenedAt TEXT NOT NULL,
-    insertedAt TEXT NOT NULL,
+    happenedAt DATETIME NOT NULL,
+    insertedAt DATETIME NOT NULL,
     FOREIGN KEY (teamId) REFERENCES team(id),
     FOREIGN KEY (profileId) REFERENCES profile(id)
 );

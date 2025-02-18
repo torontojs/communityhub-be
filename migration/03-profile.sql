@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS profile (
     schemaVersion INTEGER NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
-    happenedAt TEXT NOT NULL,
-    insertedAt TEXT NOT NULL,
+    happenedAt DATETIME NOT NULL,
+    insertedAt DATETIME NOT NULL,
     links TEXT                                                          -- Store markup for social links
 );
