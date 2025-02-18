@@ -146,6 +146,10 @@ export enum StatusCodes {
 	 */
 	I_AM_A_TEAPOT = 418,
 	/**
+	 * The server understands the content type of the request entity, but was unable to process the contained instructions. This is often used when there are validation errors or semantic errors in the request data.
+	 */
+	UNPROCESSABLE_ENTITY = 422,
+	/**
 	 * Indicates that the server is unwilling to risk processing a request that might be replayed.
 	 *
 	 * @variation Experimental
