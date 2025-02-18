@@ -149,6 +149,10 @@ export const StatusCodes = {
 	 */
 	I_AM_A_TEAPOT: 418,
 	/**
+	 * The request was well-formed but was unable to be followed due to semantic errors.
+	 */
+	UNPROCESSABLE_CONTENT: 422,
+	/**
 	 * Indicates that the server is unwilling to risk processing a request that might be replayed.
 	 *
 	 * @variation Experimental
@@ -211,7 +215,7 @@ export function statusResponseFormatter<T, C extends Context>(result: T, context
 	if (errors instanceof ZodError) {
 		return context.json({
 			errors: Object.fromEntries(errors.issues.map(({ path, message }) => [path.join('.'), message]))
-		}, StatusCodes.BAD_REQUEST);
+		}, StatusCodes.UNPROCESSABLE_CONTENT);
 	}
 
 	return context.req;
