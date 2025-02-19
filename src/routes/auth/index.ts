@@ -1,7 +1,7 @@
 import sgMail from '@sendgrid/mail';
 import { type Context, Hono } from 'hono';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
-import { hashPasswordPBKDF2 } from '../../utils/hashPassword.ts';
+import { hashPassword, validatePassword } from '../../utils/hashPassword.ts';
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
@@ -28,14 +28,10 @@ authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
 		return context.json<StatusResponse>({ message: 'Duplicate email' }, StatusCodes.CONFLICT);
 	}
 
-	// Create Profile
-	const salt = crypto.getRandomValues(new Uint8Array(16));
-	const hashedPassword = await hashPasswordPBKDF2(parsedBody.password, salt);
-	// Convert salt to Base64 for storage
-	const saltBase64 = btoa(String.fromCharCode(...salt));
+	const hashedPasswordWithSalt = await hashPassword(parsedBody.password);
 
 	// Store the hashed password and salt in the database
-	parsedBody.password = `${saltBase64}:${hashedPassword}`;
+	parsedBody.password = hashedPasswordWithSalt;
 	await insertProfile({ payload: parsedBody, database: context.env.database });
 
 	// Send email
@@ -101,25 +97,14 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 		throw error;
 	}
 
-	const storedPassword = await getPassword(context.env.database, parsedBody);
-
-	if (!storedPassword) {
-		return context.json<StatusResponse>({ message: 'Unauthorized requests' }, StatusCodes.UNAUTHORIZED);
+	const hashedPasswordWithSalt = await getPassword(context.env.database, parsedBody);
+	if (!hashedPasswordWithSalt) {
+		return context.json<StatusResponse>({ message: 'Invalid email or password' }, StatusCodes.UNAUTHORIZED);
 	}
 
-	// Extract salt and hashed password from stored format
-	const [saltBase64, storedHashedPassword] = storedPassword.split(':');
-	if (saltBase64 === undefined) {
-		throw new Error('Salt not found');
-	}
-	const salt = new Uint8Array([...atob(saltBase64)].map((c) => c.charCodeAt(0)));
-
-	// Hash input password with the same salt
-	const inputHashedPassword = await hashPasswordPBKDF2(parsedBody.password, salt);
-
-	// Verify if the input password matches the stored password
-	if (inputHashedPassword !== storedHashedPassword) {
-		return context.json<StatusResponse>({ message: 'Unauthorized' }, StatusCodes.UNAUTHORIZED);
+	const isValid = await validatePassword(parsedBody.password, hashedPasswordWithSalt);
+	if (!isValid) {
+		return context.json<StatusResponse>({ message: 'Invalid email or password' }, StatusCodes.UNAUTHORIZED);
 	}
 
 	// Generate session token
