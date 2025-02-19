@@ -41,15 +41,14 @@ authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
 	// Send email
 	sgMail.setApiKey(context.env.SENDGRID_API_KEY);
 
-	const token = await hashPasswordPBKDF2(parsedBody.email, salt);
-	const encodedToken = encodeURIComponent(token);
+	const token = crypto.randomUUID();
 	await context.env.ACTIVATION_TOKENS.put(
-		encodedToken,
+		token,
 		parsedBody.email,
 		{ expirationTtl: 60 * 10 }
 	);
 
-	const activationUrl = `${context.env.BASE_URL}/auth/activate?token=${encodedToken}`;
+	const activationUrl = `${context.env.BASE_URL}/auth/activate?token=${token}`;
 	const logoUrl = `${context.env.BASE_URL}/assets/torontojs-logo.png`;
 	const emailText = `Please confirm your account by clicking the following link: ${activationUrl}`;
 	const emailHtmlTemplate = generateEmailHtml(activationUrl, logoUrl);
