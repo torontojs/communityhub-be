@@ -107,14 +107,16 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 		return context.json<StatusResponse>({ message: 'Invalid email or password' }, StatusCodes.UNAUTHORIZED);
 	}
 
-	// Generate session token
 	const sessionToken = crypto.randomUUID();
 	const hoursAhead = 1;
-	const tokenExpiry = String(Date.now() + hoursAhead * 60 * 60 * 1000);
-	const expiryAndUserEmail = `${tokenExpiry} ${parsedBody.email}`;
-	await context.env.SESSION_TOKENS.put(sessionToken, expiryAndUserEmail);
+	const tokenExpiryISO = new Date(Date.now() + hoursAhead * 60 * 60 * 1000).toISOString();
+	const sessionData = JSON.stringify({
+		expiry: tokenExpiryISO,
+		email: parsedBody.email
+	});
+	await context.env.SESSION_TOKENS.put(sessionToken, sessionData);
 
-	context.header('Set-Cookie', `auth_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Expires=${tokenExpiry}; Path=/; Domain=torontojs.com`);
+	context.header('Set-Cookie', `auth_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Expires=${tokenExpiryISO}; Path=/;`);
 
 	return context.json<StatusResponse>({ message: 'Authorized successfully', data: sessionToken }, StatusCodes.CREATED);
 });
