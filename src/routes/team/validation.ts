@@ -1,33 +1,29 @@
 import { z } from 'zod';
+import { BaseDbEntitySchema, BaseDBFieldsToOmit } from '../../constants/db.ts';
 
-export interface Team {
-	id: string;
-	schemaVersion: number;
-	name: string;
-	description?: string;
-	happenedAt: string;
-	insertedAt: string;
-}
+export const TeamSchema = BaseDbEntitySchema.merge(z.object({
+	name: z
+		.string()
+		.trim()
+		.min(1, 'Name is required')
+		.describe("The team's name."),
+	description: z
+		.string()
+		.optional()
+		.describe('A description for the team. It may include markdown content.')
+}));
 
-export const NewTeamSchema = z.object({
-	name: z.string().min(1, 'Name is required'),
-	happenedAt: z.string().min(1, 'HappenedAt is required').refine((val) => !isNaN(Date.parse(val)), {
-		message: 'HappenedAt must be a valid ISO 8601 date string'
-	}),
-	description: z.string().optional()
-});
+export type Team = z.infer<typeof TeamSchema>;
 
-export type NewTeamData = z.infer<typeof NewTeamSchema>;
+export const CreateTeamSchema = TeamSchema.omit(BaseDBFieldsToOmit);
 
-export const UpdateTeamSchema = z.object({
-	name: z.string().optional(),
-	description: z.string().optional(),
-	happenedAt: z.string().optional().refine((val) => {
-		if (val) { return !isNaN(Date.parse(val)); }
-		return true;
-	}, {
-		message: 'HappenedAt must be a valid ISO 8601 date string'
-	})
-});
+export type CreateTeamData = z.infer<typeof CreateTeamSchema>;
+
+export const UpdateTeamSchema = CreateTeamSchema
+	.partial()
+	.refine(
+		(data) => Object.keys(data).length === 0,
+		{ message: 'At least one property is required' }
+	);
 
 export type UpdateTeamData = z.infer<typeof UpdateTeamSchema>;

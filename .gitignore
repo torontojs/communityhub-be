@@ -1,6 +1,9 @@
 # Build output
 dist/
 
+# Local db
+db/
+
 # Dependencies
 node_modules/
 .wrangler/

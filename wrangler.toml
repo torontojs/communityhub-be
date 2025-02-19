@@ -11,8 +11,10 @@ keep_vars = true
 
 [[d1_databases]]
 binding = "database"
-database_name = "vms-local-db"
-database_id = "vms-local-db"
+database_name = "vms-local"
+database_id = "vms-local"
+migrations_table = "migrations"
+migrations_dir = "migrations"
 
 [env.dev]
 name = "vms-dev"

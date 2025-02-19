@@ -155,7 +155,7 @@ const rules = {
 	'no-undef-init': 'warn',
 	'no-undef': 'off', // Typescript provides better support
 	'no-undefined': 'off',
-	'no-underscore-dangle': 'error',
+	'no-underscore-dangle': ['warn', { allow: ['_errors', '_links'] }],
 	'no-unexpected-multiline': 'error',
 	'no-unmodified-loop-condition': 'error',
 	'no-unneeded-ternary': 'error',
@@ -243,13 +243,13 @@ const rules = {
 	'@typescript-eslint/max-params': ['warn', { max: 6 }],
 	'@typescript-eslint/member-ordering': 'off',
 	'@typescript-eslint/method-signature-style': ['error', 'method'],
-	'@typescript-eslint/naming-convention': ['error', {
+	'@typescript-eslint/naming-convention': ['warn', {
 		selector: 'default',
 		format: ['PascalCase', 'camelCase'],
 		leadingUnderscore: 'allow',
 		trailingUnderscore: 'forbid',
 		filter: {
-			regex: '^(_id|__v)$',
+			regex: '^(_id|__v|_links)$',
 			match: false
 		}
 	}, {
@@ -263,7 +263,7 @@ const rules = {
 		leadingUnderscore: 'forbid',
 		trailingUnderscore: 'forbid',
 		filter: {
-			regex: '^(_id|__v)$',
+			regex: '^(_id|__v|_links)$',
 			match: false
 		}
 	}, {
@@ -283,7 +283,7 @@ const rules = {
 		leadingUnderscore: 'forbid',
 		trailingUnderscore: 'forbid',
 		filter: {
-			regex: '^(_id|__v)$',
+			regex: '^(_id|__v|_links)$',
 			match: false
 		}
 	}, {
@@ -292,7 +292,7 @@ const rules = {
 		leadingUnderscore: 'forbid',
 		trailingUnderscore: 'forbid',
 		filter: {
-			regex: '^(_id|__v)$',
+			regex: '^(_id|__v|_links)$',
 			match: false
 		}
 	}, {
