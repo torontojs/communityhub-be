@@ -49,7 +49,7 @@ authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
 		{ expirationTtl: 60 * 10 }
 	);
 
-	const emailHtmlTemplate = generateEmailHtml(context, encodedToken);
+	const emailHtmlTemplate = generateEmailHtml(context.env.BASE_URL, encodedToken);
 	const msg = {
 		to: parsedBody.email,
 		from: context.env.SENDER_EMAIL,

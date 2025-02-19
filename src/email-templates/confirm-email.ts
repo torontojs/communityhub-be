@@ -1,8 +1,6 @@
-import type { Context } from 'hono';
-
-export function generateEmailHtml(context: Context<EnvironmentBindings>, token: string) {
-	const activationUrl = `${context.env.BASE_URL}/auth/activate?token=${token}`;
-	const logoUrl = `${context.env.BASE_URL}/assets/torontojs-logo.png`;
+export function generateEmailHtml(baseUrl: string, token: string) {
+	const activationUrl = `${baseUrl}/auth/activate?token=${token}`;
+	const logoUrl = `${baseUrl}/assets/torontojs-logo.png`;
 
 	return `
     <!doctype html>
