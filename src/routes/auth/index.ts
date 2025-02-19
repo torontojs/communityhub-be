@@ -49,11 +49,15 @@ authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
 		{ expirationTtl: 60 * 10 }
 	);
 
-	const emailHtmlTemplate = generateEmailHtml(context.env.BASE_URL, encodedToken);
+	const activationUrl = `${context.env.BASE_URL}/auth/activate?token=${encodedToken}`;
+	const logoUrl = `${context.env.BASE_URL}/assets/torontojs-logo.png`;
+	const emailText = `Please confirm your account by clicking the following link: ${activationUrl}`;
+	const emailHtmlTemplate = generateEmailHtml(activationUrl, logoUrl);
 	const msg = {
 		to: parsedBody.email,
 		from: context.env.SENDER_EMAIL,
 		subject: '[TorontoJS] Confirm your account',
+		text: emailText,
 		html: emailHtmlTemplate
 	};
 	await sgMail.send(msg);
