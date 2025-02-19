@@ -1,7 +1,7 @@
 import sgMail from '@sendgrid/mail';
 import { type Context, Hono } from 'hono';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
-import { hashPassword, validatePassword } from '../../utils/hashPassword.ts';
+import { hashPassword, validatePassword } from '../../utils/password-hashing.ts';
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
