@@ -1,5 +1,5 @@
 # Top-level configuration
-name = "vms-dev"
+name = "vms-local"
 main = "src/index.ts"
 compatibility_date = "2022-07-12"
 compatibility_flags = ["nodejs_compat"]
@@ -7,7 +7,21 @@ compatibility_flags = ["nodejs_compat"]
 vars = { NODE_ENV = "development", NODE_VERSION = "22.12.0" }
 
 workers_dev = true
+keep_vars = true
+
+[[d1_databases]]
+binding = "database"
+database_name = "vms-local"
+database_id = "vms-local"
+migrations_table = "migrations"
+migrations_dir = "migrations"
+
+[env.dev]
+name = "vms-dev"
+
+vars = { NODE_ENV = "development", NODE_VERSION = "22.12.0" }
 
 [env.production]
 name = "vms"
+
 vars = { NODE_ENV = "production", NODE_VERSION = "22.12.0" }

@@ -1,26 +1,58 @@
-import { Hono } from 'hono';
+import { OpenAPIHono } from '@hono/zod-openapi';
 import { cors } from 'hono/cors';
-import profilesRoute from './routes/profiles/profiles';
-import teamsRoutes from './routes/profiles/teams';
+import { profileRoutes } from './routes/profile/index.ts';
+import { teamRoutes } from './routes/team/index.ts';
+import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
 
-const app = new Hono();
+import packageJson from '../package.json';
 
-app.get('/', (context) => context.text('Welome to volunteer management system!'));
+const app = new OpenAPIHono<EnvironmentBindings>({
+	defaultHook: statusResponseFormatter
+});
 
-// CORS middleware
+// Catch all error handler.
+app.onError((err, context) => {
+	// TODO: add better error logging?
+	console.error(err);
+
+	return context.json({ message: 'An error has occured' }, StatusCodes.INTERNAL_SERVER_ERROR);
+});
+
+// CORS middleware22
 app.use(
 	'/*',
 	cors({
-		// TODO: Allow all origins for now. Use specific domains in production.
+		// FIXME: We want to block origins external to Toronto JS
 		origin: '*',
 		allowMethods: ['POST', 'GET', 'OPTIONS', 'DELETE', 'PATCH'],
-		// TODO: Ensure the required headers are allowed.
 		allowHeaders: ['Content-Type']
 	})
 );
 
-// Existing routes
-app.route('/profiles', profilesRoute);
-app.route('/teams', teamsRoutes);
+app.doc('/open-api.json', {
+	openapi: '3.0.0',
+	servers: [
+		{
+			url: 'https://vms.torontojs.com/',
+			description: 'Production server.'
+		},
+		{
+			url: 'http://localhost:8787/',
+			description: 'Local server for development.'
+		}
+	],
+	info: {
+		title: 'Toronto JS Community Hub API',
+		version: packageJson.version,
+		description: `
+		This is the API documentation for the [Toronto JS Community Hub](https://vms.torontojs.com/).
+
+		Please note that the recomended way of getting data from the community hub is to use the staticly generated data available on GitHub.
+		`
+	}
+});
+
+app.route('/profiles', profileRoutes);
+app.route('/teams', teamRoutes);
 
 export default app;
