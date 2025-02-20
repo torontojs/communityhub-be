@@ -193,5 +193,4 @@ export enum StatusCodes {
 
 export interface StatusResponse {
 	message: string;
-	data?: string;
 }
