@@ -1,13 +1,13 @@
 import { DBTables } from '../../constants/db.ts';
-import type { SignInData } from './validate.ts';
+import type { Profile, SignInData } from './validate.ts';
 
 export async function getPassword(database: D1Database, body: SignInData): Promise<string> {
 	const { results } = await database
 		.prepare(`SELECT password FROM ${DBTables.PROFILE} WHERE email = ? AND activatedAt IS NOT NULL LIMIT 1`)
 		.bind(body.email)
-		.run();
+		.run<Profile>();
 
-	const password = results[0]?.['password'] as string | undefined;
+	const password = results[0]?.password;
 
 	if (!password) {
 		throw new Error('No active account found with the provided email');
