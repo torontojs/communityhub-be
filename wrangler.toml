@@ -12,7 +12,6 @@ binding = "ASSETS"
 NODE_ENV = "local"
 NODE_VERSION = "22.12.0"
 BASE_URL = "http://localhost:8787"
-SENDER_EMAIL = "jsi04049@gmail.com"
 
 workers_dev = true
 keep_vars = true
@@ -40,6 +39,7 @@ name = "vms-dev"
 NODE_ENV = "development"
 NODE_VERSION = "22.12.0"
 
+
 [env.production]
 name = "vms"
 
@@ -47,4 +47,3 @@ name = "vms"
 NODE_ENV = "production"
 NODE_VERSION = "22.12.0"
 BASE_URL = "https://torontojs.com"
-SENDER_EMAIL = "organizers@torontojs.com"
