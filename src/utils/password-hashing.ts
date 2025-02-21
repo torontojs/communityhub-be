@@ -1,6 +1,6 @@
 const PBKDF2_ITERATIONS = 600000;
 const PBKDF2_HASH = 'SHA-256';
-const DERIVED_KEY_LENGTH = 256;
+const DERIVED_KEY_LENGTH = 512;
 
 /**
  * Converts a Uint8Array to a Base64 string.
