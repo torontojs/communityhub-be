@@ -1,37 +1,36 @@
-import { DBTables, SCHEMA_VERSION } from '../../constants/db.ts';
-import type { NewTeamData, Team, UpdateTeamData } from './validation.ts';
+import { DBTables, generateBaseDBfields } from '../../constants/db.ts';
+import type { CreateTeamData, Team, UpdateTeamData } from './validation.ts';
 
-export async function createNewTeam(database: D1Database, body: NewTeamData) {
-	const id = crypto.randomUUID();
-	const insertedAt = new Date().toISOString();
-	const happenedAt = new Date(body.happenedAt).toISOString();
+export async function insertTeam(database: D1Database, data: CreateTeamData) {
+	const baseDbfields = generateBaseDBfields();
 
-	const { success } = await database.prepare(
-		`INSERT INTO ${DBTables.TEAM} (id, name, schemaVersion, description, happenedAt, insertedAt) VALUES (?,?,?,?,?,?)`
-	)
-		.bind(id, body.name, SCHEMA_VERSION, body.description ?? '', happenedAt, insertedAt)
+	const { success } = await database.prepare(`
+		INSERT INTO ${DBTables.TEAM} (
+			${Object.keys(baseDbfields).join(', ')},
+			${Object.keys(data).join(', ')}
+		)
+		VALUES (
+			${[...Object.keys(baseDbfields)].fill('?').join(', ')},
+			${[...Object.keys(data)].fill('?').join(', ')}
+		)
+	`)
+		.bind(...Object.values(baseDbfields), ...Object.values(data))
 		.run();
 
-	return success;
+	return { success, id: baseDbfields.id };
 }
 
-export async function updateTeamById(database: D1Database, teamId: string, body: UpdateTeamData) {
-	if (Object.keys(body).length === 0) {
-		throw new Error('No fields provided to update');
-	}
-
+export async function updateTeamById(database: D1Database, id: string, data: UpdateTeamData) {
 	const { success } = await database
-		.prepare(`UPDATE ${DBTables.TEAM} SET ${Object.keys(body).join(', ')} WHERE id = ?`)
-		.bind(...Object.values(body), teamId)
+		.prepare(`
+			UPDATE ${DBTables.TEAM}
+			SET ${Object.keys(data).join(', ')}
+			WHERE id = ?
+		`)
+		.bind(...Object.values(data), id)
 		.run();
 
 	return success;
-}
-
-export async function getAllTeams(database: D1Database) {
-	const { results } = await database.prepare(`SELECT * FROM ${DBTables.TEAM}`).run<Team>();
-
-	return results;
 }
 
 export async function getTeamById(database: D1Database, id: string) {
@@ -43,10 +42,16 @@ export async function getTeamById(database: D1Database, id: string) {
 	return results?.[0];
 }
 
-export async function deleteTeamById(database: D1Database, teamId: string) {
+export async function getAllTeams(database: D1Database) {
+	const { results } = await database.prepare(`SELECT * FROM ${DBTables.TEAM}`).run<Team>();
+
+	return results;
+}
+
+export async function deleteTeamById(database: D1Database, id: string) {
 	const { success } = await database
 		.prepare(`DELETE FROM ${DBTables.TEAM} WHERE id = ?`)
-		.bind(teamId)
+		.bind(id)
 		.run();
 
 	return success;

@@ -1,156 +1,231 @@
-import { type Context, Hono } from 'hono';
-import { ZodError } from 'zod';
-import { IdSchema } from '../../utils/id-validation.ts';
-import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
-import { validateProfileId } from '../../validator/profile.ts';
-import { deleteProfileById, getAllProfiles, getProfileById, insertProfile, updateProfile } from './data.ts';
-import { type CreateProfileRequestBody, CreateProfileSchema, type UpdateProfileRequestBody, UpdateProfileSchema } from './validation.ts';
+import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
+import { z } from 'zod';
+import { DBTables } from '../../constants/db.ts';
+import {
+	type DataResponse,
+	generateDataResponeSchema,
+	generatePaginatedResponseSchema,
+	type PaginatedResponse,
+	StatusCodes,
+	type StatusResponse,
+	statusResponseFormatter,
+	StatusResponseSchema
+} from '../../utils/responses.ts';
+import { IdParamSchema, validateExistingId } from '../../utils/validation.ts';
+import { deleteProfileById, getAllProfiles, getProfileById, insertProfile, updateProfileById, validateExistingEmail } from './data.ts';
+import { CreateProfileSchema, ProfileSchema, UpdateProfileSchema } from './validation.ts';
 
-export const profileRoutes = new Hono();
+export const profileRoutes = new OpenAPIHono<EnvironmentBindings>({
+	defaultHook: statusResponseFormatter
+});
 
-profileRoutes.get('/:id', async (context: Context<EnvironmentBindings>) => {
-	try {
-		const { success: isValidProfileId, data: profileId } = IdSchema.safeParse(context.req.param('id'));
+profileRoutes.openapi(
+	createRoute({
+		method: 'post',
+		path: '/',
+		operationId: 'createNewProfile',
+		summary: 'Create new profile',
+		description: 'Add a new profile to the VMS including basic information about this person.',
+		tags: ['Profile'],
+		request: {
+			body: { content: { 'application/json': { schema: CreateProfileSchema } }, required: true }
+		},
+		responses: {
+			[StatusCodes.CREATED]: {
+				description: 'Successful response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.BAD_REQUEST]: {
+				description: 'Error response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.INTERNAL_SERVER_ERROR]: {
+				description: 'Server Error response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			}
+		}
+	}),
+	async (context) => {
+		const body = context.req.valid('json');
 
-		if (!isValidProfileId) {
-			return context.json<StatusResponse>({ message: 'Invalid Profile ID' }, StatusCodes.BAD_REQUEST);
+		const isEmailExisting = await validateExistingEmail(context.env.database, body.email);
+
+		if (isEmailExisting) {
+			return context.json({ message: 'Email already exists' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
 		}
 
-		const profile = await getProfileById(context.env.database, profileId);
+		const { success } = await insertProfile(context.env.database, body);
+
+		if (!success) {
+			return context.json({ message: 'Profile not created' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		}
+
+		return context.json({ message: 'Profile created successfully' } satisfies StatusResponse, StatusCodes.CREATED);
+	}
+);
+
+profileRoutes.openapi(
+	createRoute({
+		method: 'patch',
+		path: '/{id}',
+		operationId: 'updateProfile',
+		summary: 'Update existing profile',
+		description: "Update information for an existing profile based on it's id.",
+		tags: ['Profile'],
+		request: {
+			body: { content: { 'application/json': { schema: UpdateProfileSchema } }, required: true },
+			params: IdParamSchema
+		},
+		responses: {
+			[StatusCodes.OKAY]: {
+				description: 'Successful response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.NOT_FOUND]: {
+				description: 'Error response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.INTERNAL_SERVER_ERROR]: {
+				description: 'Server Error response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			}
+		}
+	}),
+	async (context) => {
+		const { id } = context.req.valid('param');
+		const body = context.req.valid('json');
+
+		const isProfileIdValid = await validateExistingId(context.env.database, DBTables.PROFILE, id);
+
+		if (!isProfileIdValid) {
+			return context.json({ message: 'Profile not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
+		}
+
+		const isUpdated = await updateProfileById(context.env.database, id, body);
+
+		if (!isUpdated) {
+			return context.json({ message: 'Profile not updated' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		}
+
+		return context.json({ message: 'Profile updated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
+	}
+);
+
+profileRoutes.openapi(
+	createRoute({
+		method: 'get',
+		path: '/{id}',
+		operationId: 'getProfile',
+		summary: 'Get profile by ID',
+		description: "Retrieves a single profile based on it's id.",
+		tags: ['Profile'],
+		request: {
+			params: IdParamSchema
+		},
+		responses: {
+			[StatusCodes.OKAY]: {
+				description: 'Successful response',
+				content: { 'application/json': { schema: generateDataResponeSchema(ProfileSchema) } }
+			},
+			[StatusCodes.NOT_FOUND]: {
+				description: 'Error response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			}
+		}
+	}),
+	async (context) => {
+		const { id } = context.req.valid('param');
+
+		const profile = await getProfileById(context.env.database, id);
 
 		if (!profile) {
-			return context.json<StatusResponse>({ message: 'Profile not found' }, StatusCodes.NOT_FOUND);
+			return context.json({ message: 'Profile not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
 
-		return context.json(profile);
-	} catch (err) {
-		return context.json<StatusResponse>({ message: err?.message ?? 'An error has occurred' }, StatusCodes.INTERNAL_SERVER_ERROR);
+		return context.json({ data: profile, _links: { self: { href: context.req.url } } } satisfies DataResponse<typeof profile>, StatusCodes.OKAY);
 	}
-});
+);
 
-profileRoutes.get('/', async (context: Context<EnvironmentBindings>) => {
-	try {
+profileRoutes.openapi(
+	createRoute({
+		method: 'get',
+		path: '/',
+		operationId: 'getProfiles',
+		summary: 'Get profiles',
+		description: 'Retrieves a list of profiles',
+		tags: ['Profile'],
+		responses: {
+			[StatusCodes.OKAY]: {
+				description: 'Successful response',
+				content: { 'application/json': { schema: generatePaginatedResponseSchema(z.array(ProfileSchema)) } }
+			}
+		}
+	}),
+	async (context) => {
 		const profiles = await getAllProfiles(context.env.database);
 
-		return context.json(profiles);
-	} catch (err) {
-		return context.json<StatusResponse>({ message: err?.message ?? 'An error has occurred' }, StatusCodes.INTERNAL_SERVER_ERROR);
-	}
-});
-
-profileRoutes.delete('/:id', async (context: Context<EnvironmentBindings>) => {
-	try {
-		const { success: isValidProfileId, data: profileId } = IdSchema.safeParse(context.req.param('id'));
-
-		if (!isValidProfileId) {
-			return context.json<StatusResponse>({ message: 'Invalid Profile ID' }, StatusCodes.BAD_REQUEST);
-		}
-
-		const isDeleted = await deleteProfileById(context.env.database, profileId);
-
-		if (!isDeleted) {
-			return context.json<StatusResponse>({ message: 'Profile not deleted' }, StatusCodes.FORBIDDEN);
-		}
-
-		return context.json({ message: 'Profile deleted successfully' }, StatusCodes.OKAY);
-	} catch (err) {
-		return context.json({ error: err.message }, StatusCodes.INTERNAL_SERVER_ERROR);
-	}
-});
-
-profileRoutes.post('/', async (context: Context<EnvironmentBindings>) => {
-	const body: CreateProfileRequestBody = await context.req.json();
-
-	try {
-		const parsedBody = CreateProfileSchema.parse(body);
-		const { success, id } = await insertProfile({
-			payload: parsedBody,
-			database: context.env.database
-		});
-
-		if (!success) {
-			throw new Error('Insertion failed');
-		}
-
 		return context.json(
-			{ message: 'Profile created successfully', createdId: id },
-			StatusCodes.CREATED
-		);
-	} catch (error) {
-		if (error instanceof ZodError) {
-			return context.json<StatusResponse>(
-				{ message: error.issues.map((issue) => issue.message).join(', ') },
-				StatusCodes.BAD_REQUEST
-			);
-		}
-
-		return context.json<StatusResponse>(
-			{ message: error.message },
-			StatusCodes.INTERNAL_SERVER_ERROR
-		);
-	}
-});
-
-profileRoutes.patch('/:id', async (context: Context<EnvironmentBindings>) => {
-	const body: UpdateProfileRequestBody = await context.req.json();
-	let parsedBody;
-
-	try {
-		parsedBody = UpdateProfileSchema.parse(body);
-	} catch (error) {
-		console.log(error);
-		return context.json<StatusResponse>(
+			// TODO: implement proper pagination
 			{
-				message: (error as ZodError).issues
-					.map((issue) => issue.message)
-					.join(', ')
-			},
-			StatusCodes.BAD_REQUEST
-		);
-	}
-
-	const onlyHasHappenedAt = Object.keys(parsedBody).length === 1 && parsedBody.happenedAt !== undefined;
-
-	if (onlyHasHappenedAt) {
-		return context.json<StatusResponse>(
-			{ message: 'No fields to update' },
-			StatusCodes.BAD_REQUEST
-		);
-	}
-
-	const profileId = context.req.param('id');
-	const isProfileIdValid = await validateProfileId({
-		id: profileId,
-		database: context.env.database
-	});
-
-	if (!isProfileIdValid) {
-		return context.json<StatusResponse>(
-			{ message: 'Profile id is not found' },
-			StatusCodes.NOT_FOUND
-		);
-	}
-
-	try {
-		const { success } = await updateProfile({
-			id: profileId,
-			data: parsedBody,
-			database: context.env.database
-		});
-
-		if (!success) {
-			throw new Error('Update Failed');
-		}
-
-		return context.json<StatusResponse>(
-			{ message: 'Profile updated successfully' },
+				data: profiles,
+				start: 0,
+				end: profiles.length - 1,
+				total: profiles.length,
+				size: profiles.length,
+				currentPage: 1,
+				lastPage: 1,
+				_links: {
+					self: { href: context.req.url },
+					first: { href: context.req.url },
+					last: { href: context.req.url }
+				}
+			} satisfies PaginatedResponse<typeof profiles>,
 			StatusCodes.OKAY
 		);
-	} catch (error) {
-		console.log(error);
-		return context.json<StatusResponse>(
-			{ message: error.meesage },
-			StatusCodes.INTERNAL_SERVER_ERROR
-		);
 	}
-});
+);
+
+profileRoutes.openapi(
+	createRoute({
+		method: 'delete',
+		path: '/{id}',
+		operationId: 'deleteProfile',
+		summary: 'Delete profile by ID',
+		description: "Deletes a single profile based on it's id",
+		tags: ['Profile'],
+		request: {
+			params: IdParamSchema
+		},
+		responses: {
+			[StatusCodes.OKAY]: {
+				description: 'Successful response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.NOT_FOUND]: {
+				description: 'Error response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.INTERNAL_SERVER_ERROR]: {
+				description: 'Server Error response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			}
+		}
+	}),
+	async (context) => {
+		const { id } = context.req.valid('param');
+
+		const isProfileIdValid = await validateExistingId(context.env.database, DBTables.PROFILE, id);
+
+		if (!isProfileIdValid) {
+			return context.json({ message: 'Profile not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
+		}
+
+		const isDeleted = await deleteProfileById(context.env.database, id);
+
+		if (!isDeleted) {
+			return context.json({ message: 'Profile not deleted' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		}
+
+		return context.json({ message: 'Profile deleted successfully' } satisfies StatusResponse, StatusCodes.OKAY);
+	}
+);

@@ -1,12 +1,24 @@
-import { type Context, Hono } from 'hono';
+import { OpenAPIHono } from '@hono/zod-openapi';
+import { type Context } from 'hono';
 import { cors } from 'hono/cors';
 import { authRoutes } from './routes/auth/index.ts';
 import { profileRoutes } from './routes/profile/index.ts';
 import { teamRoutes } from './routes/team/index.ts';
+import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
 
-const app = new Hono();
+import packageJson from '../package.json';
 
-app.get('/', (context) => context.text('Welome to volunteer management system!'));
+const app = new OpenAPIHono<EnvironmentBindings>({
+	defaultHook: statusResponseFormatter
+});
+
+// Catch all error handler.
+app.onError((err, context) => {
+	// TODO: add better error logging?
+	console.error(err);
+
+	return context.json({ message: 'An error has occured' }, StatusCodes.INTERNAL_SERVER_ERROR);
+});
 
 // CORS middleware22
 app.use(
@@ -18,6 +30,29 @@ app.use(
 		allowHeaders: ['Content-Type']
 	})
 );
+
+app.doc('/open-api.json', {
+	openapi: '3.0.0',
+	servers: [
+		{
+			url: 'https://vms.torontojs.com/',
+			description: 'Production server.'
+		},
+		{
+			url: 'http://localhost:8787/',
+			description: 'Local server for development.'
+		}
+	],
+	info: {
+		title: 'Toronto JS Community Hub API',
+		version: packageJson.version,
+		description: `
+		This is the API documentation for the [Toronto JS Community Hub](https://vms.torontojs.com/).
+
+		Please note that the recomended way of getting data from the community hub is to use the staticly generated data available on GitHub.
+		`
+	}
+});
 
 app.route('/profiles', profileRoutes);
 app.route('/teams', teamRoutes);
