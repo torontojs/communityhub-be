@@ -1,5 +1,5 @@
 const PBKDF2_ITERATIONS = 600000;
-const PBKDF2_HASH = 'SHA-256';
+const PBKDF2_HASH = 'SHA-512';
 const DERIVED_KEY_LENGTH = 512;
 
 /**
