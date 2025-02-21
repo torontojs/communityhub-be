@@ -1,8 +1,6 @@
 import { z } from 'zod';
 import { BaseDbEntitySchema, BaseDBFieldsToOmit } from '../../constants/db.ts';
 
-export type CreateProfileRequestBody = z.infer<typeof CreateProfileSchema>;
-
 export const ProfileSchema = BaseDbEntitySchema.merge(z.object({
 	email: z
 		.string()
@@ -24,12 +22,14 @@ export const ProfileSchema = BaseDbEntitySchema.merge(z.object({
 
 export type Profile = z.infer<typeof ProfileSchema>;
 
-export const CreateProfileSchema = ProfileSchema.omit(BaseDBFieldsToOmit);
+export const CreateProfileSchema = ProfileSchema.omit(BaseDBFieldsToOmit).merge(z.object({ password: z.string() }));
+
+export type CreateProfileRequestBody = z.infer<typeof CreateProfileSchema>;
 
 export type CreateProfileData = z.infer<typeof CreateProfileSchema>;
 
 export const UpdateProfileSchema = CreateProfileSchema
-	.omit({ email: true })
+	.omit({ email: true, password: true })
 	.partial()
 	.refine(
 		(data) => Object.keys(data).length === 0,

@@ -32,7 +32,7 @@ authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
 
 	// Store the hashed password and salt in the database
 	parsedBody.password = hashedPasswordWithSalt;
-	await insertProfile({ payload: parsedBody, database: context.env.database });
+	await insertProfile(context.env.database, parsedBody);
 
 	// Send email
 	sgMail.setApiKey(context.env.SENDGRID_API_KEY);

@@ -1,5 +1,5 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
-import { type Context } from 'hono';
+import type { Context } from 'hono';
 import { cors } from 'hono/cors';
 import { authRoutes } from './routes/auth/index.ts';
 import { profileRoutes } from './routes/profile/index.ts';

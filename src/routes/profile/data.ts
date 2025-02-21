@@ -1,23 +1,42 @@
 import { DBTables, generateBaseDBfields } from '../../constants/db.ts';
 import type { CreateProfileData, Profile, UpdateProfileData } from './validation.ts';
 
-export async function insertProfile(database: D1Database, body: CreateProfileData) {
-	const baseDbfields = generateBaseDBfields();
+export async function insertProfile(database: D1Database, { email, name, password, description }: CreateProfileData) {
+	const { id, schemaVersion, happenedAt, insertedAt } = generateBaseDBfields();
 
-	const { success } = await database.prepare(`
-		INSERT INTO ${DBTables.PROFILE} (
-			${Object.keys(baseDbfields).join(', ')},
-			${Object.keys(body).join(', ')}
-		)
-		VALUES (
-			${[...Object.keys(baseDbfields)].fill('?').join(', ')},
-			${[...Object.keys(body)].fill('?').join(', ')}
-		)
-	`)
-		.bind(...Object.values(baseDbfields), ...Object.values(body))
-		.run();
+	const results = await database.batch([
+		database.prepare(`
+			INSERT INTO ${DBTables.PROFILE} (
+				id, schemaVersion, happenedAt, insertedAt,
+				email, name
+				${description ? ', descrition' : ''}
+			)
+			VALUES (
+				?, ?, ?, ?,
+				?, ?
+				${description ? ', ?' : ''}
+			)
+		`).bind(
+			id,
+			schemaVersion,
+			happenedAt,
+			insertedAt,
+			email,
+			name,
+			description
+		),
+		// TODO: insert into links table
+		database.prepare(`
+			INSERT INTO ${DBTables.PASSWORD} (
+				id, schemaVersion, password
+			)
+			VALUES (
+				?, ?, ?
+			)
+		`).bind(id, schemaVersion, password)
+	]);
 
-	return { success, id: baseDbfields.id };
+	return { success: results.every(({ success }) => success), id };
 }
 
 export async function updateProfileById(database: D1Database, id: string, data: UpdateProfileData) {
