@@ -1,10 +1,17 @@
 # Top-level configuration
 name = "vms-local"
 main = "src/index.ts"
-compatibility_date = "2022-07-12"
+compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
-vars = { NODE_ENV = "development", NODE_VERSION = "22.12.0" }
+[assets]
+directory = "./public/"
+binding = "ASSETS"
+
+[vars]
+NODE_ENV = "local"
+NODE_VERSION = "22.12.0"
+BASE_URL = "http://localhost:8787"
 
 workers_dev = true
 keep_vars = true
@@ -16,12 +23,29 @@ database_id = "vms-local"
 migrations_table = "migrations"
 migrations_dir = "migrations"
 
+[[kv_namespaces]]
+binding = "SESSION_TOKENS"
+id = "cdaa5de8aaa9471697f014631d8f41a0"
+preview_id = "kv-session-token-dev"
+
+[[kv_namespaces]]
+binding = "ACTIVATION_TOKENS"
+id = "c9a8ccde35684c3fb605416bc43737ff"
+preview_id = "kv-activation-token-dev"
+
+
 [env.dev]
 name = "vms-dev"
 
-vars = { NODE_ENV = "development", NODE_VERSION = "22.12.0" }
+[env.dev.vars]
+NODE_ENV = "development"
+NODE_VERSION = "22.12.0"
+
 
 [env.production]
 name = "vms"
 
-vars = { NODE_ENV = "production", NODE_VERSION = "22.12.0" }
+[env.production.vars]
+NODE_ENV = "production"
+NODE_VERSION = "22.12.0"
+BASE_URL = "https://torontojs.com"

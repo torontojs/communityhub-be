@@ -1,5 +1,7 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
+import type { Context } from 'hono';
 import { cors } from 'hono/cors';
+import { authRoutes } from './routes/auth/index.ts';
 import { profileRoutes } from './routes/profile/index.ts';
 import { teamRoutes } from './routes/team/index.ts';
 import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
@@ -54,5 +56,9 @@ app.doc('/open-api.json', {
 
 app.route('/profiles', profileRoutes);
 app.route('/teams', teamRoutes);
+app.route('/auth', authRoutes);
+
+// Handle static assets using Cloudflare Workers
+app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.env.ASSETS.fetch(context.req.raw));
 
 export default app;

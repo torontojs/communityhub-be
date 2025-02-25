@@ -4,7 +4,8 @@ export const SCHEMA_VERSION = 1;
 
 export enum DBTables {
 	PROFILE = 'profile',
-	TEAM = 'team'
+	TEAM = 'team',
+	PASSWORD = 'passwords'
 }
 
 export const IdAndSchemaVersionSchema = z.object({
