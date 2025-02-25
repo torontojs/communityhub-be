@@ -6,14 +6,14 @@ const DERIVED_KEY_LENGTH = 512;
  * Converts a Uint8Array to a Base64 string.
  */
 function toBase64(buffer: Uint8Array): string {
-	return btoa(String.fromCharCode(...buffer));
+	return Buffer.from(buffer).toString('base64');
 }
 
 /**
  * Converts a Base64 string to a Uint8Array.
  */
 function fromBase64(str: string): Uint8Array {
-	return new Uint8Array([...atob(str)].map((char) => char.charCodeAt(0)));
+	return new Uint8Array(Buffer.from(str, 'base64'));
 }
 
 /**
