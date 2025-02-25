@@ -18,6 +18,8 @@ function fromBase64(str: string): Uint8Array {
 
 /**
  * Derives a key using PBKDF2 with the given password and salt.
+ *
+ * [deriveBits() using PBKDF2](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/deriveBits#pbkdf2)
  */
 async function deriveKey(password: string, salt: Uint8Array): Promise<Uint8Array> {
 	// Encode the password as a buffer
@@ -33,7 +35,7 @@ async function deriveKey(password: string, salt: Uint8Array): Promise<Uint8Array
 		['deriveBits']
 	);
 
-	// Derive key using PBKDF2-HMAC-SHA256
+	// Derive bits for key using PBKDF2-HMAC-SHA512
 	const derivedBits = await crypto.subtle.deriveBits(
 		{
 			name: 'PBKDF2',
