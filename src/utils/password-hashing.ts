@@ -20,6 +20,7 @@ function fromBase64(str: string): Uint8Array {
  * Derives a key using PBKDF2 with the given password and salt.
  */
 async function deriveKey(password: string, salt: Uint8Array): Promise<Uint8Array> {
+	// Encode the password as a buffer
 	const encoder = new TextEncoder();
 	const passwordBuffer = encoder.encode(password);
 
@@ -60,6 +61,30 @@ export async function hashPassword(password: string): Promise<string> {
 }
 
 /**
+ * Performs a constant-time comparison between two Uint8Array values.
+ * This prevents timing attacks by ensuring the comparison takes the same amount of time
+ * regardless of the input values.
+ */
+function isEqual(arr1: Uint8Array, arr2: Uint8Array): boolean {
+	const length = Math.max(arr1.length, arr2.length);
+	let mismatchCount = 0;
+
+	// Compare each byte
+	for (let i = 0; i < length; i++) {
+		// Use 0 if the index is out of bounds
+		const byte1 = arr1[i] ?? 0;
+		const byte2 = arr2[i] ?? 0;
+
+		// Increment mismatchCount if bytes are different
+		if (byte1 !== byte2) {
+			mismatchCount += 1;
+		}
+	}
+	// Return true if all bytes are equal (mismatchCount should be 0)
+	return mismatchCount === 0;
+}
+
+/**
  * Validates an input password against a stored hashed password.
  * Returns true if the password matches, otherwise false.
  */
@@ -76,15 +101,5 @@ export async function validatePassword(inputPassword: string, hashedPasswordWith
 	// Derive key using the input password and extracted salt
 	const derivedKey = await deriveKey(inputPassword, salt);
 
-	// Compare the derived key with the stored key byte by byte
-	if (derivedKey.length !== storedDerivedKey.length) {
-		return false;
-	}
-	for (let i = 0; i < derivedKey.length; i++) {
-		if (derivedKey[i] !== storedDerivedKey[i]) {
-			return false;
-		}
-	}
-
-	return true;
+	return isEqual(derivedKey, storedDerivedKey);
 }
