@@ -1,8 +1,7 @@
 import { type Context, type Next } from 'hono';
 import { getCookie } from 'hono/cookie';
-import { StatusCodes } from '../utils/responses.ts';
 import type { Session } from '../types/data/session.d.ts';
-
+import { StatusCodes } from '../utils/responses.ts';
 
 export const authMiddleware = async (context: Context, next: Next) => {
 	try {
