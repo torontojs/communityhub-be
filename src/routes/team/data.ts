@@ -50,8 +50,8 @@ export async function getAllTeams(database: D1Database) {
 
 export async function deleteTeamById(database: D1Database, id: string) {
 	const { success } = await database
-		.prepare(`DELETE FROM ${DBTables.TEAM} WHERE id = ?`)
-		.bind(id)
+		.prepare(`UPDATE ${DBTables.TEAM} SET deletedAt = ? WHERE id = ?`)
+		.bind(new Date().toISOString(), id)
 		.run();
 
 	return success;
