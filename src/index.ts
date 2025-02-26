@@ -1,11 +1,11 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
 import type { Context } from 'hono';
 import { cors } from 'hono/cors';
+import { authMiddleware } from './middleware/auth.ts';
 import { authRoutes } from './routes/auth/index.ts';
 import { profileRoutes } from './routes/profile/index.ts';
 import { teamRoutes } from './routes/team/index.ts';
 import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
-import { authMiddleware } from './middleware/auth.ts';
 
 import packageJson from '../package.json';
 
@@ -59,7 +59,6 @@ app.route('/auth', authRoutes);
 app.use(authMiddleware);
 app.route('/profiles', profileRoutes);
 app.route('/teams', teamRoutes);
-
 
 // Handle static assets using Cloudflare Workers
 app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.env.ASSETS.fetch(context.req.raw));
