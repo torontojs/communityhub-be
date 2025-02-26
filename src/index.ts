@@ -5,6 +5,7 @@ import { authRoutes } from './routes/auth/index.ts';
 import { profileRoutes } from './routes/profile/index.ts';
 import { teamRoutes } from './routes/team/index.ts';
 import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
+import { authMiddleware } from './middleware/auth.ts';
 
 import packageJson from '../package.json';
 
@@ -54,9 +55,11 @@ app.doc('/open-api.json', {
 	}
 });
 
+app.route('/auth', authRoutes);
+app.use(authMiddleware);
 app.route('/profiles', profileRoutes);
 app.route('/teams', teamRoutes);
-app.route('/auth', authRoutes);
+
 
 // Handle static assets using Cloudflare Workers
 app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.env.ASSETS.fetch(context.req.raw));
