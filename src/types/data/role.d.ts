@@ -12,5 +12,5 @@ export interface Role {
 export enum authorizationRole {
 	ADMIN = 'admin',
 	ORGANIZER = 'organizer',
-	VOLUNTEER = 'volunteer',
+	VOLUNTEER = 'volunteer'
 }
