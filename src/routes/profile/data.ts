@@ -8,11 +8,13 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 		database.prepare(`
 			INSERT INTO ${DBTables.PROFILE} (
 				id, schemaVersion, happenedAt, insertedAt,
-				email, name, description, pronouns, birthday, avatar
+				email, name
+				${description ? ', descrition' : ''}
 			)
 			VALUES (
 				?, ?, ?, ?,
-				?, ?, ?, ?, ?, ?
+				?, ?
+				${description ? ', ?' : ''}
 			)
 		`).bind(
 			id,
@@ -21,10 +23,7 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 			insertedAt,
 			email,
 			name,
-			description ?? '',
-			'',
-			'',
-			''
+			description
 		),
 		// TODO: insert into links table
 		database.prepare(`
