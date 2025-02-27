@@ -8,3 +8,9 @@ export interface Role {
 	happenedAt: Date;
 	insertedAt: Date;
 }
+
+export enum authorizationRole {
+	ADMIN = 'admin',
+	ORGANIZER = 'organizer',
+	VOLUNTEER = 'volunteer',
+}
