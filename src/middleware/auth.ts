@@ -1,4 +1,4 @@
-import { type Context, type Next } from 'hono';
+import type { Context, Next } from 'hono';
 import { getCookie } from 'hono/cookie';
 import type { Session } from '../types/data/session.d.ts';
 import { StatusCodes } from '../utils/responses.ts';
