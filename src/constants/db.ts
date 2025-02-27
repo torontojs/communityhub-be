@@ -33,7 +33,6 @@ export const TimestampsSchema = InsertionTimestampsSchema.merge(DeletionTimestam
 
 export type Timestamps = z.infer<typeof TimestampsSchema>;
 
-
 export const BaseDbEntitySchema = IdAndSchemaVersionSchema.merge(TimestampsSchema);
 
 export type BaseDBEntity = z.infer<typeof BaseDbEntitySchema>;
