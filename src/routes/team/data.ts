@@ -1,23 +1,25 @@
 import { DBTables, generateBaseDBfields } from '../../constants/db.ts';
 import type { CreateTeamData, Team, UpdateTeamData } from './validation.ts';
 
-export async function insertTeam(database: D1Database, data: CreateTeamData) {
-	const baseDbfields = generateBaseDBfields();
+export async function insertTeam(database: D1Database, { name, description }: CreateTeamData) {
+	const { id, schemaVersion, happenedAt, insertedAt } = generateBaseDBfields();
 
 	const { success } = await database.prepare(`
 		INSERT INTO ${DBTables.TEAM} (
-			${Object.keys(baseDbfields).join(', ')},
-			${Object.keys(data).join(', ')}
+			id, schemaVersion, happenedAt, insertedAt,
+			name
+			${description ? ', descrition' : ''}
 		)
 		VALUES (
-			${[...Object.keys(baseDbfields)].fill('?').join(', ')},
-			${[...Object.keys(data)].fill('?').join(', ')}
+			?, ?, ?, ?,
+			?
+			${description ? ', ?' : ''}
 		)
 	`)
-		.bind(...Object.values(baseDbfields), ...Object.values(data))
+		.bind(id, schemaVersion, happenedAt, insertedAt, name, description)
 		.run();
 
-	return { success, id: baseDbfields.id };
+	return { success, id };
 }
 
 export async function updateTeamById(database: D1Database, id: string, data: UpdateTeamData) {
