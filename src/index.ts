@@ -65,8 +65,8 @@ app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.en
 app.use(authMiddleware);
 app.route('/api')
 	// Volunteer routes(everyone can access)
-	.get('/profile', authorizationVolunteer, (c) => profileRoutes.fetch(c.req.raw))
-	.get('/profile/:id', authorizationVolunteer, (c) => profileRoutes.fetch(c.req.raw))
+	.get('/profile', authorizationVolunteer, async (c) => profileRoutes.fetch(c.req.raw))
+	.get('/profile/:id', authorizationVolunteer, async (c) => profileRoutes.fetch(c.req.raw))
 	.patch('/profile/:id', authorizationVolunteer, async (c: Context) => {
 		const session = c.get('session') as Session;
 		const requestedId = c.req.param('id');
@@ -78,8 +78,8 @@ app.route('/api')
 
 		return profileRoutes.fetch(c.req.raw);
 	})
-	.get('/team', authorizationVolunteer, (c) => teamRoutes.fetch(c.req.raw))
-	.get('/team/:id', authorizationVolunteer, (c) => teamRoutes.fetch(c.req.raw));
+	.get('/team', authorizationVolunteer, async (c) => teamRoutes.fetch(c.req.raw))
+	.get('/team/:id', authorizationVolunteer, async (c) => teamRoutes.fetch(c.req.raw));
 
 // Routes for testing will be removed before deployment
 app.route('/profiles', profileRoutes);

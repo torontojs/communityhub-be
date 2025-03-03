@@ -33,7 +33,15 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 			VALUES (
 				?, ?, ?
 			)
-		`).bind(id, schemaVersion, password)
+		`).bind(id, schemaVersion, password),
+		database.prepare(`
+			INSERT INTO ${DBTables.ACCESS} (
+				id, access
+			)
+			VALUES (
+				?, ?
+			)
+		`).bind(id, 'volunteer')
 	]);
 
 	return { success: results.every(({ success }) => success), id };
