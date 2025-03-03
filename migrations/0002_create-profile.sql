@@ -71,24 +71,26 @@ CREATE TABLE IF NOT EXISTS passwords (
 	-- The person's account password
 	-- This should be propperly hashed and salted!
 	password TEXT NOT NULL,
+	-- The date this person has joined Toronto JS, saved as an ISO timestamp
 
 	FOREIGN KEY (id) REFERENCES profile(id)
 );
 
--- Migration number: 0005 	 2025-01-30T00:58:45.123Z
-
 DROP TABLE IF EXISTS access;
 
--- Store authentication and authorization data separately from profiles
 CREATE TABLE IF NOT EXISTS access (
-	-- The UUID of the profile this access belongs to
+	-- The UUID of the profile this link belongs to
 	id TEXT NOT NULL UNIQUE COLLATE BINARY,
 	-- Schema version to use
+	-- Here it is useful if we update the password encryption algorithm in the future
 	schemaVersion INTEGER NOT NULL DEFAULT 1,
-	-- The person's access level in the system
-	-- This determines what actions they can perform
-	access TEXT NOT NULL CHECK(access IN ('admin', 'organizer', 'volunteer')),
-	-- The date this access was added to the database
+	-- The person's account password
+	-- This should be propperly hashed and salted!
+	access TEXT NOT NULL,
+	-- The date this profile access was added saved as an ISO timestamp
+	happenedAt DATETIME NOT NULL,
+	-- The date this profile access as changed last, saved as an ISO timestamp
+	insertedAt DATETIME NOT NULL,
 	FOREIGN KEY (id) REFERENCES profile(id)
 );
 

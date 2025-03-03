@@ -28,16 +28,16 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 		// TODO: insert into links table
 		database.prepare(`
 			INSERT INTO ${DBTables.PASSWORD} (
-				id, schemaVersion, happenedAt, insertedAt, password
+				id, schemaVersion, password
 			)
 			VALUES (
-				?, ?, ?, ?,
-				?
+				?, ?, ?
+
 			)
 		`).bind(id, schemaVersion, happenedAt, insertedAt, password),
 		database.prepare(`
 			INSERT INTO ${DBTables.ACCESS} (
-				id, schemaVersion, happenedAt, insertedAt, access
+				id, schemaVersion, access, happenedAt, insertedAt
 			)
 			VALUES (
 				?, ?, ?, ?,
