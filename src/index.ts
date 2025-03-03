@@ -1,13 +1,14 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
 import type { Context } from 'hono';
 import { cors } from 'hono/cors';
+import packageJson from '../package.json';
 import { authMiddleware } from './middleware/auth.ts';
+import { authorizationVolunteer } from './middleware/createMiddleware.ts';
 import { authRoutes } from './routes/auth/index.ts';
 import { profileRoutes } from './routes/profile/index.ts';
 import { teamRoutes } from './routes/team/index.ts';
+import type { Session } from './types/data/session.d.ts';
 import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
-
-import packageJson from '../package.json';
 
 const app = new OpenAPIHono<EnvironmentBindings>({
 	defaultHook: statusResponseFormatter
@@ -55,12 +56,33 @@ app.doc('/open-api.json', {
 	}
 });
 
+// Public routes
 app.route('/auth', authRoutes);
-app.use(authMiddleware);
-app.route('/profiles', profileRoutes);
-app.route('/teams', teamRoutes);
-
 // Handle static assets using Cloudflare Workers
 app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.env.ASSETS.fetch(context.req.raw));
+
+// Protected routes - note hierarchy of access
+app.use(authMiddleware);
+app.route('/api')
+	// Volunteer routes(everyone can access)
+	.get('/profile', authorizationVolunteer, (c) => profileRoutes.fetch(c.req.raw))
+	.get('/profile/:id', authorizationVolunteer, (c) => profileRoutes.fetch(c.req.raw))
+	.patch('/profile/:id', authorizationVolunteer, async (c: Context) => {
+		const session = c.get('session') as Session;
+		const requestedId = c.req.param('id');
+
+		// Check if the requested ID matches the session ID
+		if (requestedId !== session.id) {
+			return c.json({ message: 'Forbidden: Can only update own profile' }, StatusCodes.FORBIDDEN);
+		}
+
+		return profileRoutes.fetch(c.req.raw);
+	})
+	.get('/team', authorizationVolunteer, (c) => teamRoutes.fetch(c.req.raw))
+	.get('/team/:id', authorizationVolunteer, (c) => teamRoutes.fetch(c.req.raw));
+
+// Routes for testing will be removed before deployment
+app.route('/profiles', profileRoutes);
+app.route('/teams', teamRoutes);
 
 export default app;

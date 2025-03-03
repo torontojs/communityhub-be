@@ -1,6 +1,6 @@
 import type { Context, Next } from 'hono';
-// import type { AuthMiddleware } from '../types/data/authMiddleware.d.ts';
-// import type { Role } from '../types/data/role.d.ts';
+// Import type { AuthMiddleware } from '../types/data/authMiddleware.d.ts';
+// Import type { Role } from '../types/data/role.d.ts';
 import { getCookie } from 'hono/cookie';
 import type { Session } from '../types/data/session.d.ts';
 import { StatusCodes } from '../utils/responses.ts';
@@ -30,16 +30,3 @@ export const authMiddleware = async (context: Context, next: Next) => {
 		return context.json({ message: 'Invalid token' }, StatusCodes.INTERNAL_SERVER_ERROR);
 	}
 };
-
-// export const createRoleMiddleware = ( requiredRole: Role): AuthMiddleware => {
-// 	return async (context , next) => {
-// 		const session = context.get('session') as Session | undefined;
-// 		if (!session) {
-// 			return context.json({ message: 'Unauthorized' }, StatusCodes.UNAUTHORIZED);
-// 		}
-// 		if (session.role !== requiredRole) {
-// 			return context.json({ message: 'Forbidden' }, StatusCodes.FORBIDDEN);
-// 		}
-// 		return next();
-// 	}
-// }

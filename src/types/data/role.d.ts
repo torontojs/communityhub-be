@@ -9,7 +9,7 @@ export interface Role {
 	insertedAt: Date;
 }
 
-export enum authorizationRole {
+export enum AuthorizationRole {
 	ADMIN = 'admin',
 	ORGANIZER = 'organizer',
 	VOLUNTEER = 'volunteer'

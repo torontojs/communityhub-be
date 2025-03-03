@@ -1,5 +1,8 @@
+import type { AuthorizationRole } from './role';
+
 export interface Session {
+	id: string;
 	email: string;
-	role: Role;
+	role: AuthorizationRole;
 	expiry: string;
 }

@@ -5,7 +5,7 @@ import { hashPassword, validatePassword } from '../../utils/password-hashing.ts'
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
-import { activateProfile, checkEmail, getPassword } from './data.ts';
+import { activateProfile, checkEmail, getId, getPassword } from './data.ts';
 import { type SignInData, SignInSchema } from './validate.ts';
 
 export const authRoutes = new Hono();
@@ -98,8 +98,14 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 	}
 
 	const hashedPasswordWithSalt = await getPassword(context.env.database, parsedBody);
+	const profileId = await getId(context.env.database, parsedBody);
+
 	if (!hashedPasswordWithSalt) {
 		return context.json<StatusResponse>({ message: 'Invalid email or password' }, StatusCodes.UNAUTHORIZED);
+	}
+
+	if (!profileId) {
+		return context.json<StatusResponse>({ message: 'Invalid id' }, StatusCodes.UNAUTHORIZED);
 	}
 
 	const isValid = await validatePassword(parsedBody.password, hashedPasswordWithSalt);
@@ -111,6 +117,7 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 	const hoursAhead = 1;
 	const tokenExpiryISO = new Date(Date.now() + hoursAhead * 60 * 60 * 1000).toISOString();
 	const sessionData = JSON.stringify({
+		id: profileId,
 		expiry: tokenExpiryISO,
 		email: parsedBody.email
 	});
