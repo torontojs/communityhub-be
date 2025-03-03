@@ -36,7 +36,7 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 		`).bind(id, schemaVersion, password),
 		database.prepare(`
 			INSERT INTO ${DBTables.ACCESS} (
-				id, access
+				id,access
 			)
 			VALUES (
 				?, ?
