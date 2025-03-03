@@ -28,20 +28,22 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 		// TODO: insert into links table
 		database.prepare(`
 			INSERT INTO ${DBTables.PASSWORD} (
-				id, schemaVersion, password
+				id, schemaVersion, happenedAt, insertedAt, password
 			)
 			VALUES (
-				?, ?, ?
+				?, ?, ?, ?,
+				?
 			)
-		`).bind(id, schemaVersion, password),
+		`).bind(id, schemaVersion, happenedAt, insertedAt, password),
 		database.prepare(`
 			INSERT INTO ${DBTables.ACCESS} (
-				id,access
+				id, schemaVersion, happenedAt, insertedAt, access
 			)
 			VALUES (
-				?, ?
+				?, ?, ?, ?,
+				?
 			)
-		`).bind(id, 'volunteer')
+		`).bind(id, schemaVersion, happenedAt, insertedAt, 'volunteer')
 	]);
 
 	return { success: results.every(({ success }) => success), id };
