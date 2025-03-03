@@ -4,5 +4,5 @@ export interface Session {
 	id: string;
 	email: string;
 	role: AuthorizationRole;
-	expiry: string;
+	expiry: ISODate;
 }
