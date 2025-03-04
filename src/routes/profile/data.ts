@@ -9,7 +9,7 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 			INSERT INTO ${DBTables.PROFILE} (
 				id, schemaVersion, happenedAt, insertedAt,
 				email, name
-				${description ? ', descrition' : ''}
+				${description ? ', description' : ''}
 			)
 			VALUES (
 				?, ?, ?, ?,
@@ -32,12 +32,11 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 			)
 			VALUES (
 				?, ?, ?
-
 			)
-		`).bind(id, schemaVersion, happenedAt, insertedAt, password),
+		`).bind(id, schemaVersion, password),
 		database.prepare(`
 			INSERT INTO ${DBTables.ACCESS} (
-				id, schemaVersion, access, happenedAt, insertedAt
+				id, schemaVersion, happenedAt, insertedAt, access
 			)
 			VALUES (
 				?, ?, ?, ?,
