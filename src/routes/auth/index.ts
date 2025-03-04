@@ -98,12 +98,11 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 	}
 
 	const hashedPasswordWithSalt = await getPassword(context.env.database, parsedBody);
-	const profileId = await getId(context.env.database, parsedBody);
-
 	if (!hashedPasswordWithSalt) {
 		return context.json<StatusResponse>({ message: 'Invalid email or password' }, StatusCodes.UNAUTHORIZED);
 	}
 
+	const profileId = await getId(context.env.database, parsedBody);
 	if (!profileId) {
 		return context.json<StatusResponse>({ message: 'Invalid id' }, StatusCodes.UNAUTHORIZED);
 	}
