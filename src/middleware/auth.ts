@@ -6,7 +6,6 @@ import type { Session } from '../types/data/session.d.ts';
 import { StatusCodes } from '../utils/responses.ts';
 
 export const authMiddleware = async (context: Context, next: Next) => {
-	try {
 		// Get token from cookie
 		const sessionToken: string | undefined = getCookie(context, 'auth_token');
 
@@ -25,8 +24,5 @@ export const authMiddleware = async (context: Context, next: Next) => {
 		}
 
 		context.set('session', sessionData);
-		return next();
-	} catch (error) {
-		return context.json({ message: 'Invalid token' }, StatusCodes.INTERNAL_SERVER_ERROR);
-	}
+		return next()
 };
