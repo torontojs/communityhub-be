@@ -63,8 +63,9 @@ app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.en
 
 // Protected routes - note hierarchy of access
 app.use(authMiddleware);
-app.route('/api')
-	// Volunteer routes(everyone can access)
+
+// Volunteer routes(everyone can access)
+app
 	.get('/profile', authorizationVolunteer, async (c) => profileRoutes.fetch(c.req.raw))
 	.get('/profile/:id', authorizationVolunteer, async (c) => profileRoutes.fetch(c.req.raw))
 	.patch('/profile/:id', authorizationVolunteer, async (c: Context) => {
