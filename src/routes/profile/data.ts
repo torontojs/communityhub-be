@@ -42,7 +42,27 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 				?, ?, ?, ?,
 				?
 			)
-		`).bind(id, schemaVersion, happenedAt, insertedAt, 'volunteer')
+		`).bind(id, schemaVersion, happenedAt, insertedAt, 'volunteer'),
+		database.prepare(`
+			INSERT INTO ${DBTables.ROLE} (
+				id, schemaVersion, happenedAt, insertedAt,
+				role, description, teamId, profileId
+			)
+			VALUES (
+				?, ?, ?, ?,
+				?, ?, ?, ?
+			)
+		`).bind(
+			id,
+			schemaVersion,
+			happenedAt,
+			insertedAt,
+			'volunteer',
+			'',
+			'',
+			id
+		)
+		// TODO : set TorontoJS team id 👆
 	]);
 
 	return { success: results.every(({ success }) => success), id };
