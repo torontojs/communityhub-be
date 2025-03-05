@@ -5,7 +5,7 @@ import packageJson from '../package.json';
 import { authMiddleware } from './middleware/auth.ts';
 import { authorizationVolunteer } from './middleware/createMiddleware.ts';
 import { authRoutes } from './routes/auth/index.ts';
-import { profileRoutes } from './routes/profile/index.ts';
+import { publicProfileRoutes, protectedProfileRoutes } from './routes/profile/index.ts';
 import { teamRoutes } from './routes/team/index.ts';
 import type { Session } from './types/data/session.d.ts';
 import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
@@ -61,24 +61,12 @@ app.route('/auth', authRoutes);
 // Handle static assets using Cloudflare Workers
 app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.env.ASSETS.fetch(context.req.raw));
 
-//  Public/private access
-app.route('/profiles')
-	.get('/', async (c) => profileRoutes.fetch(c.req.raw))
-	.get('/:id', async (c) => profileRoutes.fetch(c.req.raw))
-	.use('/*', authMiddleware)
-	.patch('/:id', authorizationVolunteer, async (c: Context) => {
-		const session = c.get('session') as Session;
-		const requestedId = c.req.param('id');
+// Public routes
+app.route('/profiles', publicProfileRoutes);
 
-		if (requestedId !== session.id) {
-			return c.json({ message: 'Forbidden: Can only update own profile' }, StatusCodes.FORBIDDEN);
-		}
+// Protected routes (after auth middleware)
+app.use('/*', authMiddleware);
+app.route('/api/profiles', protectedProfileRoutes);
 
-		return profileRoutes.fetch(c.req.raw);
-	});
-
-app.route('/teams')
-	.get('/', async (c) => teamRoutes.fetch(c.req.raw))
-	.get('/:id', async (c) => teamRoutes.fetch(c.req.raw));
 
 export default app;

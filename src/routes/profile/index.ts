@@ -15,11 +15,93 @@ import { IdParamSchema, validateExistingId } from '../../utils/validation.ts';
 import { deleteProfileById, getAllProfiles, getProfileById, insertProfile, updateProfileById, validateExistingEmail } from './data.ts';
 import { CreateProfileSchema, ProfileSchema, UpdateProfileSchema } from './validation.ts';
 
-export const profileRoutes = new OpenAPIHono<EnvironmentBindings>({
+// Public routes (GET only)
+export const publicProfileRoutes = new OpenAPIHono<EnvironmentBindings>({
 	defaultHook: statusResponseFormatter
 });
 
-profileRoutes.openapi(
+// GET all profiles
+publicProfileRoutes.openapi(
+	createRoute({
+		method: 'get',
+		path: '/',
+		operationId: 'getProfiles',
+		summary: 'Get profiles',
+		description: 'Retrieves a list of profiles',
+		tags: ['Profile'],
+		responses: {
+			[StatusCodes.OKAY]: {
+				description: 'Successful response',
+				content: { 'application/json': { schema: generatePaginatedResponseSchema(z.array(ProfileSchema)) } }
+			}
+		}
+	}),
+	async (context) => {
+		const profiles = await getAllProfiles(context.env.database);
+
+		return context.json(
+			{
+				data: profiles,
+				start: 0,
+				end: profiles.length - 1,
+				total: profiles.length,
+				size: profiles.length,
+				currentPage: 1,
+				lastPage: 1,
+				_links: {
+					self: { href: context.req.url },
+					first: { href: context.req.url },
+					last: { href: context.req.url }
+				}
+			} satisfies PaginatedResponse<typeof profiles>,
+			StatusCodes.OKAY
+		);
+	}
+);
+
+// GET profile by ID
+publicProfileRoutes.openapi(
+	createRoute({
+		method: 'get',
+		path: '/{id}',
+		operationId: 'getProfile',
+		summary: 'Get profile by ID',
+		description: "Retrieves a single profile based on it's id.",
+		tags: ['Profile'],
+		request: {
+			params: IdParamSchema
+		},
+		responses: {
+			[StatusCodes.OKAY]: {
+				description: 'Successful response',
+				content: { 'application/json': { schema: generateDataResponeSchema(ProfileSchema) } }
+			},
+			[StatusCodes.NOT_FOUND]: {
+				description: 'Error response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			}
+		}
+	}),
+	async (context) => {
+		const { id } = context.req.valid('param');
+
+		const profile = await getProfileById(context.env.database, id);
+
+		if (!profile) {
+			return context.json({ message: 'Profile not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
+		}
+
+		return context.json({ data: profile, _links: { self: { href: context.req.url } } } satisfies DataResponse<typeof profile>, StatusCodes.OKAY);
+	}
+);
+
+// Protected routes (POST, PATCH, DELETE)
+export const protectedProfileRoutes = new OpenAPIHono<EnvironmentBindings>({
+	defaultHook: statusResponseFormatter
+});
+
+// POST new profile
+protectedProfileRoutes.openapi(
 	createRoute({
 		method: 'post',
 		path: '/',
@@ -64,7 +146,8 @@ profileRoutes.openapi(
 	}
 );
 
-profileRoutes.openapi(
+// PATCH profile
+protectedProfileRoutes.openapi(
 	createRoute({
 		method: 'patch',
 		path: '/{id}',
@@ -111,81 +194,8 @@ profileRoutes.openapi(
 	}
 );
 
-profileRoutes.openapi(
-	createRoute({
-		method: 'get',
-		path: '/{id}',
-		operationId: 'getProfile',
-		summary: 'Get profile by ID',
-		description: "Retrieves a single profile based on it's id.",
-		tags: ['Profile'],
-		request: {
-			params: IdParamSchema
-		},
-		responses: {
-			[StatusCodes.OKAY]: {
-				description: 'Successful response',
-				content: { 'application/json': { schema: generateDataResponeSchema(ProfileSchema) } }
-			},
-			[StatusCodes.NOT_FOUND]: {
-				description: 'Error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			}
-		}
-	}),
-	async (context) => {
-		const { id } = context.req.valid('param');
-
-		const profile = await getProfileById(context.env.database, id);
-
-		if (!profile) {
-			return context.json({ message: 'Profile not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
-		}
-
-		return context.json({ data: profile, _links: { self: { href: context.req.url } } } satisfies DataResponse<typeof profile>, StatusCodes.OKAY);
-	}
-);
-
-profileRoutes.openapi(
-	createRoute({
-		method: 'get',
-		path: '/',
-		operationId: 'getProfiles',
-		summary: 'Get profiles',
-		description: 'Retrieves a list of profiles',
-		tags: ['Profile'],
-		responses: {
-			[StatusCodes.OKAY]: {
-				description: 'Successful response',
-				content: { 'application/json': { schema: generatePaginatedResponseSchema(z.array(ProfileSchema)) } }
-			}
-		}
-	}),
-	async (context) => {
-		const profiles = await getAllProfiles(context.env.database);
-
-		return context.json(
-			// TODO: implement proper pagination
-			{
-				data: profiles,
-				start: 0,
-				end: profiles.length - 1,
-				total: profiles.length,
-				size: profiles.length,
-				currentPage: 1,
-				lastPage: 1,
-				_links: {
-					self: { href: context.req.url },
-					first: { href: context.req.url },
-					last: { href: context.req.url }
-				}
-			} satisfies PaginatedResponse<typeof profiles>,
-			StatusCodes.OKAY
-		);
-	}
-);
-
-profileRoutes.openapi(
+// DELETE profile
+protectedProfileRoutes.openapi(
 	createRoute({
 		method: 'delete',
 		path: '/{id}',
