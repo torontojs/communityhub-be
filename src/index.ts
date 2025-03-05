@@ -61,29 +61,24 @@ app.route('/auth', authRoutes);
 // Handle static assets using Cloudflare Workers
 app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.env.ASSETS.fetch(context.req.raw));
 
-// Protected routes - note hierarchy of access
-app.use(authMiddleware);
-
-// Volunteer routes(everyone can access)
-app
-	.get('/profile', authorizationVolunteer, async (c) => profileRoutes.fetch(c.req.raw))
-	.get('/profile/:id', authorizationVolunteer, async (c) => profileRoutes.fetch(c.req.raw))
-	.patch('/profile/:id', authorizationVolunteer, async (c: Context) => {
+//  Public/private access
+app.route('/profiles')
+	.get('/', async (c) => profileRoutes.fetch(c.req.raw))
+	.get('/:id', async (c) => profileRoutes.fetch(c.req.raw))
+	.use('/*', authMiddleware)
+	.patch('/:id', authorizationVolunteer, async (c: Context) => {
 		const session = c.get('session') as Session;
 		const requestedId = c.req.param('id');
 
-		// Check if the requested ID matches the session ID
 		if (requestedId !== session.id) {
 			return c.json({ message: 'Forbidden: Can only update own profile' }, StatusCodes.FORBIDDEN);
 		}
 
 		return profileRoutes.fetch(c.req.raw);
-	})
-	.get('/team', authorizationVolunteer, async (c) => teamRoutes.fetch(c.req.raw))
-	.get('/team/:id', authorizationVolunteer, async (c) => teamRoutes.fetch(c.req.raw));
+	});
 
-// Routes for testing will be removed before deployment
-app.route('/profiles', profileRoutes);
-app.route('/teams', teamRoutes);
+app.route('/teams')
+	.get('/', async (c) => teamRoutes.fetch(c.req.raw))
+	.get('/:id', async (c) => teamRoutes.fetch(c.req.raw));
 
 export default app;
