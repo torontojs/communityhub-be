@@ -27,13 +27,13 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 		),
 		// TODO: insert into links table
 		database.prepare(`
-			INSERT INTO ${DBTables.PASSWORD} (
-				id, schemaVersion, password
+			INSERT INTO ${DBTables.ACCESS} (
+				id, schemaVersion, access, password
 			)
 			VALUES (
 				?, ?, ?
 			)
-		`).bind(id, schemaVersion, password),
+		`).bind(id, schemaVersion, 'volunteer', password),
 		database.prepare(`
 			INSERT INTO ${DBTables.ACCESS} (
 				id, schemaVersion, happenedAt, insertedAt, access

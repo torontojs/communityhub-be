@@ -4,12 +4,14 @@ import type { Profile, SignInData } from './validate.ts';
 export async function getPassword(database: D1Database, body: SignInData): Promise<string> {
 	const { results } = await database
 		.prepare(`
-			SELECT pw.password
-			FROM ${DBTables.PROFILE} pf
-			JOIN ${DBTables.PASSWORD} pw ON pf.id = pw.id
-			WHERE pf.email = ? AND pf.activatedAt IS NOT NULL
-			LIMIT 1
-		`)
+            SELECT password
+            FROM ${DBTables.ACCESS}
+            WHERE id IN (
+                SELECT id
+                FROM ${DBTables.PROFILE}
+                WHERE email = ? AND activatedAt IS NOT NULL
+            )
+        `)
 		.bind(body.email)
 		.run<Profile>();
 

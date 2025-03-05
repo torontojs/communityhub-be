@@ -6,7 +6,6 @@ export enum DBTables {
 	PROFILE = 'profile',
 	TEAM = 'team',
 	ROLE = 'role',
-	PASSWORD = 'passwords',
 	ACCESS = 'access'
 }
 
