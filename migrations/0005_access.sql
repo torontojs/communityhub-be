@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS access (
 	-- The person's access level in the system
 	-- This determines what actions they can perform
 	access TEXT NOT NULL CHECK(access IN ('admin', 'organizer', 'volunteer')),
-
+	-- The person's account password
 	password TEXT NOT NULL,
 
 	PRIMARY KEY (id),
