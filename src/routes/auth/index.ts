@@ -5,7 +5,7 @@ import { hashPassword, validatePassword } from '../../utils/password-hashing.ts'
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
-import { activateProfile, checkEmail, getId, getPassword } from './data.ts';
+import { activateProfile, checkEmail, getProfileId, getPassword } from './data.ts';
 import { type SignInData, SignInSchema } from './validate.ts';
 
 export const authRoutes = new Hono();
@@ -102,7 +102,7 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 		return context.json<StatusResponse>({ message: 'Invalid email or password' }, StatusCodes.UNAUTHORIZED);
 	}
 
-	const profileId = await getId(context.env.database, parsedBody);
+	const profileId = await getProfileId(context.env.database, parsedBody);
 	if (!profileId) {
 		return context.json<StatusResponse>({ message: 'Invalid id' }, StatusCodes.UNAUTHORIZED);
 	}

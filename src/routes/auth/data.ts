@@ -24,7 +24,7 @@ export async function getPassword(database: D1Database, body: SignInData): Promi
 	return password;
 }
 
-export async function getId(database: D1Database, body: SignInData): Promise<string> {
+export async function getProfileId(database: D1Database, body: SignInData): Promise<string> {
 	const { results } = await database
 		.prepare(`SELECT id FROM ${DBTables.PROFILE} WHERE email = ? AND activatedAt IS NOT NULL LIMIT 1`)
 		.bind(body.email)
