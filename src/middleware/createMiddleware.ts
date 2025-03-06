@@ -8,6 +8,12 @@ const AccessHierachy = {
 	volunteer: ['admin', 'organizer', 'volunteer']
 };
 
+enum AuthorizationRole {
+    ADMIN = 'admin',
+    ORGANIZER = 'organizer',
+    VOLUNTEER = 'volunteer'
+}
+
 export const createAccessMiddlware = (minimumAcess: 'admin' | 'organizer' | 'volunteer') => async (context: Context, next: Next) => {
 	const session = context.get('session') as Session | undefined;
 
@@ -28,8 +34,9 @@ export const authorizationVolunteer = createAccessMiddlware('volunteer');
 export const canModifyOwnProfile = async (context: Context, next: Next) => {
 	const session = context.get('session') as Session;
 	const targetId = context.req.param('id');
+
 	// If admin or organizer, allow
-	if (session.role === 'admin' || session.role === 'organizer') {
+	if (session.role === AuthorizationRole.ADMIN || session.role === AuthorizationRole.ORGANIZER) {
 		return next();
 	}
 
