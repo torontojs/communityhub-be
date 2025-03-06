@@ -5,7 +5,7 @@ import packageJson from '../package.json';
 import { authMiddleware } from './middleware/auth.ts';
 import { authorizationVolunteer } from './middleware/createMiddleware.ts';
 import { authRoutes } from './routes/auth/index.ts';
-import { publicProfileRoutes, protectedProfileRoutes } from './routes/profile/index.ts';
+import { protectedProfileRoutes, publicProfileRoutes } from './routes/profile/index.ts';
 import { teamRoutes } from './routes/team/index.ts';
 import type { Session } from './types/data/session.d.ts';
 import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
@@ -67,6 +67,5 @@ app.route('/profiles', publicProfileRoutes);
 // Protected routes (after auth middleware)
 app.use('/*', authMiddleware);
 app.route('/api/profiles', protectedProfileRoutes);
-
 
 export default app;
