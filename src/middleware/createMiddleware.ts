@@ -1,5 +1,6 @@
 import type { Context, Next } from 'hono';
 import type { Session } from '../types/data/session.d.ts';
+import { AuthorizationRole } from '../types/data/role';
 import { StatusCodes } from '../utils/responses.ts';
 
 const AccessHierachy = {
@@ -7,12 +8,6 @@ const AccessHierachy = {
 	organizer: ['admin', 'organizer'],
 	volunteer: ['admin', 'organizer', 'volunteer']
 };
-
-enum AuthorizationRole {
-    ADMIN = 'admin',
-    ORGANIZER = 'organizer',
-    VOLUNTEER = 'volunteer'
-}
 
 export const createAccessMiddlware = (minimumAcess: 'admin' | 'organizer' | 'volunteer') => async (context: Context, next: Next) => {
 	const session = context.get('session') as Session | undefined;
