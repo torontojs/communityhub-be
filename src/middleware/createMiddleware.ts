@@ -21,6 +21,22 @@ export const createAccessMiddlware = (minimumAcess: 'admin' | 'organizer' | 'vol
 	return next();
 };
 
-export const authorizationAdmine = createAccessMiddlware('admin');
+export const authorizationAdmin = createAccessMiddlware('admin');
 export const authorizationOrganizer = createAccessMiddlware('organizer');
 export const authorizationVolunteer = createAccessMiddlware('volunteer');
+
+export const canModifyOwnProfile = async (context: Context, next: Next) => {
+	const session = context.get('session') as Session;
+	const targetId = context.req.param('id');
+	// If admin or organizer, allow
+	if (session.role === 'admin' || session.role === 'organizer') {
+		return next();
+	}
+
+	// For volunteers, only allow if it's their own profile
+	if (session.id !== targetId) {
+		return context.json({ message: 'Can only modify own profile' }, StatusCodes.FORBIDDEN);
+	}
+
+	return next();
+};

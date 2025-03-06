@@ -4,6 +4,7 @@ import type { Context, Next } from 'hono';
 import { getCookie } from 'hono/cookie';
 import type { Session } from '../types/data/session.d.ts';
 import { StatusCodes } from '../utils/responses.ts';
+import { createAccessMiddlware } from './createMiddleware';
 
 export const authMiddleware = async (context: Context, next: Next) => {
 		// Get token from cookie
@@ -24,5 +25,8 @@ export const authMiddleware = async (context: Context, next: Next) => {
 		}
 
 		context.set('session', sessionData);
-		return next()
+
+		// Create and apply access middleware based on user's access level
+		const accessMiddleware = createAccessMiddlware(sessionData.role);
+		return accessMiddleware(context, next);
 };
