@@ -66,5 +66,5 @@ export async function checkActivation(database: D1Database, email: string) {
 		.bind(email)
 		.run<{ activatedAt: string | null }>();
 
-	return results.length > 0 && results[0]?.['activatedAt'] !== null;
+	return results.length > 0 && results[0]?.activatedAt !== null;
 }

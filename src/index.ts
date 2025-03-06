@@ -66,6 +66,6 @@ app.route('/profiles', publicProfileRoutes);
 
 // Protected routes (after auth middleware)
 app.use('/*', authMiddleware);
-app.route('/api/profiles', protectedProfileRoutes);
+app.route('/profiles', protectedProfileRoutes);
 
 export default app;
