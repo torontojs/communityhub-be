@@ -48,7 +48,6 @@ export async function checkEmail(database: D1Database, email: string) {
 	return Boolean(results.length);
 }
 
-
 export async function activateProfile(database: D1Database, email: string) {
 	const now = new Date().toISOString();
 	const results = await database.batch([
