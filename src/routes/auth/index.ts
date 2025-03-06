@@ -76,7 +76,10 @@ authRoutes.get('/activate', async (context: Context<EnvironmentBindings>) => {
 		return context.json({ message: 'User not found' }, StatusCodes.NOT_FOUND);
 	}
 
-	await activateProfile(context.env.database, email);
+	const activated = await activateProfile(context.env.database, email);
+	if (!activated) {
+		return context.json({ message: 'Failed to activate account' }, StatusCodes.INTERNAL_SERVER_ERROR);
+	}
 
 	// Remove token after successful activation
 	await context.env.ACTIVATION_TOKENS.delete(token);

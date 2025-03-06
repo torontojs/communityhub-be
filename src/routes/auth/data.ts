@@ -48,12 +48,15 @@ export async function checkEmail(database: D1Database, email: string) {
 	return Boolean(results.length);
 }
 
+
 export async function activateProfile(database: D1Database, email: string) {
 	const now = new Date().toISOString();
-	const { success } = await database
-		.prepare(`UPDATE ${DBTables.PROFILE} SET activatedAt = ? WHERE email = ?`)
+	const results = await database.batch([
+		database.prepare(`UPDATE ${DBTables.PROFILE} SET activatedAt = ? WHERE email = ?`)
+		.bind(now, email),
+		database.prepare(`UPDATE ${DBTables.ACCESS} SET activatedAt = ? WHERE email = ?`)
 		.bind(now, email)
-		.run();
+	]);
 
-	return success;
+	return results.every((result) => result.success);
 }
