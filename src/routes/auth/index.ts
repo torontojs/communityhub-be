@@ -5,7 +5,7 @@ import { hashPassword, validatePassword } from '../../utils/password-hashing.ts'
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
-import { activateProfile, checkEmail, getPassword, getProfileId } from './data.ts';
+import { activateProfile, checkEmail, getPassword, getProfileId, checkActivation } from './data.ts';
 import { type SignInData, SignInSchema } from './validate.ts';
 
 export const authRoutes = new Hono();
@@ -108,6 +108,12 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 	const profileId = await getProfileId(context.env.database, parsedBody);
 	if (!profileId) {
 		return context.json<StatusResponse>({ message: 'Invalid id' }, StatusCodes.UNAUTHORIZED);
+	}
+
+	// Check if account is activated
+	const isActivated = await checkActivation(context.env.database, parsedBody.email);
+	if (!isActivated) {
+		return context.json<StatusResponse>({ message: 'Account not activated. Please check your email.' }, StatusCodes.UNAUTHORIZED);
 	}
 
 	const isValid = await validatePassword(parsedBody.password, hashedPasswordWithSalt);

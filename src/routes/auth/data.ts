@@ -52,10 +52,19 @@ export async function activateProfile(database: D1Database, email: string) {
 	const now = new Date().toISOString();
 	const results = await database.batch([
 		database.prepare(`UPDATE ${DBTables.PROFILE} SET activatedAt = ? WHERE email = ?`)
-		.bind(now, email),
+			.bind(now, email),
 		database.prepare(`UPDATE ${DBTables.ACCESS} SET activatedAt = ? WHERE email = ?`)
-		.bind(now, email)
+			.bind(now, email)
 	]);
 
 	return results.every((result) => result.success);
+}
+
+export async function checkActivation(database: D1Database, email: string) {
+	const { results } = await database
+		.prepare(`SELECT activatedAt FROM ${DBTables.ACCESS} WHERE email = ?`)
+		.bind(email)
+		.run<{ activatedAt: string | null }>();
+
+	return results.length > 0 && results[0]?.['activatedAt'] !== null;
 }
