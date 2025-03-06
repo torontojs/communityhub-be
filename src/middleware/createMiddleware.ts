@@ -1,6 +1,6 @@
 import type { Context, Next } from 'hono';
+import { AuthorizationAccess } from '../types/data/access';
 import type { Session } from '../types/data/session.d.ts';
-import { AuthorizationRole } from '../types/data/role';
 import { StatusCodes } from '../utils/responses.ts';
 
 const AccessHierachy = {
@@ -16,7 +16,7 @@ export const createAccessMiddlware = (minimumAcess: 'admin' | 'organizer' | 'vol
 		return context.json({ message: 'Unauthorized' }, StatusCodes.UNAUTHORIZED);
 	}
 
-	if (!AccessHierachy[minimumAcess].includes(session.role)) {
+	if (!AccessHierachy[minimumAcess].includes(session.access)) {
 		return context.json({ message: 'Forbidden' }, StatusCodes.FORBIDDEN);
 	}
 	return next();
@@ -31,7 +31,7 @@ export const canModifyOwnProfile = async (context: Context, next: Next) => {
 	const targetId = context.req.param('id');
 
 	// If admin or organizer, allow
-	if (session.role === AuthorizationRole.ADMIN || session.role === AuthorizationRole.ORGANIZER) {
+	if (session.access === AuthorizationAccess.ADMIN || session.access === AuthorizationAccess.ORGANIZER) {
 		return next();
 	}
 
