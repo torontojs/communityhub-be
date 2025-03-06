@@ -64,7 +64,7 @@ app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.en
 // Public routes
 app.route('/profiles', publicProfileRoutes);
 
-// Protected volunteer routes (after auth middleware)
+// Protected routes (after auth middleware)
 app.use('/*', authMiddleware);
 app.route('/profiles', protectedProfileRoutes);
 

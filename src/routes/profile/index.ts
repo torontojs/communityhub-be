@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { z } from 'zod';
 import { DBTables } from '../../constants/db.ts';
 import { authMiddleware } from '../../middleware/auth.ts';
-import { authorizationAdmin, authorizationVolunteer } from '../../middleware/createMiddleware.ts';
+import { authorizationAdmin, authorizationVolunteer, canModifyOwnProfile } from '../../middleware/createMiddleware.ts';
 import {
 	type DataResponse,
 	generateDataResponeSchema,
@@ -158,7 +158,7 @@ protectedProfileRoutes.openapi(
 		summary: 'Update existing profile',
 		description: "Update information for an existing profile based on it's id.",
 		tags: ['Profile'],
-		middleware: [authMiddleware, authorizationAdmin] as const,
+		middleware: [authMiddleware, authorizationVolunteer, canModifyOwnProfile] as const,
 		request: {
 			body: { content: { 'application/json': { schema: UpdateProfileSchema } }, required: true },
 			params: IdParamSchema
