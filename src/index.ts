@@ -3,11 +3,11 @@ import type { Context } from 'hono';
 import { cors } from 'hono/cors';
 import packageJson from '../package.json';
 import { authMiddleware } from './middleware/auth.ts';
-import { authorizationVolunteer } from './middleware/createMiddleware.ts';
+// import { authorizationVolunteer } from './middleware/createMiddleware.ts';
 import { authRoutes } from './routes/auth/index.ts';
 import { protectedProfileRoutes, publicProfileRoutes } from './routes/profile/index.ts';
-import { teamRoutes } from './routes/team/index.ts';
-import type { Session } from './types/data/session.d.ts';
+// import { teamRoutes } from './routes/team/index.ts';
+// import type { Session } from './types/data/session.d.ts';
 import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
 
 const app = new OpenAPIHono<EnvironmentBindings>({
