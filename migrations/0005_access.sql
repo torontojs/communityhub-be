@@ -13,6 +13,10 @@ CREATE TABLE IF NOT EXISTS access (
 	access TEXT NOT NULL CHECK(access IN ('admin', 'organizer', 'volunteer')),
 	-- The person's account password
 	password TEXT NOT NULL,
+	-- The person's email address
+	email TEXT NOT NULL UNIQUE,
+	-- When the account was activated
+	activatedAt DATETIME DEFAULT NULL,
 
 	PRIMARY KEY (id),
 	FOREIGN KEY (id) REFERENCES profile(id)

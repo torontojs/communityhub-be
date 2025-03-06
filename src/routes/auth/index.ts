@@ -5,7 +5,7 @@ import { hashPassword, validatePassword } from '../../utils/password-hashing.ts'
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
-import { activateProfile, checkEmail, getProfileId, getPassword } from './data.ts';
+import { activateProfile, checkEmail, getPassword, getProfileId } from './data.ts';
 import { type SignInData, SignInSchema } from './validate.ts';
 
 export const authRoutes = new Hono();
