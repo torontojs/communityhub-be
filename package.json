@@ -13,7 +13,7 @@
 		"lint:js": "eslint --fix",
 		"lint": "npm run typecheck && npm run lint:js",
 		"db:setup": "wrangler d1 migrations apply vms-local --local --persist-to=.wrangler/state",
-		"db:setup:linux-file-auth": "./migration/wrangler-development-script.sh"
+		"db:seed": "wrangler d1 execute vms-local --local --persist-to=.wrangler/state --file=./seeds/seed-data.sql"
 	},
 	"dependencies": {
 		"@sendgrid/mail": "^8.1.4",
