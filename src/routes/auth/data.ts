@@ -1,4 +1,5 @@
 import { DBTables } from '../../constants/db.ts';
+import type { Access } from '../../types/data/access.ts';
 import type { Profile, SignInData } from './validate.ts';
 
 export async function getPassword(database: D1Database, body: SignInData): Promise<string> {
@@ -37,6 +38,17 @@ export async function getProfileId(database: D1Database, body: SignInData): Prom
 	}
 
 	return id;
+}
+
+export async function getAccessLevel(database: D1Database, profileId: string) {
+	const { results } = await database
+		.prepare(`SELECT access_level FROM ${DBTables.ACCESS} WHERE id = ? LIMIT 1`)
+		.bind(profileId)
+		.run<Access>();
+
+	const accessLevel = results[0];
+
+	return accessLevel;
 }
 
 export async function checkEmail(database: D1Database, email: string) {

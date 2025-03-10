@@ -1,11 +1,12 @@
 import sgMail from '@sendgrid/mail';
 import { type Context, Hono } from 'hono';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
+import type { SessionData } from '../../types/data/session';
 import { hashPassword, validatePassword } from '../../utils/password-hashing.ts';
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
-import { activateProfile, checkActivation, checkEmail, getPassword, getProfileId } from './data.ts';
+import { activateProfile, checkActivation, checkEmail, getAccessLevel, getPassword, getProfileId } from './data.ts';
 import { type SignInData, SignInSchema } from './validate.ts';
 
 export const authRoutes = new Hono();
@@ -107,7 +108,12 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 
 	const profileId = await getProfileId(context.env.database, parsedBody);
 	if (!profileId) {
-		return context.json<StatusResponse>({ message: 'Invalid id' }, StatusCodes.UNAUTHORIZED);
+		return context.json<StatusResponse>({ message: 'Invalid id or Account not activated' }, StatusCodes.UNAUTHORIZED);
+	}
+
+	const accessLevel = await getAccessLevel(context.env.database, profileId);
+	if (!accessLevel) {
+		return context.json<StatusResponse>({ message: 'Access not found' }, StatusCodes.NOT_FOUND);
 	}
 
 	// Check if account is activated
@@ -124,11 +130,13 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 	const sessionToken = crypto.randomUUID();
 	const hoursAhead = 1;
 	const tokenExpiryISO = new Date(Date.now() + hoursAhead * 60 * 60 * 1000).toISOString();
-	const sessionData = JSON.stringify({
+	const sessionDataObject: SessionData = {
 		id: profileId,
-		expiry: tokenExpiryISO,
-		email: parsedBody.email
-	});
+		email: parsedBody.email,
+		access: accessLevel,
+		expiry: tokenExpiryISO
+	};
+	const sessionData = JSON.stringify(sessionDataObject);
 	await context.env.SESSION_TOKENS.put(sessionToken, sessionData);
 
 	context.header('Set-Cookie', `auth_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Expires=${tokenExpiryISO}; Path=/;`);
