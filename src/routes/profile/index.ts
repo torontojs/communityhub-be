@@ -111,7 +111,7 @@ protectedProfileRoutes.openapi(
 		summary: 'Create new profile',
 		description: 'Add a new profile to the VMS including basic information about this person.',
 		tags: ['Profile'],
-		middleware: [authMiddleware, authorizationVolunteer] as const,
+		middleware: [authorizationVolunteer] as const,
 		request: {
 			body: { content: { 'application/json': { schema: CreateProfileSchema } }, required: true }
 		},
@@ -158,7 +158,7 @@ protectedProfileRoutes.openapi(
 		summary: 'Update existing profile',
 		description: "Update information for an existing profile based on it's id.",
 		tags: ['Profile'],
-		middleware: [authMiddleware, authorizationVolunteer, canModifyOwnProfile] as const,
+		middleware: [authorizationVolunteer, canModifyOwnProfile] as const,
 		request: {
 			body: { content: { 'application/json': { schema: UpdateProfileSchema } }, required: true },
 			params: IdParamSchema
@@ -207,7 +207,7 @@ protectedProfileRoutes.openapi(
 		summary: 'Delete profile by ID',
 		description: "Deletes a single profile based on it's id",
 		tags: ['Profile'],
-		middleware: [authMiddleware, authorizationAdmin] as const,
+		middleware: [authorizationAdmin] as const,
 		request: {
 			params: IdParamSchema
 		},
