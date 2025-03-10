@@ -25,17 +25,13 @@ export async function getPassword(database: D1Database, body: SignInData): Promi
 	return password;
 }
 
-export async function getProfileId(database: D1Database, body: SignInData): Promise<string> {
+export async function getProfileId(database: D1Database, body: SignInData) {
 	const { results } = await database
 		.prepare(`SELECT id FROM ${DBTables.PROFILE} WHERE email = ? AND activatedAt IS NOT NULL LIMIT 1`)
 		.bind(body.email)
 		.run<Profile>();
 
 	const id = results[0]?.id;
-
-	if (!id) {
-		throw new Error('No active account found with the provided email');
-	}
 
 	return id;
 }
