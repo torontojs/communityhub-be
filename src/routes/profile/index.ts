@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { z } from 'zod';
 import { DBTables } from '../../constants/db.ts';
-import { authorizeAdmin, authorizeVolunteer, canModifyOwnProfile } from '../../middleware/createMiddleware.ts';
+import { authorizeAdmin, authorizeOrganizer, authorizeVolunteer, canModifyOwnProfile } from '../../middleware/createMiddleware.ts';
 import {
 	type DataResponse,
 	generateDataResponeSchema,
@@ -110,7 +110,6 @@ protectedProfileRoutes.openapi(
 		summary: 'Create new profile',
 		description: 'Add a new profile to the VMS including basic information about this person.',
 		tags: ['Profile'],
-		middleware: [authorizeVolunteer] as const,
 		request: {
 			body: { content: { 'application/json': { schema: CreateProfileSchema } }, required: true }
 		},
@@ -127,7 +126,8 @@ protectedProfileRoutes.openapi(
 				description: 'Server Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
-		}
+		},
+		middleware: [authorizeOrganizer] as const
 	}),
 	async (context) => {
 		const body = context.req.valid('json');
@@ -157,7 +157,6 @@ protectedProfileRoutes.openapi(
 		summary: 'Update existing profile',
 		description: "Update information for an existing profile based on it's id.",
 		tags: ['Profile'],
-		middleware: [authorizeVolunteer, canModifyOwnProfile] as const,
 		request: {
 			body: { content: { 'application/json': { schema: UpdateProfileSchema } }, required: true },
 			params: IdParamSchema
@@ -175,7 +174,8 @@ protectedProfileRoutes.openapi(
 				description: 'Server Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
-		}
+		},
+		middleware: [authorizeVolunteer, canModifyOwnProfile] as const
 	}),
 	async (context) => {
 		const { id } = context.req.valid('param');
@@ -206,7 +206,6 @@ protectedProfileRoutes.openapi(
 		summary: 'Delete profile by ID',
 		description: "Deletes a single profile based on it's id",
 		tags: ['Profile'],
-		middleware: [authorizeAdmin] as const,
 		request: {
 			params: IdParamSchema
 		},
@@ -223,7 +222,8 @@ protectedProfileRoutes.openapi(
 				description: 'Server Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
-		}
+		},
+		middleware: [authorizeAdmin] as const
 	}),
 	async (context) => {
 		const { id } = context.req.valid('param');

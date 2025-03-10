@@ -1,6 +1,7 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { z } from 'zod';
 import { DBTables } from '../../constants/db.ts';
+import { authorizeAdmin, authorizeOrganizer, authorizeVolunteer } from '../../middleware/createMiddleware.ts';
 import {
 	type DataResponse,
 	generateDataResponeSchema,
@@ -39,7 +40,8 @@ teamRoutes.openapi(
 				description: 'Server Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
-		}
+		},
+		middleware: [authorizeAdmin] as const
 	}),
 	async (context) => {
 		const body = context.req.valid('json');
@@ -78,7 +80,8 @@ teamRoutes.openapi(
 				description: 'Server error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
-		}
+		},
+		middleware: [authorizeOrganizer] as const
 	}),
 	async (context) => {
 		const { id } = context.req.valid('param');
@@ -120,7 +123,8 @@ teamRoutes.openapi(
 				description: 'Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
-		}
+		},
+		middleware: [authorizeVolunteer] as const
 	}),
 	async (context) => {
 		const { id } = context.req.valid('param');
@@ -154,7 +158,8 @@ teamRoutes.openapi(
 				description: 'Successful response',
 				content: { 'application/json': { schema: generatePaginatedResponseSchema(z.array(TeamSchema)) } }
 			}
-		}
+		},
+		middleware: [authorizeVolunteer] as const
 	}),
 	async (context) => {
 		const teams = await getAllTeams(context.env.database);
@@ -204,7 +209,8 @@ teamRoutes.openapi(
 				description: 'Server error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
-		}
+		},
+		middleware: [authorizeAdmin] as const
 	}),
 	async (context) => {
 		const { id } = context.req.valid('param');
