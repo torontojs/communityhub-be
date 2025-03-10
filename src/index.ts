@@ -3,11 +3,9 @@ import type { Context } from 'hono';
 import { cors } from 'hono/cors';
 import packageJson from '../package.json';
 import { authMiddleware } from './middleware/auth.ts';
-// Import { authorizationVolunteer } from './middleware/createMiddleware.ts';
 import { authRoutes } from './routes/auth/index.ts';
 import { protectedProfileRoutes, publicProfileRoutes } from './routes/profile/index.ts';
-// Import { teamRoutes } from './routes/team/index.ts';
-// Import type { Session } from './types/data/session.d.ts';
+import { teamRoutes } from './routes/team/index.ts';
 import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
 
 const app = new OpenAPIHono<EnvironmentBindings>({
@@ -67,5 +65,6 @@ app.route('/profiles', publicProfileRoutes);
 // Protected routes (after auth middleware)
 app.use('/*', authMiddleware);
 app.route('/profiles', protectedProfileRoutes);
+app.route('/teams', teamRoutes);
 
 export default app;
