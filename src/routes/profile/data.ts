@@ -28,7 +28,7 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 		// TODO: insert into links table
 		database.prepare(`
 			INSERT INTO ${DBTables.ACCESS} (
-				id, schemaVersion, access, password, email
+				id, schemaVersion, access_level, password, email
 			)
 			VALUES (
 				?, ?, ?, ?, ?

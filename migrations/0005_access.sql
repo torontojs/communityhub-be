@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS access (
 	schemaVersion INTEGER NOT NULL DEFAULT 1,
 	-- The person's access level in the system
 	-- This determines what actions they can perform
-	access TEXT NOT NULL CHECK(access IN ('admin', 'organizer', 'volunteer')),
+	access_level TEXT NOT NULL CHECK(access IN ('admin', 'organizer', 'volunteer')),
 	-- The person's account password
 	password TEXT NOT NULL,
 	-- The person's email address
