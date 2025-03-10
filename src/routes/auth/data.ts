@@ -71,12 +71,3 @@ export async function activateProfile(database: D1Database, email: string) {
 
 	return results.every((result) => result.success);
 }
-
-export async function checkActivation(database: D1Database, email: string) {
-	const { results } = await database
-		.prepare(`SELECT activatedAt FROM ${DBTables.ACCESS} WHERE email = ?`)
-		.bind(email)
-		.run<{ activatedAt: string | null }>();
-
-	return results.length > 0 && results[0]?.activatedAt !== null;
-}
