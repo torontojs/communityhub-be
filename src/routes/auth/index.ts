@@ -101,12 +101,12 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 		throw error;
 	}
 
-	const hashedPasswordWithSalt = await getPassword(context.env.database, parsedBody);
+	const hashedPasswordWithSalt = await getPassword(context.env.database, parsedBody.email);
 	if (!hashedPasswordWithSalt) {
 		return context.json<StatusResponse>({ message: 'Invalid email or password' }, StatusCodes.UNAUTHORIZED);
 	}
 
-	const profileId = await getProfileId(context.env.database, parsedBody);
+	const profileId = await getProfileId(context.env.database, parsedBody.email);
 	if (!profileId) {
 		return context.json<StatusResponse>({ message: 'Invalid id or Account not activated' }, StatusCodes.UNAUTHORIZED);
 	}
