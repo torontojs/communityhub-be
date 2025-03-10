@@ -1,8 +1,8 @@
-import type { AuthorizationAccess } from './access';
+import type { Access } from './access';
 
-export interface Session {
+export interface SessionData {
 	id: string;
 	email: string;
-	access: AuthorizationAccess;
+	access: Access;
 	expiry: ISODate;
 }

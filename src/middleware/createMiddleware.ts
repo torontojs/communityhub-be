@@ -1,6 +1,6 @@
 import type { Context, Next } from 'hono';
-import { AuthorizationAccess } from '../types/data/access';
-import type { Session } from '../types/data/session.d.ts';
+import { Access } from '../types/data/access';
+import type { SessionData } from '../types/data/session.d.ts';
 import { StatusCodes } from '../utils/responses.ts';
 
 const AccessHierachy = {
@@ -9,11 +9,11 @@ const AccessHierachy = {
 	volunteer: ['admin', 'organizer', 'volunteer']
 };
 
-export const createAccessMiddlware = (minimumAcess: 'admin' | 'organizer' | 'volunteer') => async (context: Context, next: Next) => {
-	const session = context.get('session') as Session | undefined;
+export const createAccessMiddleware = (minimumAcess: Access) => async (context: Context, next: Next) => {
+	const session = context.get('session') as SessionData | undefined;
 
 	if (!session) {
-		return context.json({ message: 'Unauthorized' }, StatusCodes.UNAUTHORIZED);
+		return context.json({ message: 'Session not found' }, StatusCodes.UNAUTHORIZED);
 	}
 
 	if (!AccessHierachy[minimumAcess].includes(session.access)) {
@@ -22,16 +22,16 @@ export const createAccessMiddlware = (minimumAcess: 'admin' | 'organizer' | 'vol
 	return next();
 };
 
-export const authorizationAdmin = createAccessMiddlware('admin');
-export const authorizationOrganizer = createAccessMiddlware('organizer');
-export const authorizationVolunteer = createAccessMiddlware('volunteer');
+export const authorizeAdmin = createAccessMiddleware(Access.ADMIN);
+export const authorizeOrganizer = createAccessMiddleware(Access.ORGANIZER);
+export const authorizeVolunteer = createAccessMiddleware(Access.VOLUNTEER);
 
 export const canModifyOwnProfile = async (context: Context, next: Next) => {
-	const session = context.get('session') as Session;
+	const session = context.get('session') as SessionData;
 	const targetId = context.req.param('id');
 
 	// If admin or organizer, allow
-	if (session.access === AuthorizationAccess.ADMIN || session.access === AuthorizationAccess.ORGANIZER) {
+	if (session.access === Access.ADMIN || session.access === Access.ORGANIZER) {
 		return next();
 	}
 

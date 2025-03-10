@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { z } from 'zod';
 import { DBTables } from '../../constants/db.ts';
-import { authorizationAdmin, authorizationVolunteer, canModifyOwnProfile } from '../../middleware/createMiddleware.ts';
+import { authorizeAdmin, authorizeVolunteer, canModifyOwnProfile } from '../../middleware/createMiddleware.ts';
 import {
 	type DataResponse,
 	generateDataResponeSchema,
@@ -110,7 +110,7 @@ protectedProfileRoutes.openapi(
 		summary: 'Create new profile',
 		description: 'Add a new profile to the VMS including basic information about this person.',
 		tags: ['Profile'],
-		middleware: [authorizationVolunteer] as const,
+		middleware: [authorizeVolunteer] as const,
 		request: {
 			body: { content: { 'application/json': { schema: CreateProfileSchema } }, required: true }
 		},
@@ -157,7 +157,7 @@ protectedProfileRoutes.openapi(
 		summary: 'Update existing profile',
 		description: "Update information for an existing profile based on it's id.",
 		tags: ['Profile'],
-		middleware: [authorizationVolunteer, canModifyOwnProfile] as const,
+		middleware: [authorizeVolunteer, canModifyOwnProfile] as const,
 		request: {
 			body: { content: { 'application/json': { schema: UpdateProfileSchema } }, required: true },
 			params: IdParamSchema
@@ -206,7 +206,7 @@ protectedProfileRoutes.openapi(
 		summary: 'Delete profile by ID',
 		description: "Deletes a single profile based on it's id",
 		tags: ['Profile'],
-		middleware: [authorizationAdmin] as const,
+		middleware: [authorizeAdmin] as const,
 		request: {
 			params: IdParamSchema
 		},

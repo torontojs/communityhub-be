@@ -1,6 +1,6 @@
 import type { Context, Next } from 'hono';
 import { getCookie } from 'hono/cookie';
-import type { Session } from '../types/data/session.d.ts';
+import type { SessionData } from '../types/data/session.d.ts';
 import { StatusCodes } from '../utils/responses.ts';
 
 export const authMiddleware = async (context: Context, next: Next) => {
@@ -10,7 +10,7 @@ export const authMiddleware = async (context: Context, next: Next) => {
 	if (!sessionToken) {
 		return context.json({ message: 'Invalid or missing token' }, StatusCodes.UNAUTHORIZED);
 	}
-	const sessionData: Session | undefined = await context.env.SESSION_TOKENS.get(sessionToken, 'json');
+	const sessionData: SessionData | undefined = await context.env.SESSION_TOKENS.get(sessionToken, 'json');
 
 	if (!sessionData) {
 		return context.json({ message: 'Invalid session' }, StatusCodes.UNAUTHORIZED);
