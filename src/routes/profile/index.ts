@@ -1,7 +1,10 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
+import type { Context, Next } from 'hono';
 import { z } from 'zod';
 import { DBTables } from '../../constants/db.ts';
-import { authorizeAdmin, authorizeOrganizer, authorizeVolunteer, canModifyOwnProfile } from '../../middleware/createMiddleware.ts';
+import { authorizeAdmin, authorizeOrganizer, authorizeVolunteer } from '../../middleware/createMiddleware.ts';
+import { Access } from '../../types/data/access.ts';
+import type { SessionData } from '../../types/data/session';
 import {
 	type DataResponse,
 	generateDataResponeSchema,
@@ -148,6 +151,23 @@ protectedProfileRoutes.openapi(
 	}
 );
 
+async function canModifyProfile(context: Context, next: Next) {
+	const session = context.get('session') as SessionData;
+	const targetId = context.req.param('id');
+
+	// If admin, allow
+	if (session.access === Access.ADMIN) {
+		return next();
+	}
+
+	// For volunteers, only allow if it's their own profile
+	if (session.id !== targetId) {
+		return context.json({ message: 'Can only modify own profile' }, StatusCodes.FORBIDDEN);
+	}
+
+	return next();
+}
+
 // PATCH profile
 protectedProfileRoutes.openapi(
 	createRoute({
@@ -175,7 +195,7 @@ protectedProfileRoutes.openapi(
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
 		},
-		middleware: [authorizeVolunteer, canModifyOwnProfile] as const
+		middleware: [authorizeVolunteer, canModifyProfile] as const
 	}),
 	async (context) => {
 		const { id } = context.req.valid('param');

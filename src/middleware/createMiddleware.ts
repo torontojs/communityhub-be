@@ -25,20 +25,3 @@ export const createAccessMiddleware = (minimumAcess: Access) => async (context: 
 export const authorizeAdmin = createAccessMiddleware(Access.ADMIN);
 export const authorizeOrganizer = createAccessMiddleware(Access.ORGANIZER);
 export const authorizeVolunteer = createAccessMiddleware(Access.VOLUNTEER);
-
-export const canModifyOwnProfile = async (context: Context, next: Next) => {
-	const session = context.get('session') as SessionData;
-	const targetId = context.req.param('id');
-
-	// If admin or organizer, allow
-	if (session.access === Access.ADMIN || session.access === Access.ORGANIZER) {
-		return next();
-	}
-
-	// For volunteers, only allow if it's their own profile
-	if (session.id !== targetId) {
-		return context.json({ message: 'Can only modify own profile' }, StatusCodes.FORBIDDEN);
-	}
-
-	return next();
-};
