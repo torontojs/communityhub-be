@@ -16,7 +16,7 @@ export const authMiddleware = async (context: Context, next: Next) => {
 		return context.json({ message: 'Invalid session' }, StatusCodes.UNAUTHORIZED);
 	}
 
-	if (new Date(sessionData.expiry) > new Date()) {
+	if (new Date(sessionData.expiry) < new Date()) {
 		await context.env.SESSION_TOKENS.delete(sessionToken);
 		return context.json({ message: 'Session expired' }, StatusCodes.UNAUTHORIZED);
 	}
