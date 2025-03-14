@@ -1,4 +1,4 @@
-import { DBTables, generateBaseDBfields } from '../../constants/db.ts';
+import { DBTables, DEFAULT_TEAM_ID, generateBaseDBfields } from '../../constants/db.ts';
 import type { CreateProfileData, Profile, UpdateProfileData } from './validation.ts';
 
 export async function insertProfile(database: D1Database, { email, name, password, description }: CreateProfileData) {
@@ -51,10 +51,9 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 			insertedAt,
 			'volunteer',
 			'',
-			'',
+			DEFAULT_TEAM_ID,
 			id
 		)
-		// TODO : set TorontoJS team id 👆
 	]);
 
 	return { success: results.every(({ success }) => success), id };
