@@ -15,8 +15,6 @@ CREATE TABLE IF NOT EXISTS access (
 	password TEXT NOT NULL,
 	-- The person's email address
 	email TEXT NOT NULL UNIQUE,
-	-- When the account was activated
-	activatedAt DATETIME DEFAULT NULL,
 
 	PRIMARY KEY (id),
 	FOREIGN KEY (id) REFERENCES profile(id)

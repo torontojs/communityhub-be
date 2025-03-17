@@ -51,5 +51,4 @@ export interface AccessSchema extends IdAndSchemaVersion {
 	access_level: Access;
 	password: string;
 	email: string;
-	activatedAt: ISODate;
 }

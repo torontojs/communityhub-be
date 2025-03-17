@@ -6,7 +6,7 @@ export async function getPassword(database: D1Database, email: string) {
 		.prepare(`
             SELECT password
             FROM ${DBTables.ACCESS}
-            WHERE email = ? AND activatedAt IS NOT NULL
+            WHERE email = ?
 			LIMIT 1
         `)
 		.bind(email)
@@ -44,12 +44,10 @@ export async function checkEmail(database: D1Database, email: string) {
 
 export async function activateProfile(database: D1Database, email: string) {
 	const now = new Date().toISOString();
-	const results = await database.batch([
-		database.prepare(`UPDATE ${DBTables.PROFILE} SET activatedAt = ? WHERE email = ?`)
-			.bind(now, email),
-		database.prepare(`UPDATE ${DBTables.ACCESS} SET activatedAt = ? WHERE email = ?`)
-			.bind(now, email)
-	]);
+	const { success } = await database
+		.prepare(`UPDATE ${DBTables.PROFILE} SET activatedAt = ? WHERE email = ?`)
+		.bind(now, email)
+		.run();
 
-	return results.every((result) => result.success);
+	return success;
 }

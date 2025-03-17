@@ -19,7 +19,7 @@ VALUES
 ('eda2a43f-ef85-4de6-a6dc-7cee0d9d4af7', '3227114d-43c4-42ed-8aea-f3860fe42222', 'profile', 'created', '9a633d13-8095-48a8-9bf1-08ea40f5faa0', 'team', '2025-01-20T10:00:00Z', '2025-01-20T10:00:00Z'),
 ('0c27ba8d-d5b8-4dad-ae0f-70cfda5429a0', 'aa7e8915-8034-43d9-b910-a2e3ebdb947f', 'profile', 'assigned', '3ad040f0-2d52-43d1-a1d7-54d9560453d5', 'role', '2025-01-20T11:00:00Z', '2025-01-20T11:00:00Z');
 
-INSERT INTO access (id, access_level, password, email, activatedAt)
+INSERT INTO access (id, access_level, password, email)
 VALUES
-('3227114d-43c4-42ed-8aea-f3860fe42222', 'volunteer', 'hashed_password_1', 'profile1@example.com', '2025-01-20T10:00:00Z'),
-('aa7e8915-8034-43d9-b910-a2e3ebdb947f', 'organizer', 'hashed_password_2', 'profile2@example.com', '2025-01-20T11:00:00Z');
+('3227114d-43c4-42ed-8aea-f3860fe42222', 'volunteer', 'hashed_password_1', 'profile1@example.com'),
+('aa7e8915-8034-43d9-b910-a2e3ebdb947f', 'organizer', 'hashed_password_2', 'profile2@example.com');
