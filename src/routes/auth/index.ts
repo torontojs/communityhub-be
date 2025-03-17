@@ -1,4 +1,5 @@
 import sgMail from '@sendgrid/mail';
+import { addHours } from 'date-fns';
 import { type Context, Hono } from 'hono';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
 import type { SessionData } from '../../types/data/session';
@@ -122,8 +123,8 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 	}
 
 	const sessionToken = crypto.randomUUID();
-	const hoursAhead = 1;
-	const tokenExpiryISO = new Date(Date.now() + hoursAhead * 60 * 60 * 1000).toISOString();
+	const hoursOffset = 24;
+	const tokenExpiryISO = addHours(new Date(), hoursOffset).toISOString();
 	const sessionDataObject: SessionData = {
 		id: profileId,
 		email: parsedBody.email,
