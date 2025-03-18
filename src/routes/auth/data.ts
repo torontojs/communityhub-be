@@ -1,10 +1,10 @@
 import { type AccessSchema, DBTables } from '../../constants/db.ts';
 import type { Profile } from './validate.ts';
 
-export async function getProfileIdPassword(database: D1Database, email: string) {
+export async function getAccess(database: D1Database, email: string) {
 	const { results } = await database
 		.prepare(`
-            SELECT id, password
+            SELECT id, password, access_level
             FROM ${DBTables.ACCESS}
             WHERE email = ?
 			LIMIT 1
@@ -12,7 +12,7 @@ export async function getProfileIdPassword(database: D1Database, email: string) 
 		.bind(email)
 		.run<AccessSchema>();
 
-	return { id: results[0]?.id, password: results[0]?.password };
+	return results[0];
 }
 
 export async function checkProfile(database: D1Database, profileId: string) {
@@ -29,15 +29,6 @@ export async function checkProfile(database: D1Database, profileId: string) {
 		.run<Profile>();
 
 	return Boolean(results.length);
-}
-
-export async function getAccessLevel(database: D1Database, profileId: string) {
-	const { results } = await database
-		.prepare(`SELECT access_level FROM ${DBTables.ACCESS} WHERE id = ? LIMIT 1`)
-		.bind(profileId)
-		.run<AccessSchema>();
-
-	return results[0]?.access_level;
 }
 
 export async function checkEmail(database: D1Database, email: string) {

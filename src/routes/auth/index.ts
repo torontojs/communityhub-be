@@ -7,7 +7,7 @@ import { hashPassword, validatePassword } from '../../utils/password-hashing.ts'
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
-import { activateProfile, checkEmail, checkProfile, getAccessLevel, getProfileIdPassword } from './data.ts';
+import { activateProfile, checkEmail, checkProfile, getAccess } from './data.ts';
 import { type SignInData, SignInSchema } from './validate.ts';
 
 export const authRoutes = new Hono();
@@ -102,19 +102,15 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 		throw error;
 	}
 
-	const { id: profileId, password: storedPassword } = await getProfileIdPassword(context.env.database, parsedBody.email);
-	if (!profileId || !storedPassword) {
+	const accessData = await getAccess(context.env.database, parsedBody.email);
+	if (!accessData) {
 		return context.json<StatusResponse>({ message: 'Invalid email' }, StatusCodes.UNAUTHORIZED);
 	}
+	const { id: profileId, password: storedPassword, accessLevel } = accessData;
 
 	const isProfileValid = await checkProfile(context.env.database, profileId);
 	if (!isProfileValid) {
 		return context.json<StatusResponse>({ message: 'Invalid profile id or Account not activated' }, StatusCodes.UNAUTHORIZED);
-	}
-
-	const accessLevel = await getAccessLevel(context.env.database, profileId);
-	if (!accessLevel) {
-		return context.json<StatusResponse>({ message: 'Access not found' }, StatusCodes.NOT_FOUND);
 	}
 
 	const isValid = await validatePassword(parsedBody.password, storedPassword);
