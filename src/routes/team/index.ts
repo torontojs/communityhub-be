@@ -16,11 +16,147 @@ import { IdParamSchema, validateExistingId } from '../../utils/validation.ts';
 import { deleteTeamById, getAllTeams, getTeamById, insertTeam, updateTeamById } from './data.ts';
 import { CreateTeamSchema, TeamSchema, UpdateTeamSchema } from './validation.ts';
 
-export const teamRoutes = new OpenAPIHono<EnvironmentBindings>({
+export const publicTeamRoutes = new OpenAPIHono<EnvironmentBindings>({
 	defaultHook: statusResponseFormatter
 });
 
-teamRoutes.openapi(
+// GET team by ID
+publicTeamRoutes.openapi(
+	createRoute({
+		method: 'get',
+		path: '/{id}',
+		operationId: 'getTeam',
+		summary: 'Get team by ID',
+		description: "Retrieves a single team based on it's id.",
+		tags: ['Team'],
+		request: {
+			params: IdParamSchema
+		},
+		responses: {
+			[StatusCodes.OKAY]: {
+				description: 'Successful response',
+				content: { 'application/json': { schema: generateDataResponeSchema(TeamSchema) } }
+			},
+			[StatusCodes.NOT_FOUND]: {
+				description: 'Error response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			}
+		}
+	}),
+	async (context) => {
+		const { id } = context.req.valid('param');
+
+		const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
+
+		if (!isTeamIdValid) {
+			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
+		}
+
+		const team = await getTeamById(context.env.database, id);
+
+		if (!team) {
+			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
+		}
+
+		return context.json({ data: team, _links: { self: { href: context.req.url } } } satisfies DataResponse<typeof team>, StatusCodes.OKAY);
+	}
+);
+
+// GET all teams
+publicTeamRoutes.openapi(
+	createRoute({
+		method: 'get',
+		path: '/',
+		operationId: 'getTeams',
+		summary: 'Get teams',
+		description: 'Retrieves a list of teams',
+		tags: ['Team'],
+		responses: {
+			[StatusCodes.OKAY]: {
+				description: 'Successful response',
+				content: { 'application/json': { schema: generatePaginatedResponseSchema(z.array(TeamSchema)) } }
+			}
+		},
+		middleware: [authorizeVolunteer] as const
+	}),
+	async (context) => {
+		const teams = await getAllTeams(context.env.database);
+
+		return context.json(
+			// TODO: implement proper pagination
+			{
+				data: teams,
+				start: 0,
+				end: teams.length - 1,
+				total: teams.length,
+				size: teams.length,
+				currentPage: 1,
+				lastPage: 1,
+				_links: {
+					self: { href: context.req.url },
+					first: { href: context.req.url },
+					last: { href: context.req.url }
+				}
+			} satisfies PaginatedResponse<typeof teams>,
+			StatusCodes.OKAY
+		);
+	}
+);
+
+// Protected routes (POST, PATCH, DELETE)
+export const protectedTeamRoutes = new OpenAPIHono<EnvironmentBindings>({
+	defaultHook: statusResponseFormatter
+});
+
+// DELETE team by ID
+protectedTeamRoutes.openapi(
+	createRoute({
+		method: 'delete',
+		path: '/{id}',
+		operationId: 'deleteTeam',
+		summary: 'Delete team by ID',
+		description: "Deletes a single team based on it's id",
+		tags: ['Team'],
+		request: {
+			params: IdParamSchema
+		},
+		responses: {
+			[StatusCodes.OKAY]: {
+				description: 'Successful response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.NOT_FOUND]: {
+				description: 'Error response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.INTERNAL_SERVER_ERROR]: {
+				description: 'Server error response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			}
+		},
+		middleware: [authorizeAdmin] as const
+	}),
+	async (context) => {
+		const { id } = context.req.valid('param');
+
+		const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
+
+		if (!isTeamIdValid) {
+			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
+		}
+
+		const isDeleted = await deleteTeamById(context.env.database, id);
+
+		if (!isDeleted) {
+			return context.json({ message: 'Team not deleted' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		}
+
+		return context.json({ message: 'Team deleted successfully' } satisfies StatusResponse, StatusCodes.OKAY);
+	}
+);
+
+// POST new team
+protectedTeamRoutes.openapi(
 	createRoute({
 		method: 'post',
 		path: '/',
@@ -55,7 +191,8 @@ teamRoutes.openapi(
 	}
 );
 
-teamRoutes.openapi(
+// PATCH team by ID
+protectedTeamRoutes.openapi(
 	createRoute({
 		method: 'patch',
 		path: '/{id}',
@@ -100,133 +237,5 @@ teamRoutes.openapi(
 		}
 
 		return context.json({ message: 'Team updated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
-	}
-);
-
-teamRoutes.openapi(
-	createRoute({
-		method: 'get',
-		path: '/{id}',
-		operationId: 'getTeam',
-		summary: 'Get team by ID',
-		description: "Retrieves a single team based on it's id.",
-		tags: ['Team'],
-		request: {
-			params: IdParamSchema
-		},
-		responses: {
-			[StatusCodes.OKAY]: {
-				description: 'Successful response',
-				content: { 'application/json': { schema: generateDataResponeSchema(TeamSchema) } }
-			},
-			[StatusCodes.NOT_FOUND]: {
-				description: 'Error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			}
-		},
-		middleware: [authorizeVolunteer] as const
-	}),
-	async (context) => {
-		const { id } = context.req.valid('param');
-
-		const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
-
-		if (!isTeamIdValid) {
-			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
-		}
-
-		const team = await getTeamById(context.env.database, id);
-
-		if (!team) {
-			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
-		}
-
-		return context.json({ data: team, _links: { self: { href: context.req.url } } } satisfies DataResponse<typeof team>, StatusCodes.OKAY);
-	}
-);
-
-teamRoutes.openapi(
-	createRoute({
-		method: 'get',
-		path: '/',
-		operationId: 'getTeams',
-		summary: 'Get teams',
-		description: 'Retrieves a list of teams',
-		tags: ['Team'],
-		responses: {
-			[StatusCodes.OKAY]: {
-				description: 'Successful response',
-				content: { 'application/json': { schema: generatePaginatedResponseSchema(z.array(TeamSchema)) } }
-			}
-		},
-		middleware: [authorizeVolunteer] as const
-	}),
-	async (context) => {
-		const teams = await getAllTeams(context.env.database);
-
-		return context.json(
-			// TODO: implement proper pagination
-			{
-				data: teams,
-				start: 0,
-				end: teams.length - 1,
-				total: teams.length,
-				size: teams.length,
-				currentPage: 1,
-				lastPage: 1,
-				_links: {
-					self: { href: context.req.url },
-					first: { href: context.req.url },
-					last: { href: context.req.url }
-				}
-			} satisfies PaginatedResponse<typeof teams>,
-			StatusCodes.OKAY
-		);
-	}
-);
-
-teamRoutes.openapi(
-	createRoute({
-		method: 'delete',
-		path: '/{id}',
-		operationId: 'deleteTeam',
-		summary: 'Delete team by ID',
-		description: "Deletes a single team based on it's id",
-		tags: ['Team'],
-		request: {
-			params: IdParamSchema
-		},
-		responses: {
-			[StatusCodes.OKAY]: {
-				description: 'Successful response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			},
-			[StatusCodes.NOT_FOUND]: {
-				description: 'Error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			},
-			[StatusCodes.INTERNAL_SERVER_ERROR]: {
-				description: 'Server error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			}
-		},
-		middleware: [authorizeAdmin] as const
-	}),
-	async (context) => {
-		const { id } = context.req.valid('param');
-
-		const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
-
-		if (!isTeamIdValid) {
-			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
-		}
-
-		const isDeleted = await deleteTeamById(context.env.database, id);
-
-		if (!isDeleted) {
-			return context.json({ message: 'Team not deleted' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
-		}
-
-		return context.json({ message: 'Team deleted successfully' } satisfies StatusResponse, StatusCodes.OKAY);
 	}
 );

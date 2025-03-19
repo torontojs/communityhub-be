@@ -6,7 +6,7 @@ import { authMiddleware } from './middleware/auth.ts';
 import { authRoutes } from './routes/auth/index.ts';
 import { protectedProfileRoutes, publicProfileRoutes } from './routes/profile/index.ts';
 import { roleRoutes } from './routes/role/index.ts';
-import { teamRoutes } from './routes/team/index.ts';
+import { protectedTeamRoutes, publicTeamRoutes } from './routes/team/index.ts';
 import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
 
 const app = new OpenAPIHono<EnvironmentBindings>({
@@ -63,10 +63,11 @@ app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.en
 
 // Public routes
 app.route('/profiles', publicProfileRoutes);
+app.route('/teams', publicTeamRoutes);
 
 // Protected routes (after auth middleware)
 app.use('/*', authMiddleware);
 app.route('/profiles', protectedProfileRoutes);
-app.route('/teams', teamRoutes);
+app.route('/teams', protectedTeamRoutes);
 
 export default app;
