@@ -1,12 +1,14 @@
 import { z } from 'zod';
+import type { Access } from '../types/data/access.ts';
 
 export const SCHEMA_VERSION = 1;
+export const DEFAULT_TEAM_ID = 'b3410598-ecbc-41be-9f68-925da74bc613';
 
 export enum DBTables {
 	PROFILE = 'profile',
 	TEAM = 'team',
-	PASSWORD = 'passwords',
-	ROLE = 'role'
+	ROLE = 'role',
+	ACCESS = 'access'
 }
 
 export const IdAndSchemaVersionSchema = z.object({
@@ -54,4 +56,10 @@ export function generateBaseDBfields() {
 		insertedAt: newTimestamp.toISOString(),
 		happenedAt: newTimestamp.toISOString()
 	} satisfies BaseDBEntity;
+}
+
+export interface AccessSchema extends IdAndSchemaVersion {
+	access_level: Access;
+	password: string;
+	email: string;
 }

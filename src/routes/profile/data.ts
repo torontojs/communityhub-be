@@ -1,4 +1,4 @@
-import { DBTables, generateBaseDBfields } from '../../constants/db.ts';
+import { DBTables, DEFAULT_TEAM_ID, generateBaseDBfields } from '../../constants/db.ts';
 import type { CreateProfileData, Profile, UpdateProfileData } from './validation.ts';
 
 export async function insertProfile(database: D1Database, { email, name, password, description }: CreateProfileData) {
@@ -9,7 +9,7 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 			INSERT INTO ${DBTables.PROFILE} (
 				id, schemaVersion, happenedAt, insertedAt,
 				email, name
-				${description ? ', descrition' : ''}
+				${description ? ', description' : ''}
 			)
 			VALUES (
 				?, ?, ?, ?,
@@ -17,23 +17,33 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 				${description ? ', ?' : ''}
 			)
 		`).bind(
-			id,
-			schemaVersion,
-			happenedAt,
-			insertedAt,
-			email,
-			name,
+			id, schemaVersion, happenedAt, insertedAt,
+			email, name,
 			description
 		),
 		// TODO: insert into links table
 		database.prepare(`
-			INSERT INTO ${DBTables.PASSWORD} (
-				id, schemaVersion, password
+			INSERT INTO ${DBTables.ACCESS} (
+				id, schemaVersion, access_level, password, email
 			)
 			VALUES (
-				?, ?, ?
+				?, ?, ?, ?, ?
 			)
-		`).bind(id, schemaVersion, password)
+		`).bind(id, schemaVersion, 'volunteer', password, email),
+
+		database.prepare(`
+			INSERT INTO ${DBTables.ROLE} (
+				id, schemaVersion, happenedAt, insertedAt,
+				role, description, teamId, profileId
+			)
+			VALUES (
+				?, ?, ?, ?,
+				?, ?, ?, ?
+			)
+		`).bind(
+			id, schemaVersion, happenedAt, insertedAt,
+			'volunteer', '', DEFAULT_TEAM_ID, id
+		)
 	]);
 
 	return { success: results.every(({ success }) => success), id };
@@ -106,7 +116,7 @@ export async function updateProfile({
 
 export async function validateExistingEmail(database: D1Database, email: string) {
 	const { email: existingEmail } = await database
-		.prepare(`SSELECT email FROM ${DBTables.PROFILE} WHERE email = ? LIMIT 1`)
+		.prepare(`SELECT email FROM ${DBTables.PROFILE} WHERE email = ? LIMIT 1`)
 		.bind(email)
 		.first<{ email: string }>() ?? {};
 
