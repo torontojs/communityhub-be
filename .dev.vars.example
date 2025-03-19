@@ -1,0 +1,5 @@
+# api key created in the SendGrid account
+SENDGRID_API_KEY=
+
+# verified sender in the SendGrid account (Settings - Sender Authentication)
+SENDER_EMAIL=

@@ -1,26 +1,64 @@
-import { Hono } from 'hono';
+import { OpenAPIHono } from '@hono/zod-openapi';
+import type { Context } from 'hono';
 import { cors } from 'hono/cors';
-import profilesRoute from './routes/profiles/profiles';
-import teamsRoutes from './routes/profiles/teams';
+import packageJson from '../package.json';
+import { authRoutes } from './routes/auth/index.ts';
+import { profileRoutes } from './routes/profile/index.ts';
+import { roleRoutes } from './routes/role/index.ts';
+import { teamRoutes } from './routes/team/index.ts';
+import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
 
-const app = new Hono();
+const app = new OpenAPIHono<EnvironmentBindings>({
+	defaultHook: statusResponseFormatter
+});
 
-app.get('/', (context) => context.text('Welome to volunteer management system!'));
+// Catch all error handler.
+app.onError((err, context) => {
+	// TODO: add better error logging?
+	console.error(err);
 
-// CORS middleware
+	return context.json({ message: 'An error has occured' }, StatusCodes.INTERNAL_SERVER_ERROR);
+});
+
+// CORS middleware22
 app.use(
 	'/*',
 	cors({
-		// TODO: Allow all origins for now. Use specific domains in production.
+		// FIXME: We want to block origins external to Toronto JS
 		origin: '*',
 		allowMethods: ['POST', 'GET', 'OPTIONS', 'DELETE', 'PATCH'],
-		// TODO: Ensure the required headers are allowed.
 		allowHeaders: ['Content-Type']
 	})
 );
 
-// Existing routes
-app.route('/profiles', profilesRoute);
-app.route('/teams', teamsRoutes);
+app.doc('/open-api.json', {
+	openapi: '3.0.0',
+	servers: [
+		{
+			url: 'https://vms.torontojs.com/',
+			description: 'Production server.'
+		},
+		{
+			url: 'http://localhost:8787/',
+			description: 'Local server for development.'
+		}
+	],
+	info: {
+		title: 'Toronto JS Community Hub API',
+		version: packageJson.version,
+		description: `
+		This is the API documentation for the [Toronto JS Community Hub](https://vms.torontojs.com/).
+
+		Please note that the recomended way of getting data from the community hub is to use the staticly generated data available on GitHub.
+		`
+	}
+});
+
+app.route('/profiles', profileRoutes);
+app.route('/teams', teamRoutes);
+app.route('/auth', authRoutes);
+app.route('/roles', roleRoutes);
+// Handle static assets using Cloudflare Workers
+app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.env.ASSETS.fetch(context.req.raw));
 
 export default app;
