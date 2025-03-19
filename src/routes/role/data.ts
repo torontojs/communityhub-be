@@ -1,11 +1,11 @@
 import { DBTables, generateBaseDBfields } from '../../constants/db.ts';
-import type { CreateTeamData, Team, UpdateTeamData } from './validation.ts';
+import type { CreateRoleData, Role, UpdateRoleData } from './validation.ts';
 
-export async function insertTeam(database: D1Database, { name, description }: CreateTeamData) {
+export async function insertRole(database: D1Database, { name, description }: CreateRoleData) {
 	const { id, schemaVersion, happenedAt, insertedAt } = generateBaseDBfields();
 
 	const { success } = await database.prepare(`
-		INSERT INTO ${DBTables.TEAM} (
+		INSERT INTO ${DBTables.ROLE} (
 			id, schemaVersion, happenedAt, insertedAt,
 			name
 			${description ? ', descrition' : ''}
@@ -22,10 +22,10 @@ export async function insertTeam(database: D1Database, { name, description }: Cr
 	return { success, id };
 }
 
-export async function updateTeamById(database: D1Database, id: string, data: UpdateTeamData) {
+export async function updateRoleById(database: D1Database, id: string, data: UpdateRoleData) {
 	const { success } = await database
 		.prepare(`
-			UPDATE ${DBTables.TEAM}
+			UPDATE ${DBTables.ROLE}
 			SET ${Object.keys(data).join(', ')}
 			WHERE id = ?
 		`)
@@ -35,24 +35,24 @@ export async function updateTeamById(database: D1Database, id: string, data: Upd
 	return success;
 }
 
-export async function getTeamById(database: D1Database, id: string) {
+export async function getRoleById(database: D1Database, id: string) {
 	const { results } = await database
-		.prepare(`SELECT * FROM ${DBTables.TEAM} WHERE id = ?`)
+		.prepare(`SELECT * FROM ${DBTables.ROLE} WHERE id = ?`)
 		.bind(id)
-		.run<Team>();
+		.run<Role>();
 
 	return results?.[0];
 }
 
-export async function getAllTeams(database: D1Database) {
-	const { results } = await database.prepare(`SELECT * FROM ${DBTables.TEAM}`).run<Team>();
+export async function getAllRoles(database: D1Database) {
+	const { results } = await database.prepare(`SELECT * FROM ${DBTables.ROLE}`).run<Role>();
 
 	return results;
 }
 
-export async function deleteTeamById(database: D1Database, id: string) {
+export async function deleteRoleById(database: D1Database, id: string) {
 	const { success } = await database
-		.prepare(`UPDATE ${DBTables.TEAM} SET deletedAt = ? WHERE id = ?`)
+		.prepare(`UPDATE ${DBTables.ROLE} SET deletedAt = ? WHERE id = ?`)
 		.bind(new Date().toISOString(), id)
 		.run();
 

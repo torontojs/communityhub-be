@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS role (
 	-- Schema version to use
 	schemaVersion INTEGER NOT NULL DEFAULT 1,
 	-- The role name
-	role TEXT NOT NULL,
+	name TEXT NOT NULL,
 	-- The role description
 	description TEXT,
 	-- The UUID of the team this role belongs to
@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS role (
 	happenedAt DATETIME NOT NULL,
 	-- The date this role was added to the database, saved as an ISO timestamp
 	insertedAt DATETIME NOT NULL,
+	-- The date this role was closed/deleted, saved as an ISO timestamp
+	deletedAt DATETIME DEFAULT NULL,
 
 	PRIMARY KEY (id),
 	FOREIGN KEY (teamId) REFERENCES team(id),

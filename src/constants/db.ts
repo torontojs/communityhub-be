@@ -25,7 +25,17 @@ export const InsertionTimestampsSchema = z.object({
 
 export type InsertionTimestamps = z.infer<typeof InsertionTimestampsSchema>;
 
-export const BaseDbEntitySchema = IdAndSchemaVersionSchema.merge(InsertionTimestampsSchema);
+export const DeletionTimestampsSchema = z.object({
+	deletedAt: z.string().datetime({ offset: true }).describe('The date when the entity was deleted from the database.').optional()
+});
+
+export type DeletionTimestamps = z.infer<typeof DeletionTimestampsSchema>;
+
+export const TimestampsSchema = InsertionTimestampsSchema.merge(DeletionTimestampsSchema);
+
+export type Timestamps = z.infer<typeof TimestampsSchema>;
+
+export const BaseDbEntitySchema = IdAndSchemaVersionSchema.merge(TimestampsSchema);
 
 export type BaseDBEntity = z.infer<typeof BaseDbEntitySchema>;
 
@@ -33,7 +43,8 @@ export const BaseDBFieldsToOmit: Record<keyof BaseDBEntity, true> = {
 	id: true,
 	schemaVersion: true,
 	happenedAt: true,
-	insertedAt: true
+	insertedAt: true,
+	deletedAt: true
 };
 
 export function generateBaseDBfields() {
