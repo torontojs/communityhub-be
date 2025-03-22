@@ -28,15 +28,46 @@ In order to improve the trust and security of the code contributed we require th
 
 Our editor of choice is Visual Studio Code (VS Code), it is not required for working with the code, but is recommended for sharing code and contributing with others.
 
-## Installing dependencies
+## Setting up the project
 
-Once you have cloned the repository, to install the dependencies run:
+1. Clone the repository
 
-```shell
-npm install --save-dev
-```
+    ```shell
+    git clone https://github.com/torontojs/vms.git
+    cd vms
+    ```
 
-This will install all of the needed dependencies.
+2. Install Volta to manage your node version and pin a specific version of `node` to the project.
+    - Note: If you already have `nvm` installed, `volta` will conflict with it so it's best to uninstall `nvm`.
+    ```shell
+        curl https://get.volta.sh | bash
+        source ~/.bashrc
+    ```
+
+3. Install the dependencies
+    ```shell
+        npm install
+    ```
+
+4. Copy the `.dev.vars.example` file to `.dev.vars` for providing environment secrets during development.
+    ```shell
+        cp .dev.vars.example .dev.vars
+    ```
+5. Create a SendGrid account and get your API key. We will use this to send emails.
+    1. Go to [SendGrid](https://sendgrid.com/) and create an account and complete your email verification.
+    2. Once you have created your account, log in
+    3. Send Grid may show a 3-step process when you first log in which you can skip. There will be a button on the top-right corner to "Skip to dashboard". Click on it.
+    4. Click on "Settings" dropdown on the left sidebar and click "API Keys".
+    5. Generate a new API Key with "Full Access" and click "Create & View".
+    6. Copy the API Key and paste it in the `.dev.vars` file under the `SENDGRID_API_KEY` variable.
+    7. Also, in the `.dev.vars` file, update the `SENDER_EMAIL` variable to be the email you used for your SendGrid account.
+
+6. Run migrations to create your tables and seed the database with some initial data.
+
+    ```shell
+        npm run db:setup
+        npm run db:seed
+    ```
 
 ## Starting the project
 
@@ -47,6 +78,9 @@ npm run dev
 ```
 
 the project will start in development mode and watch for code changes.
+
+## Resetting the database
+From time to time, you may want to reset the database. To do so, you'll need to delete the `.wrangler` folder and run the `db:setup` and `db:seed` scripts again.
 
 ## Coding standards and guidelines
 
