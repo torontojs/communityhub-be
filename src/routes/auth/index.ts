@@ -13,6 +13,13 @@ import { type SignInData, SignInSchema } from './validate.ts';
 export const authRoutes = new Hono();
 
 authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
+	if (!context.env.SENDGRID_API_KEY) {
+		throw new Error('❌ SENDGRID_API_KEY is not set which is needed to send emails');
+	}
+	if (!context.env.SENDER_EMAIL) {
+		throw new Error('❌ SENDER_EMAIL is not set which is needed to send emails');
+	}
+
 	let parsedBody: CreateProfileRequestBody;
 
 	try {
@@ -102,7 +109,7 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 		throw error;
 	}
 
-  const genericErrorMessage = 'The email and/or password is invalid or the account is not activated' 
+	const genericErrorMessage = 'The email and/or password is invalid or the account is not activated';
 
 	const { id: profileId, password: storedPassword } = await getProfileIdPassword(context.env.database, parsedBody.email);
 	if (!profileId || !storedPassword) {
