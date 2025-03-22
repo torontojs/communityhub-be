@@ -18,6 +18,10 @@ app.onError((err, context) => {
 	// TODO: add better error logging?
 	console.error(err);
 
+  if(err instanceof Error) {
+    return context.json({ message: err.message }, StatusCodes.INTERNAL_SERVER_ERROR);
+  }
+
 	return context.json({ message: 'An error has occured' }, StatusCodes.INTERNAL_SERVER_ERROR);
 });
 
