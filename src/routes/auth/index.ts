@@ -102,24 +102,26 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 		throw error;
 	}
 
+  const genericErrorMessage = 'The email and/or password is invalid or the account is not activated' 
+
 	const { id: profileId, password: storedPassword } = await getProfileIdPassword(context.env.database, parsedBody.email);
 	if (!profileId || !storedPassword) {
-		return context.json<StatusResponse>({ message: 'Invalid email' }, StatusCodes.UNAUTHORIZED);
+		return context.json<StatusResponse>({ message: genericErrorMessage }, StatusCodes.UNAUTHORIZED);
 	}
 
 	const isProfileValid = await checkProfile(context.env.database, profileId);
 	if (!isProfileValid) {
-		return context.json<StatusResponse>({ message: 'Invalid profile id or Account not activated' }, StatusCodes.UNAUTHORIZED);
+		return context.json<StatusResponse>({ message: genericErrorMessage }, StatusCodes.UNAUTHORIZED);
 	}
 
 	const accessLevel = await getAccessLevel(context.env.database, profileId);
 	if (!accessLevel) {
-		return context.json<StatusResponse>({ message: 'Access not found' }, StatusCodes.NOT_FOUND);
+		return context.json<StatusResponse>({ message: genericErrorMessage }, StatusCodes.UNAUTHORIZED);
 	}
 
 	const isValid = await validatePassword(parsedBody.password, storedPassword);
 	if (!isValid) {
-		return context.json<StatusResponse>({ message: 'Invalid email or password' }, StatusCodes.UNAUTHORIZED);
+		return context.json<StatusResponse>({ message: genericErrorMessage }, StatusCodes.UNAUTHORIZED);
 	}
 
 	const sessionToken = crypto.randomUUID();
