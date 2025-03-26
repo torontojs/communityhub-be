@@ -7,6 +7,7 @@ import { authRoutes } from './routes/auth/index.ts';
 import { protectedProfileRoutes, publicProfileRoutes } from './routes/profile/index.ts';
 import { privateRolesRoutes, publicRoleRoutes } from './routes/role/index.ts';
 import { protectedTeamRoutes, publicTeamRoutes } from './routes/team/index.ts';
+import { checkEnvVarsPresentOrThrow } from './utils/checkEnvVars.ts';
 import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
 
 const app = new OpenAPIHono<EnvironmentBindings>({
@@ -21,6 +22,7 @@ app.onError((err, context) => {
 	return context.json({ message: 'An error has occured' }, StatusCodes.INTERNAL_SERVER_ERROR);
 });
 
+app.use(checkEnvVarsPresentOrThrow);
 // CORS middleware22
 app.use(
 	'/*',

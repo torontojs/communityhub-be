@@ -13,13 +13,6 @@ import { type SignInData, SignInSchema } from './validate.ts';
 export const authRoutes = new Hono();
 
 authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
-	if (!context.env.SENDGRID_API_KEY) {
-		throw new Error('❌ SENDGRID_API_KEY is not set which is needed to send emails');
-	}
-	if (!context.env.SENDER_EMAIL) {
-		throw new Error('❌ SENDER_EMAIL is not set which is needed to send emails');
-	}
-
 	let parsedBody: CreateProfileRequestBody;
 
 	try {
