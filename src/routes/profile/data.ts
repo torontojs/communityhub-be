@@ -34,7 +34,7 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 		database.prepare(`
 			INSERT INTO ${DBTables.ROLE} (
 				id, schemaVersion, happenedAt, insertedAt,
-				role, description, teamId, profileId
+				name, description, teamId, profileId
 			)
 			VALUES (
 				?, ?, ?, ?,
