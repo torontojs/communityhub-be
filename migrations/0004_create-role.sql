@@ -13,9 +13,9 @@ CREATE TABLE IF NOT EXISTS role (
 	-- The role description
 	description TEXT,
 	-- The UUID of the team this role belongs to
-	teamId TEXT NOT NULL UNIQUE COLLATE BINARY,
+	teamId TEXT NOT NULL COLLATE BINARY,
 	-- The UUID of the profile this role is assigned to
-	profileId TEXT NOT NULL UNIQUE COLLATE BINARY,
+	profileId TEXT NOT NULL COLLATE BINARY,
 	-- The date this role was assigned, saved as an ISO timestamp
 	happenedAt DATETIME NOT NULL,
 	-- The date this role was added to the database, saved as an ISO timestamp
