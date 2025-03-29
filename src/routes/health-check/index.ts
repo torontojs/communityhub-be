@@ -54,7 +54,7 @@ healthCheckRoutes.openapi(
 					.url({ message: 'must be a valid URL' }),
 				SENDER_EMAIL: z
 					.string({ message: 'required for emails to be sent' })
-					.email({ message: 'must be a valid email address'}),
+					.email({ message: 'must be a valid email address' }),
 				SENDGRID_API_KEY: z
 					.string({ message: 'required for emails to be sent' })
 					.min(1, { message: 'required for emails to be sent' }),
