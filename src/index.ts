@@ -4,10 +4,10 @@ import { cors } from 'hono/cors';
 import packageJson from '../package.json';
 import { authMiddleware } from './middleware/auth.ts';
 import { authRoutes } from './routes/auth/index.ts';
+import { healthCheckRoutes } from './routes/health-check/index.ts';
 import { protectedProfileRoutes, publicProfileRoutes } from './routes/profile/index.ts';
 import { privateRolesRoutes, publicRoleRoutes } from './routes/role/index.ts';
 import { protectedTeamRoutes, publicTeamRoutes } from './routes/team/index.ts';
-import { checkEnvVarsPresentOrThrow } from './utils/checkEnvVars.ts';
 import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
 
 const app = new OpenAPIHono<EnvironmentBindings>({
@@ -22,7 +22,6 @@ app.onError((err, context) => {
 	return context.json({ message: 'An error has occured' }, StatusCodes.INTERNAL_SERVER_ERROR);
 });
 
-app.use(checkEnvVarsPresentOrThrow);
 // CORS middleware22
 app.use(
 	'/*',
@@ -58,6 +57,7 @@ app.doc('/open-api.json', {
 });
 
 // Public routes
+app.route('/health-check', healthCheckRoutes);
 app.route('/auth', authRoutes);
 app.route('/roles', publicRoleRoutes);
 // Handle static assets using Cloudflare Workers
