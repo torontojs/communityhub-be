@@ -43,7 +43,7 @@ healthCheckRoutes.openapi(
 			BASE_URL: context.env.BASE_URL,
 			SENDER_EMAIL: context.env.SENDER_EMAIL,
 			SENDGRID_API_KEY: context.env.SENDGRID_API_KEY,
-			NODE_ENVIRONMENT: context.env.NODE_ENVIRONMENT
+			NODE_ENV: context.env.NODE_ENV
 		};
 
 		// NOTE: please update the schema of new environment variables here
@@ -51,23 +51,21 @@ healthCheckRoutes.openapi(
 			{
 				BASE_URL: z
 					.string({ message: 'required for the server to run' })
-					.url('must be a valid URL')
-					.min(1),
+					.url({ message: 'must be a valid URL' }),
 				SENDER_EMAIL: z
 					.string({ message: 'required for emails to be sent' })
-					.email('must be a valid email address')
-					.min(1),
+					.email({ message: 'must be a valid email address'}),
 				SENDGRID_API_KEY: z
 					.string({ message: 'required for emails to be sent' })
-					.min(1, 'required for emails to be sent'),
-				NODE_ENVIRONMENT: z
+					.min(1, { message: 'required for emails to be sent' }),
+				NODE_ENV: z
 					.enum(['development', 'local', 'production'], { message: 'must be one of the following: development, local, production' })
 			} satisfies Record<EnvKeys, ZodSchema>
 		);
 
 		const result = envSchema.safeParse(env);
 
-		if (context.env.NODE_ENVIRONMENT === 'production') {
+		if (context.env.NODE_ENV === 'production') {
 			if (result.success) {
 				return context.json({ message: '✅ OK' } satisfies StatusResponse, StatusCodes.OKAY);
 			}

@@ -8,7 +8,7 @@ interface EnvVars {
 	SENDER_EMAIL: string;
 	SENDGRID_API_KEY: string;
 	ASSETS: Fetcher;
-	NODE_ENVIRONMENT: NodeEnvironment;
+	NODE_ENV: NodeEnvironment;
 }
 
 interface EnvironmentBindings {
