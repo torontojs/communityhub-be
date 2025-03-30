@@ -4,7 +4,10 @@ import { DBTables } from '../../constants/db.ts';
 export async function getLoginInfo(database: D1Database, email: string) {
 	const results = await database
 		.prepare(`
-       SELECT a.password, a.access_level, p.id
+       SELECT
+           a.password as storedPassword,
+           a.access_level as accessLevel,
+           p.id as profileId
        FROM access a
        INNER JOIN
        profile p
@@ -13,7 +16,7 @@ export async function getLoginInfo(database: D1Database, email: string) {
        LIMIT 1
     `)
 		.bind(email)
-		.first<{ password: string, access_level: Access, id: string }>();
+		.first<{ storedPassword: string, accessLevel: Access, profileId: string }>();
 
 	return results;
 }

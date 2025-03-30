@@ -110,9 +110,9 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 	}
 
 	const {
-		password: storedPassword,
-		access_level: accessLevel,
-		id: profileId
+		storedPassword,
+		accessLevel,
+		profileId
 	} = results;
 
 	if (!storedPassword) {
