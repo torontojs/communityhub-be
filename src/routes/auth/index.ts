@@ -46,6 +46,9 @@ authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
 		{ expirationTtl: 60 * 10 }
 	);
 
+	if (context.env.NODE_ENV === 'local') {
+		return context.json<StatusResponse>({ message: token }, StatusCodes.OKAY);
+	}
 	const activationUrl = `${context.env.BASE_URL}/auth/activate?token=${token}`;
 	const logoUrl = `${context.env.BASE_URL}/assets/torontojs-logo.png`;
 	const emailText = `Please confirm your account by clicking the following link: ${activationUrl}`;
@@ -134,11 +137,13 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 	const sessionData = JSON.stringify(sessionDataObject);
 	await context.env.SESSION_TOKENS.put(sessionToken, sessionData);
 
+	const loginMessage = 'Logged in successfully';
+
 	if (context.env.NODE_ENV === 'local') {
 		context.header('Set-Cookie', `auth_token=${sessionToken}; HttpOnly; SameSite=Strict; Expires=${tokenExpiryISO}; Path=/;`);
+		return context.json<StatusResponse>({ message: loginMessage }, StatusCodes.OKAY);
 	}
 
 	context.header('Set-Cookie', `auth_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Expires=${tokenExpiryISO}; Path=/;`);
-
-	return context.json(sessionToken);
+	return context.json<StatusResponse>({ message: loginMessage }, StatusCodes.OKAY);
 });
