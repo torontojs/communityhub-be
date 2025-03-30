@@ -134,6 +134,10 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 	const sessionData = JSON.stringify(sessionDataObject);
 	await context.env.SESSION_TOKENS.put(sessionToken, sessionData);
 
+	if (context.env.NODE_ENV === 'local') {
+		context.header('Set-Cookie', `auth_token=${sessionToken}; HttpOnly; SameSite=Strict; Expires=${tokenExpiryISO}; Path=/;`);
+	}
+
 	context.header('Set-Cookie', `auth_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Expires=${tokenExpiryISO}; Path=/;`);
 
 	return context.json(sessionToken);
