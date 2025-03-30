@@ -1,43 +1,21 @@
-import { type AccessSchema, DBTables } from '../../constants/db.ts';
-import type { Profile } from './validate.ts';
+import type { Access } from 'src/types/data/access.ts';
+import { DBTables } from '../../constants/db.ts';
 
-export async function getProfileIdPassword(database: D1Database, email: string) {
-	const { results } = await database
+export async function getLoginInfo(database: D1Database, email: string) {
+	const results = await database
 		.prepare(`
-            SELECT id, password
-            FROM ${DBTables.ACCESS}
-            WHERE email = ?
-			LIMIT 1
-        `)
+       SELECT a.password, a.access_level, p.id
+       FROM access a
+       INNER JOIN
+       profile p
+       on p.id = a.id
+       WHERE p.email = ? and p.activatedAt IS NOT NULL and p.deactivatedAt IS NULL
+       LIMIT 1
+    `)
 		.bind(email)
-		.run<AccessSchema>();
+		.first<{ password: string, access_level: Access, id: string }>();
 
-	return { id: results[0]?.id, password: results[0]?.password };
-}
-
-export async function checkProfile(database: D1Database, profileId: string) {
-	const { results } = await database
-		.prepare(`
-			SELECT id
-			FROM ${DBTables.PROFILE}
-			WHERE id = ?
-			AND activatedAt IS NOT NULL
-			AND deactivatedAt IS NULL
-			LIMIT 1
-		`)
-		.bind(profileId)
-		.run<Profile>();
-
-	return Boolean(results.length);
-}
-
-export async function getAccessLevel(database: D1Database, profileId: string) {
-	const { results } = await database
-		.prepare(`SELECT access_level FROM ${DBTables.ACCESS} WHERE id = ? LIMIT 1`)
-		.bind(profileId)
-		.run<AccessSchema>();
-
-	return results[0]?.access_level;
+	return results;
 }
 
 export async function checkEmail(database: D1Database, email: string) {
