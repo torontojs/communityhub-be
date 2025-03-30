@@ -104,7 +104,7 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 
 	const results = await getLoginInfo(context.env.database, parsedBody.email);
 
-	const genericSignInError = 'Either your email is invalid, not activated or deactivated';
+	const genericSignInError = 'Either your email/password combination is invalid, or your account is not active';
 	if (!results) {
 		return context.json<StatusResponse>({ message: genericSignInError }, StatusCodes.UNAUTHORIZED);
 	}
