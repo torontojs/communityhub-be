@@ -57,7 +57,6 @@ app.doc('/open-api.json', {
 });
 
 // Public routes
-app.route('/health-check', healthCheckRoutes);
 app.route('/auth', authRoutes);
 app.route('/roles', publicRoleRoutes);
 // Handle static assets using Cloudflare Workers
@@ -69,6 +68,7 @@ app.route('/teams', publicTeamRoutes);
 
 // Protected routes (after auth middleware)
 app.use('/*', authMiddleware);
+app.route('/health-check', healthCheckRoutes);
 app.route('/profiles', protectedProfileRoutes);
 app.route('/teams', protectedTeamRoutes);
 app.route('/roles', privateRolesRoutes);

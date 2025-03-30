@@ -1,5 +1,6 @@
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
 import type { Context } from 'hono';
+import { authMiddleware } from 'src/middleware/auth';
 import { StatusCodes, type StatusResponse, statusResponseFormatter, StatusResponseSchema } from 'src/utils/responses';
 import type { ZodSchema } from 'zod';
 
@@ -28,7 +29,8 @@ healthCheckRoutes.openapi(
 				description: 'Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
-		}
+		},
+		middleware: [authMiddleware] as const
 	}),
 	(context: Context<EnvironmentBindings>) => {
 		type EnvToCheck = Omit<
