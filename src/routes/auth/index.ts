@@ -119,10 +119,6 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 		return context.json<StatusResponse>({ message: genericSignInError }, StatusCodes.UNAUTHORIZED);
 	}
 
-	if (!accessLevel) {
-		return context.json<StatusResponse>({ message: genericSignInError }, StatusCodes.UNAUTHORIZED);
-	}
-
 	const isValid = await validatePassword(parsedBody.password, storedPassword);
 	if (!isValid) {
 		return context.json<StatusResponse>({ message: genericSignInError }, StatusCodes.UNAUTHORIZED);
