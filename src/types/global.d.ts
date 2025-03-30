@@ -1,4 +1,4 @@
-type NodeEnvironment = 'local' | 'development' | 'production';
+type NodeEnvironment = 'development' | 'local' | 'production';
 
 interface EnvironmentBindings {
 	Bindings: {
