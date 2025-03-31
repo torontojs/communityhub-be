@@ -1,8 +1,7 @@
-import { Access } from './access.ts';
+import type { Access } from './access.ts';
 
-export interface heartbeat {
+export interface Heartbeat {
 	name: string;
 	avatar: string;
 	access: Access;
-	isAuthenticated: boolean;
 }

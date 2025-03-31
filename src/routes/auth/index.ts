@@ -10,6 +10,7 @@ import { getProfileById, insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
 import { activateProfile, checkEmail, checkProfile, getAccessLevel, getProfileIdPassword } from './data.ts';
 import { type SignInData, SignInSchema } from './validate.ts';
+import { Heartbeat } from '../../types/data/heartBeat.ts';
 
 export const authRoutes = new Hono();
 
@@ -166,12 +167,14 @@ authRoutes.get('/heartbeat', async (context: Context<EnvironmentBindings>) => {
 
 	const profile = await getProfileById(context.env.database, sessionData.id);
 
+	if(!profile){
+		return context.json({message:"Internal error getting profile"}, StatusCodes.UNAUTHORIZED)
+	}
 	const access = sessionData.access;
-	const isAuthenticated = true;
 	const name = profile?.name;
 
 	// STUB: Avatar upload and resource under construction
 	const avatar = 'https://gravatar.com/avatar/f8eb6ba9cc4ad24f3b79897a8596ee90?s=400&d=robohash&r=x';
 
-	return context.json({ access: access, authenticated: isAuthenticated, name: name, avatar: avatar });
+	return context.json<Heartbeat>({ access: access, name:name, avatar: avatar });
 });
