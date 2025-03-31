@@ -2,14 +2,12 @@ import sgMail from '@sendgrid/mail';
 import { addHours } from 'date-fns';
 import { type Context, Hono } from 'hono';
 import { getCookie } from 'hono/cookie';
-import { getEnvironmentData } from 'worker_threads';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
-import { type Access } from '../../types/data/access.ts';
 import type { SessionData } from '../../types/data/session';
 import { hashPassword, validatePassword } from '../../utils/password-hashing.ts';
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { getProfileById, insertProfile } from '../profile/data.ts';
-import { type CreateProfileRequestBody, CreateProfileSchema, type Profile } from '../profile/validation.ts';
+import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
 import { activateProfile, checkEmail, checkProfile, getAccessLevel, getProfileIdPassword } from './data.ts';
 import { type SignInData, SignInSchema } from './validate.ts';
 
