@@ -5,10 +5,13 @@ import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
 import type { SessionData } from '../../types/data/session';
 import { hashPassword, validatePassword } from '../../utils/password-hashing.ts';
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
-import { insertProfile } from '../profile/data.ts';
-import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
+import { getProfileById, insertProfile } from '../profile/data.ts';
+import { type CreateProfileRequestBody, CreateProfileSchema, type Profile } from '../profile/validation.ts';
 import { activateProfile, checkEmail, checkProfile, getAccessLevel, getProfileIdPassword } from './data.ts';
 import { type SignInData, SignInSchema } from './validate.ts';
+import { getCookie } from 'hono/cookie';
+import { type Access} from '../../types/data/access.ts'
+import { getEnvironmentData } from 'worker_threads';
 
 export const authRoutes = new Hono();
 
@@ -138,3 +141,39 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 
 	return context.json(sessionToken);
 });
+
+authRoutes.get('/heartbeat', async (context: Context<EnvironmentBindings>)=>{
+	const cookies = context.req.header('Cookie');
+
+	if(!cookies){
+		return context.json<StatusResponse>({ message: 'No cookies found'}, StatusCodes.UNAUTHORIZED)
+	}
+
+	const sessionToken: string | undefined = getCookie(context, 'auth_token');
+
+	if(!sessionToken){
+		return context.json<StatusResponse>({message: "Invalid or missing token"}, StatusCodes.UNAUTHORIZED)
+	}
+
+	const sessionData  = await context.env.SESSION_TOKENS.get<SessionData>(sessionToken, 'json') || undefined;
+
+	if(!sessionData){
+		return context.json({message: 'Invalid session'}, StatusCodes.UNAUTHORIZED);
+	}
+
+	if (new Date(sessionData.expiry) < new Date()) {
+		await context.env.SESSION_TOKENS.delete(sessionToken);
+		return context.json({ message: 'Session expired' }, StatusCodes.UNAUTHORIZED);
+	}
+
+	const profile =  await getProfileById(context.env.database, sessionData.id)
+
+	const access = sessionData.access;
+	const isAuthenticated = true;
+	const name = profile?.name;
+
+	// STUB: Avatar upload and resource under construction
+	const avatar = 'https://gravatar.com/avatar/f8eb6ba9cc4ad24f3b79897a8596ee90?s=400&d=robohash&r=x'
+
+	return context.json({ access: access, authenticated: isAuthenticated, name: name, avatar: avatar })
+})
