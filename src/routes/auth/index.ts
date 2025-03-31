@@ -3,7 +3,7 @@ import { addHours } from 'date-fns';
 import { type Context, Hono } from 'hono';
 import { getCookie } from 'hono/cookie';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
-import { type Heartbeat } from '../../types/data/heartBeat.ts';
+import type { Heartbeat } from '../../types/data/heartBeat.ts';
 import type { SessionData } from '../../types/data/session';
 import { hashPassword, validatePassword } from '../../utils/password-hashing.ts';
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
@@ -168,13 +168,13 @@ authRoutes.get('/heartbeat', async (context: Context<EnvironmentBindings>) => {
 	const profile = await getProfileById(context.env.database, sessionData.id);
 
 	if (!profile) {
-		return context.json({ message: 'Internal error getting profile' }, StatusCodes.UNAUTHORIZED);
+		return context.json({ message: 'Internal error getting profile that shoudl exist' }, StatusCodes.INTERNAL_SERVER_ERROR);
 	}
-	const access = sessionData.access;
-	const name = profile?.name;
+	const {access} = sessionData;
+	const name = profile.name;
 
 	// STUB: Avatar upload and resource under construction
 	const avatar = 'https://gravatar.com/avatar/f8eb6ba9cc4ad24f3b79897a8596ee90?s=400&d=robohash&r=x';
 
-	return context.json<Heartbeat>({ access: access, name: name, avatar: avatar });
+	return context.json<Heartbeat>({ access, name, avatar });
 });
