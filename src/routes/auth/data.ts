@@ -11,7 +11,7 @@ export async function getLoginInfo(database: D1Database, email: string) {
        FROM access
        INNER JOIN
        profile
-       on profile.id = access.id
+       ON profile.id = access.id
        WHERE profile.email = ? AND profile.activatedAt IS NOT NULL AND profile.deactivatedAt IS NULL
        LIMIT 1
     `)
