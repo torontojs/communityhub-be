@@ -1,18 +1,24 @@
 import sgMail from '@sendgrid/mail';
+import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { addHours } from 'date-fns';
 import { type Context, Hono } from 'hono';
 import { getCookie } from 'hono/cookie';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
-import { type Profile } from '../../types/data/';
 import type { Heartbeat } from '../../types/data/heartBeat.ts';
 import type { SessionData } from '../../types/data/session';
 import { hashPassword, validatePassword } from '../../utils/password-hashing.ts';
-import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
+import { StatusCodes, statusResponseFormatter, StatusResponseSchema, type StatusResponse } from '../../utils/responses.ts';
 import { getProfileById, insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema, type Profile } from '../profile/validation.ts';
 import { activateProfile, checkEmail, checkProfile, getAccessLevel, getProfileIdPassword } from './data.ts';
 import { type SignInData, SignInSchema } from './validate.ts';
 export const authRoutes = new Hono();
+
+// Public Routes
+export const publicAuthRoutes = new OpenAPIHono<EnvironmentBindings>({
+	defaultHook: statusResponseFormatter
+});
+
 
 authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
 	let parsedBody: CreateProfileRequestBody;
@@ -91,7 +97,40 @@ authRoutes.get('/activate', async (context: Context<EnvironmentBindings>) => {
 	return context.json({ message: 'Account activated successfully' }, StatusCodes.OKAY);
 });
 
-authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
+publicAuthRoutes.openapi(
+	createRoute({
+		method:'post',
+		path:'/',
+		operationId: 'signIn',
+		description: 'Sign in to community hub account',
+		tags: ['Sign-in'],
+		request: {
+			body: { content: { 'application/json': { schema: SignInSchema } }, required: true }
+		},
+		responses: {
+			[StatusCodes.BAD_REQUEST]: {
+				description: 'Invalid JSON format:',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.UNAUTHORIZED]: {
+				description: 'Authorized',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.NOT_FOUND]: {
+				description: 'Access not found',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.CREATED]: {
+				description: 'Sign in succesful',
+				content: { 'application/json': { schema :StatusResponseSchema} }
+			},
+			[StatusCodes.OKAY]: {
+			description: 'Sign in succesful',
+			content: { 'application/json': { schema :StatusResponseSchema} }
+			}
+		},
+	}),
+	async (context) => {
 	let parsedBody: SignInData;
 
 	try {
@@ -99,29 +138,29 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 		parsedBody = SignInSchema.parse(body);
 	} catch (error) {
 		if (error instanceof SyntaxError) {
-			return context.json<StatusResponse>({ message: `Invalid JSON format: ${error.message}` }, StatusCodes.BAD_REQUEST);
+			return context.json({ message: `Invalid JSON format: ${error.message}` } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
 		}
 		throw error;
 	}
 
 	const { id: profileId, password: storedPassword } = await getProfileIdPassword(context.env.database, parsedBody.email);
 	if (!profileId || !storedPassword) {
-		return context.json<StatusResponse>({ message: 'Invalid email' }, StatusCodes.UNAUTHORIZED);
+		return context.json({ message: 'Invalid email' } satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
 	}
 
 	const isProfileValid = await checkProfile(context.env.database, profileId);
 	if (!isProfileValid) {
-		return context.json<StatusResponse>({ message: 'Invalid profile id or Account not activated' }, StatusCodes.UNAUTHORIZED);
+		return context.json({ message: 'Invalid profile id or Account not activated' } satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
 	}
 
 	const accessLevel = await getAccessLevel(context.env.database, profileId);
 	if (!accessLevel) {
-		return context.json<StatusResponse>({ message: 'Access not found' }, StatusCodes.NOT_FOUND);
+		return context.json({ message: 'Access not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 	}
 
 	const isValid = await validatePassword(parsedBody.password, storedPassword);
 	if (!isValid) {
-		return context.json<StatusResponse>({ message: 'Invalid email or password' }, StatusCodes.UNAUTHORIZED);
+		return context.json({ message: 'Invalid email or password' } satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
 	}
 
 	const sessionToken = crypto.randomUUID();
@@ -138,8 +177,9 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 
 	context.header('Set-Cookie', `auth_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Expires=${tokenExpiryISO}; Path=/;`);
 
-	return context.json(sessionToken);
-});
+	return context.json({ message: 'Sign in successful' } satisfies StatusResponse, StatusCodes.CREATED);
+	}
+)
 
 authRoutes.get('/heartbeat', async (context: Context<EnvironmentBindings>) => {
 	const cookies = context.req.header('Cookie');
