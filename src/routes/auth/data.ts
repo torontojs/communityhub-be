@@ -5,14 +5,14 @@ export async function getLoginInfo(database: D1Database, email: string) {
 	const results = await database
 		.prepare(`
        SELECT
-           a.password as storedPassword,
-           a.access_level as accessLevel,
-           p.id as profileId
-       FROM access a
+           access.password as storedPassword,
+           access.access_level as accessLevel,
+           profile.id as profileId
+       FROM access
        INNER JOIN
-       profile p
-       on p.id = a.id
-       WHERE p.email = ? and p.activatedAt IS NOT NULL and p.deactivatedAt IS NULL
+       profile
+       on profile.id = access.id
+       WHERE profile.email = ? AND profile.activatedAt IS NOT NULL AND profile.deactivatedAt IS NULL
        LIMIT 1
     `)
 		.bind(email)
