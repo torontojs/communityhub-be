@@ -34,6 +34,3 @@ certs
 
 # Typescript build info
 *.tsbuildinfo
-
-# Bruno: Abdul testing out bruno
-bruno/
