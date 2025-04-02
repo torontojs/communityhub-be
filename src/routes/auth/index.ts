@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import sgMail from '@sendgrid/mail';
 import { addHours } from 'date-fns';
-import { type Context, Hono } from 'hono';
+import { Hono } from 'hono';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
 import { authorizeVolunteer } from '../../middleware/createMiddleware.ts';
 import type { SessionData } from '../../types/data/session';
@@ -13,11 +13,10 @@ import { activateProfile, checkEmail, checkProfile, getAccessLevel, getProfileId
 import { type SignInData, SignInSchema, SignUpSchema } from './validate.ts';
 export const authRoutes = new Hono();
 
-// Public Routes
+// Public Routes (Post, Get)
 export const publicAuthRoutes = new OpenAPIHono<EnvironmentBindings>({
 	defaultHook: statusResponseFormatter
 });
-
 
 publicAuthRoutes.openapi(
 	createRoute({
@@ -45,57 +44,89 @@ publicAuthRoutes.openapi(
 		}
 	}),
 	async (context) => {
-	let parsedBody: CreateProfileRequestBody;
+		let parsedBody: CreateProfileRequestBody;
 
-	try {
-		const body = await context.req.json();
-		parsedBody = CreateProfileSchema.parse(body);
-	} catch (error) {
-		if (error instanceof SyntaxError) {
-			return context.json({ message: `Invalid JSON format: ${error.message}` } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+		try {
+			const body = await context.req.json();
+			parsedBody = CreateProfileSchema.parse(body);
+		} catch (error) {
+			if (error instanceof SyntaxError) {
+				return context.json({ message: `Invalid JSON format: ${error.message}` } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+			}
+			throw error;
 		}
-		throw error;
-	}
 
-	const emailExists = await checkEmail(context.env.database, parsedBody.email);
-	if (emailExists) {
-		return context.json({ message: 'Duplicate email' } satisfies StatusResponse, StatusCodes.CONFLICT);
-	}
+		const emailExists = await checkEmail(context.env.database, parsedBody.email);
+		if (emailExists) {
+			return context.json({ message: 'Duplicate email' } satisfies StatusResponse, StatusCodes.CONFLICT);
+		}
 
-	const hashedPasswordWithSalt = await hashPassword(parsedBody.password);
+		const hashedPasswordWithSalt = await hashPassword(parsedBody.password);
 
-	// Store the hashed password and salt in the database
-	parsedBody.password = hashedPasswordWithSalt;
-	await insertProfile(context.env.database, parsedBody);
+		// Store the hashed password and salt in the database
+		parsedBody.password = hashedPasswordWithSalt;
+		await insertProfile(context.env.database, parsedBody);
 
-	// Send email
-	sgMail.setApiKey(context.env.SENDGRID_API_KEY);
+		// Send email
+		sgMail.setApiKey(context.env.SENDGRID_API_KEY);
 
-	const token = crypto.randomUUID();
-	await context.env.ACTIVATION_TOKENS.put(
-		token,
-		parsedBody.email,
-		{ expirationTtl: 60 * 10 }
-	);
+		const token = crypto.randomUUID();
+		await context.env.ACTIVATION_TOKENS.put(
+			token,
+			parsedBody.email,
+			{ expirationTtl: 60 * 10 }
+		);
 
-	const activationUrl = `${context.env.BASE_URL}/auth/activate?token=${token}`;
-	const logoUrl = `${context.env.BASE_URL}/assets/torontojs-logo.png`;
-	const emailText = `Please confirm your account by clicking the following link: ${activationUrl}`;
-	const emailHtmlTemplate = generateEmailHtml(activationUrl, logoUrl);
-	const msg = {
-		to: parsedBody.email,
-		from: context.env.SENDER_EMAIL,
-		subject: '[TorontoJS] Confirm your account',
-		text: emailText,
-		html: emailHtmlTemplate
-	};
-	await sgMail.send(msg);
+		const activationUrl = `${context.env.BASE_URL}/auth/activate?token=${token}`;
+		const logoUrl = `${context.env.BASE_URL}/assets/torontojs-logo.png`;
+		const emailText = `Please confirm your account by clicking the following link: ${activationUrl}`;
+		const emailHtmlTemplate = generateEmailHtml(activationUrl, logoUrl);
+		const msg = {
+			to: parsedBody.email,
+			from: context.env.SENDER_EMAIL,
+			subject: '[TorontoJS] Confirm your account',
+			text: emailText,
+			html: emailHtmlTemplate
+		};
+		await sgMail.send(msg);
 
-	return context.json({ message: 'Created a new profile and sent an email for confirmation' } satisfies StatusResponse, StatusCodes.OKAY);
+		return context.json({ message: 'Created a new profile and sent an email for confirmation' } satisfies StatusResponse, StatusCodes.OKAY);
 	}
 );
-
-authRoutes.get('/activate', async (context: Context<EnvironmentBindings>) => {
+publicAuthRoutes.openapi(
+	createRoute({
+		method: 'get',
+		path: '/',
+		operationId: 'activate',
+		description: 'Received activation email and clicked on activation link',
+		tags: ['Activate'],
+		request: {
+			body: { content: { 'application/json': { schema: SignUpSchema } }, required: true }
+		},
+		responses: {
+			[StatusCodes.BAD_REQUEST]: {
+				description: 'Invalid or missing token',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.UNAUTHORIZED]: {
+				description: 'Invalid or expired token',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.NOT_FOUND]: {
+				description: 'User nof found',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.INTERNAL_SERVER_ERROR]: {
+				description: 'Failed to activate account',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.OKAY]: {
+				description: 'Account activated successfully',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			}
+		}
+	}),
+	async (context) => {
 	const token = context.req.query('token');
 	if (!token) {
 		return context.json({ message: 'Invalid or missing token' }, StatusCodes.BAD_REQUEST);
@@ -119,8 +150,9 @@ authRoutes.get('/activate', async (context: Context<EnvironmentBindings>) => {
 	// Remove token after successful activation
 	await context.env.ACTIVATION_TOKENS.delete(token);
 
-	return context.json({ message: 'Account activated successfully' }, StatusCodes.OKAY);
-});
+	return context.json({ message: 'Account activated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
+	}
+);
 
 publicAuthRoutes.openapi(
 	createRoute({
@@ -243,7 +275,6 @@ protectedAuthRoutes.openapi(
 		if (!profile) {
 			return context.json({ message: 'Internal error getting profile that shoudl exist' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
-		// Const { access } = sessionData;
 		const { name } = profile;
 		const { access } = sessionData;
 
