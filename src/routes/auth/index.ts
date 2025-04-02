@@ -127,30 +127,30 @@ publicAuthRoutes.openapi(
 		}
 	}),
 	async (context) => {
-	const token = context.req.query('token');
-	if (!token) {
-		return context.json({ message: 'Invalid or missing token' }, StatusCodes.BAD_REQUEST);
-	}
+		const token = context.req.query('token');
+		if (!token) {
+			return context.json({ message: 'Invalid or missing token' }, StatusCodes.BAD_REQUEST);
+		}
 
-	const email = await context.env.ACTIVATION_TOKENS.get(token);
-	if (!email) {
-		return context.json({ message: 'Invalid or expired token' }, StatusCodes.UNAUTHORIZED);
-	}
+		const email = await context.env.ACTIVATION_TOKENS.get(token);
+		if (!email) {
+			return context.json({ message: 'Invalid or expired token' }, StatusCodes.UNAUTHORIZED);
+		}
 
-	const emailExists = await checkEmail(context.env.database, email);
-	if (!emailExists) {
-		return context.json({ message: 'User not found' }, StatusCodes.NOT_FOUND);
-	}
+		const emailExists = await checkEmail(context.env.database, email);
+		if (!emailExists) {
+			return context.json({ message: 'User not found' }, StatusCodes.NOT_FOUND);
+		}
 
-	const activated = await activateProfile(context.env.database, email);
-	if (!activated) {
-		return context.json({ message: 'Failed to activate account' }, StatusCodes.INTERNAL_SERVER_ERROR);
-	}
+		const activated = await activateProfile(context.env.database, email);
+		if (!activated) {
+			return context.json({ message: 'Failed to activate account' }, StatusCodes.INTERNAL_SERVER_ERROR);
+		}
 
-	// Remove token after successful activation
-	await context.env.ACTIVATION_TOKENS.delete(token);
+		// Remove token after successful activation
+		await context.env.ACTIVATION_TOKENS.delete(token);
 
-	return context.json({ message: 'Account activated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
+		return context.json({ message: 'Account activated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
 	}
 );
 
