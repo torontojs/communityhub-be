@@ -3,7 +3,7 @@ import type { Context } from 'hono';
 import { cors } from 'hono/cors';
 import packageJson from '../package.json';
 import { authMiddleware } from './middleware/auth.ts';
-import { publicAuthRoutes } from './routes/auth/index.ts';
+import { protectedAuthRoutes, publicAuthRoutes } from './routes/auth/index.ts';
 import { protectedProfileRoutes, publicProfileRoutes } from './routes/profile/index.ts';
 import { privateRolesRoutes, publicRoleRoutes } from './routes/role/index.ts';
 import { protectedTeamRoutes, publicTeamRoutes } from './routes/team/index.ts';
@@ -67,7 +67,7 @@ app.route('/teams', publicTeamRoutes);
 
 // Protected routes (after auth middleware)
 app.use('/*', authMiddleware);
-// App.use('/auth', protectedAuthRoutes)
+app.route('/auth', protectedAuthRoutes)
 app.route('/profiles', protectedProfileRoutes);
 app.route('/teams', protectedTeamRoutes);
 app.route('/roles', privateRolesRoutes);
