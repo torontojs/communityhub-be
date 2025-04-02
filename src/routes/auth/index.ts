@@ -1,23 +1,22 @@
-import sgMail from '@sendgrid/mail';
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
+import sgMail from '@sendgrid/mail';
 import { addHours } from 'date-fns';
 import { type Context, Hono } from 'hono';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
+import { authorizeVolunteer } from '../../middleware/createMiddleware.ts';
 import type { SessionData } from '../../types/data/session';
 import { hashPassword, validatePassword } from '../../utils/password-hashing.ts';
-import { HeartbeatResponseSchema, StatusCodes, statusResponseFormatter, StatusResponseSchema, type HeartbeatResponse, type StatusResponse } from '../../utils/responses.ts';
+import { type HeartbeatResponse, HeartbeatResponseSchema, StatusCodes, type StatusResponse, statusResponseFormatter, StatusResponseSchema } from '../../utils/responses.ts';
 import { getProfileById, insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
 import { activateProfile, checkEmail, checkProfile, getAccessLevel, getProfileIdPassword } from './data.ts';
 import { type SignInData, SignInSchema } from './validate.ts';
-import { authorizeVolunteer } from '../../middleware/createMiddleware.ts';
 export const authRoutes = new Hono();
 
 // Public Routes
 export const publicAuthRoutes = new OpenAPIHono<EnvironmentBindings>({
 	defaultHook: statusResponseFormatter
 });
-
 
 authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
 	let parsedBody: CreateProfileRequestBody;
@@ -98,8 +97,8 @@ authRoutes.get('/activate', async (context: Context<EnvironmentBindings>) => {
 
 publicAuthRoutes.openapi(
 	createRoute({
-		method:'post',
-		path:'/',
+		method: 'post',
+		path: '/',
 		operationId: 'signIn',
 		description: 'Sign in to community hub account',
 		tags: ['Sign-in'],
@@ -121,60 +120,60 @@ publicAuthRoutes.openapi(
 			},
 			[StatusCodes.CREATED]: {
 				description: 'Sign in succesful',
-				content: { 'application/json': { schema :StatusResponseSchema} }
-			},
-		},
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			}
+		}
 	}),
 	async (context) => {
-	let parsedBody: SignInData;
+		let parsedBody: SignInData;
 
-	try {
-		const body = await context.req.json();
-		parsedBody = SignInSchema.parse(body);
-	} catch (error) {
-		if (error instanceof SyntaxError) {
-			return context.json({ message: `Invalid JSON format: ${error.message}` } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+		try {
+			const body = await context.req.json();
+			parsedBody = SignInSchema.parse(body);
+		} catch (error) {
+			if (error instanceof SyntaxError) {
+				return context.json({ message: `Invalid JSON format: ${error.message}` } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+			}
+			throw error;
 		}
-		throw error;
+
+		const { id: profileId, password: storedPassword } = await getProfileIdPassword(context.env.database, parsedBody.email);
+		if (!profileId || !storedPassword) {
+			return context.json({ message: 'Invalid email' } satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
+		}
+
+		const isProfileValid = await checkProfile(context.env.database, profileId);
+		if (!isProfileValid) {
+			return context.json({ message: 'Invalid profile id or Account not activated' } satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
+		}
+
+		const accessLevel = await getAccessLevel(context.env.database, profileId);
+		if (!accessLevel) {
+			return context.json({ message: 'Access not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
+		}
+
+		const isValid = await validatePassword(parsedBody.password, storedPassword);
+		if (!isValid) {
+			return context.json({ message: 'Invalid email or password' } satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
+		}
+
+		const sessionToken = crypto.randomUUID();
+		const hoursOffset = 24;
+		const tokenExpiryISO = addHours(new Date(), hoursOffset).toISOString();
+		const sessionDataObject: SessionData = {
+			id: profileId,
+			email: parsedBody.email,
+			access: accessLevel,
+			expiry: tokenExpiryISO
+		};
+		const sessionData = JSON.stringify(sessionDataObject);
+		await context.env.SESSION_TOKENS.put(sessionToken, sessionData);
+
+		context.header('Set-Cookie', `auth_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Expires=${tokenExpiryISO}; Path=/;`);
+
+		return context.json({ message: 'Sign in successful' } satisfies StatusResponse, StatusCodes.CREATED);
 	}
-
-	const { id: profileId, password: storedPassword } = await getProfileIdPassword(context.env.database, parsedBody.email);
-	if (!profileId || !storedPassword) {
-		return context.json({ message: 'Invalid email' } satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
-	}
-
-	const isProfileValid = await checkProfile(context.env.database, profileId);
-	if (!isProfileValid) {
-		return context.json({ message: 'Invalid profile id or Account not activated' } satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
-	}
-
-	const accessLevel = await getAccessLevel(context.env.database, profileId);
-	if (!accessLevel) {
-		return context.json({ message: 'Access not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
-	}
-
-	const isValid = await validatePassword(parsedBody.password, storedPassword);
-	if (!isValid) {
-		return context.json({ message: 'Invalid email or password' } satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
-	}
-
-	const sessionToken = crypto.randomUUID();
-	const hoursOffset = 24;
-	const tokenExpiryISO = addHours(new Date(), hoursOffset).toISOString();
-	const sessionDataObject: SessionData = {
-		id: profileId,
-		email: parsedBody.email,
-		access: accessLevel,
-		expiry: tokenExpiryISO
-	};
-	const sessionData = JSON.stringify(sessionDataObject);
-	await context.env.SESSION_TOKENS.put(sessionToken, sessionData);
-
-	context.header('Set-Cookie', `auth_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Expires=${tokenExpiryISO}; Path=/;`);
-
-	return context.json({ message: 'Sign in successful' } satisfies StatusResponse, StatusCodes.CREATED);
-	}
-)
+);
 
 // Protected auth routes
 export const protectedAuthRoutes = new OpenAPIHono<EnvironmentBindings>({
@@ -200,32 +199,30 @@ protectedAuthRoutes.openapi(
 			},
 			[StatusCodes.OKAY]: {
 				description: 'Heartbeat succesful. User authenticted and name, avatar and access returned to Client.',
-				content: { 'application/json': { schema: HeartbeatResponseSchema} }
-			},
+				content: { 'application/json': { schema: HeartbeatResponseSchema } }
+			}
 		},
 		middleware: [authorizeVolunteer] as const
-
 	}),
 	async (context) => {
+		const sessionData = context.get('session');
 
-	const sessionData = context.get('session');
+		if (!sessionData) {
+			return context.json({ message: 'Invalid session' } satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
+		}
 
-	if (!sessionData) {
-		return context.json({ message: 'Invalid session' } satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
+		const profile = await getProfileById(context.env.database, sessionData.id);
+
+		if (!profile) {
+			return context.json({ message: 'Internal error getting profile that shoudl exist' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		}
+		// Const { access } = sessionData;
+		const { name } = profile;
+		const { access } = sessionData;
+
+		// STUB: Avatar upload and resource under construction
+		const avatar = 'https://gravatar.com/avatar/f8eb6ba9cc4ad24f3b79897a8596ee90?s=400&d=robohash&r=x';
+
+		return context.json({ message: 'Heartbeat succesful', access, name, avatar } satisfies HeartbeatResponse, StatusCodes.OKAY);
 	}
-
-	const profile = await getProfileById(context.env.database, sessionData.id);
-
-	if (!profile) {
-		return context.json({ message: 'Internal error getting profile that shoudl exist' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
-	}
-	// Const { access } = sessionData;
-	const { name } = profile;
-	const { access } = sessionData;
-
-	// STUB: Avatar upload and resource under construction
-	const avatar = 'https://gravatar.com/avatar/f8eb6ba9cc4ad24f3b79897a8596ee90?s=400&d=robohash&r=x';
-
-	return context.json({ message: "Heartbeat succesful", access, name, avatar } satisfies HeartbeatResponse, StatusCodes.OKAY);
-	}
-)
+);
