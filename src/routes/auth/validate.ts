@@ -22,4 +22,17 @@ export const SignInSchema = z.object({
 		.min(1, 'Password must be at least one character long')
 });
 
+export const SignUpSchema = z.object({
+	email: z
+		.string({ required_error: 'Email is required' })
+		.min(1, 'Email must be at least one character long')
+		.email('Invalid Email'),
+	password: z
+		.string()
+		.min(1, 'Password must be at least one character long')
+});
+
+
 export type SignInData = z.infer<typeof SignInSchema>;
+
+export type SignUpData = z.infer<typeof SignUpSchema>;

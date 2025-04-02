@@ -10,7 +10,7 @@ import { type HeartbeatResponse, HeartbeatResponseSchema, StatusCodes, type Stat
 import { getProfileById, insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
 import { activateProfile, checkEmail, checkProfile, getAccessLevel, getProfileIdPassword } from './data.ts';
-import { type SignInData, SignInSchema } from './validate.ts';
+import { type SignInData, SignInSchema, SignUpSchema } from './validate.ts';
 export const authRoutes = new Hono();
 
 // Public Routes
@@ -18,7 +18,33 @@ export const publicAuthRoutes = new OpenAPIHono<EnvironmentBindings>({
 	defaultHook: statusResponseFormatter
 });
 
-authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
+
+publicAuthRoutes.openapi(
+	createRoute({
+		method: 'post',
+		path: '/',
+		operationId: 'signUp',
+		description: 'Sign up to community hub account',
+		tags: ['Sign-up'],
+		request: {
+			body: { content: { 'application/json': { schema: SignUpSchema } }, required: true }
+		},
+		responses: {
+			[StatusCodes.BAD_REQUEST]: {
+				description: 'Invalid JSON format:',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.CONFLICT]: {
+				description: 'Duplicate email',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.OKAY]: {
+				description: 'Created a new profile and sent an email for confirmation',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			}
+		}
+	}),
+	async (context) => {
 	let parsedBody: CreateProfileRequestBody;
 
 	try {
@@ -26,14 +52,14 @@ authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
 		parsedBody = CreateProfileSchema.parse(body);
 	} catch (error) {
 		if (error instanceof SyntaxError) {
-			return context.json<StatusResponse>({ message: `Invalid JSON format: ${error.message}` }, StatusCodes.BAD_REQUEST);
+			return context.json({ message: `Invalid JSON format: ${error.message}` } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
 		}
 		throw error;
 	}
 
 	const emailExists = await checkEmail(context.env.database, parsedBody.email);
 	if (emailExists) {
-		return context.json<StatusResponse>({ message: 'Duplicate email' }, StatusCodes.CONFLICT);
+		return context.json({ message: 'Duplicate email' } satisfies StatusResponse, StatusCodes.CONFLICT);
 	}
 
 	const hashedPasswordWithSalt = await hashPassword(parsedBody.password);
@@ -65,8 +91,9 @@ authRoutes.post('/sign-up', async (context: Context<EnvironmentBindings>) => {
 	};
 	await sgMail.send(msg);
 
-	return context.json<StatusResponse>({ message: 'Created a new profile and sent an email for confirmation' }, StatusCodes.OKAY);
-});
+	return context.json({ message: 'Created a new profile and sent an email for confirmation' } satisfies StatusResponse, StatusCodes.OKAY);
+	}
+);
 
 authRoutes.get('/activate', async (context: Context<EnvironmentBindings>) => {
 	const token = context.req.query('token');
