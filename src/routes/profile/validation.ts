@@ -24,11 +24,11 @@ export const ProfileSchema = BaseDbEntitySchema.merge(z.object({
 	canJoinLocalEvents: z
 		.number()
 		.describe("User can participate in TorontoJS's local events"),
-	// Discussion: Optional Avatar Upload?
 	avatar: z
 		.string()
+		.url('Invalid url.')
 		.optional()
-		.describe('URL or address of user avatar'),
+		.describe('URL source of user avatar'),
 	description: z
 		.string()
 		.optional()
