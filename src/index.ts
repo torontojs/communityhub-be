@@ -67,7 +67,7 @@ app.route('/teams', publicTeamRoutes);
 
 // Protected routes (after auth middleware)
 app.use('/*', authMiddleware);
-// app.use('/auth', protectedAuthRoutes)
+// App.use('/auth', protectedAuthRoutes)
 app.route('/profiles', protectedProfileRoutes);
 app.route('/teams', protectedTeamRoutes);
 app.route('/roles', privateRolesRoutes);

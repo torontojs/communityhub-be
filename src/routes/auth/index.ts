@@ -2,16 +2,15 @@ import sgMail from '@sendgrid/mail';
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { addHours } from 'date-fns';
 import { type Context, Hono } from 'hono';
-import { getCookie } from 'hono/cookie';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
-import type { Heartbeat } from '../../types/data/heartBeat.ts';
 import type { SessionData } from '../../types/data/session';
 import { hashPassword, validatePassword } from '../../utils/password-hashing.ts';
-import { StatusCodes, statusResponseFormatter, StatusResponseSchema, type StatusResponse } from '../../utils/responses.ts';
+import { HeartbeatResponseSchema, StatusCodes, statusResponseFormatter, StatusResponseSchema, type HeartbeatResponse, type StatusResponse } from '../../utils/responses.ts';
 import { getProfileById, insertProfile } from '../profile/data.ts';
-import { type CreateProfileRequestBody, CreateProfileSchema, type Profile } from '../profile/validation.ts';
+import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
 import { activateProfile, checkEmail, checkProfile, getAccessLevel, getProfileIdPassword } from './data.ts';
 import { type SignInData, SignInSchema } from './validate.ts';
+import { authorizeVolunteer } from '../../middleware/createMiddleware.ts';
 export const authRoutes = new Hono();
 
 // Public Routes
@@ -113,7 +112,7 @@ publicAuthRoutes.openapi(
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
 			[StatusCodes.UNAUTHORIZED]: {
-				description: 'Authorized',
+				description: 'InValid email, profile Id, password or account not activated ',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
 			[StatusCodes.NOT_FOUND]: {
@@ -124,10 +123,6 @@ publicAuthRoutes.openapi(
 				description: 'Sign in succesful',
 				content: { 'application/json': { schema :StatusResponseSchema} }
 			},
-			[StatusCodes.OKAY]: {
-			description: 'Sign in succesful',
-			content: { 'application/json': { schema :StatusResponseSchema} }
-			}
 		},
 	}),
 	async (context) => {
@@ -181,40 +176,56 @@ publicAuthRoutes.openapi(
 	}
 )
 
-authRoutes.get('/heartbeat', async (context: Context<EnvironmentBindings>) => {
-	const cookies = context.req.header('Cookie');
+// Protected auth routes
+export const protectedAuthRoutes = new OpenAPIHono<EnvironmentBindings>({
+	defaultHook: statusResponseFormatter
+});
 
-	if (!cookies) {
-		return context.json<StatusResponse>({ message: 'No cookies found' }, StatusCodes.UNAUTHORIZED);
-	}
+protectedAuthRoutes.openapi(
+	createRoute({
+		method: 'get',
+		path: '/',
+		operationId: 'getHeartbeat',
+		summary: 'Check if authenticated and get name, avatar and access',
+		descrition: 'Every protected UI page will make a heartbeat check and if successful will receive name, avatar and access in order to generate custsom content',
+		tags: ['heartbeat'],
+		responses: {
+			[StatusCodes.INTERNAL_SERVER_ERROR]: {
+				description: 'Internal error getting profile that shoudl exist',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.UNAUTHORIZED]: {
+				description: 'No cookies found, invalid or missing token, invalid session or session expired. ',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.OKAY]: {
+				description: 'Heartbeat succesful. User authenticted and name, avatar and access returned to Client.',
+				content: { 'application/json': { schema: HeartbeatResponseSchema} }
+			},
+		},
+		middleware: [authorizeVolunteer] as const
 
-	const sessionToken: string | undefined = getCookie(context, 'auth_token');
+	}),
+	async (context) => {
 
-	if (!sessionToken) {
-		return context.json<StatusResponse>({ message: 'Invalid or missing token' }, StatusCodes.UNAUTHORIZED);
-	}
-
-	const sessionData = await context.env.SESSION_TOKENS.get<SessionData>(sessionToken, 'json') || undefined;
+	const sessionData = context.get('session');
 
 	if (!sessionData) {
-		return context.json({ message: 'Invalid session' }, StatusCodes.UNAUTHORIZED);
-	}
-
-	if (new Date(sessionData.expiry) < new Date()) {
-		await context.env.SESSION_TOKENS.delete(sessionToken);
-		return context.json({ message: 'Session expired' }, StatusCodes.UNAUTHORIZED);
+		return context.json({ message: 'Invalid session' } satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
 	}
 
 	const profile = await getProfileById(context.env.database, sessionData.id);
 
 	if (!profile) {
-		return context.json({ message: 'Internal error getting profile that shoudl exist' }, StatusCodes.INTERNAL_SERVER_ERROR);
+		return context.json({ message: 'Internal error getting profile that shoudl exist' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
 	}
+	// Const { access } = sessionData;
+	const { name } = profile;
 	const { access } = sessionData;
-	const name = profile;
 
 	// STUB: Avatar upload and resource under construction
 	const avatar = 'https://gravatar.com/avatar/f8eb6ba9cc4ad24f3b79897a8596ee90?s=400&d=robohash&r=x';
 
-	return context.json<Heartbeat>({ access, name, avatar });
-});
+	return context.json({ message: "Heartbeat succesful", access, name, avatar } satisfies HeartbeatResponse, StatusCodes.OKAY);
+	}
+)
