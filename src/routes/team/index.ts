@@ -78,7 +78,7 @@ publicTeamRoutes.openapi(
 				content: { 'application/json': { schema: generatePaginatedResponseSchema(z.array(TeamSchema)) } }
 			}
 		},
-		middleware: [authMiddleware, authorizeVolunteer] as const
+		middleware: [authorizeVolunteer] as const
 	}),
 	async (context) => {
 		const teams = await getAllTeams(context.env.database);
