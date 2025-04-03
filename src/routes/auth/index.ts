@@ -96,7 +96,7 @@ publicAuthRoutes.openapi(
 publicAuthRoutes.openapi(
 	createRoute({
 		method: 'get',
-		path: '/',
+		path: '/activate',
 		operationId: 'activate',
 		description: 'Received activation email and clicked on activation link',
 		tags: ['Activate'],
