@@ -1,5 +1,5 @@
 import sgMail from '@sendgrid/mail';
-import { addHours } from 'date-fns';
+import { addDays } from 'date-fns';
 import { type Context, Hono } from 'hono';
 import { getCookie } from 'hono/cookie';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
@@ -10,6 +10,7 @@ import { insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
 import { activateProfile, checkEmail, getLoginInfo } from './data.ts';
 import { type SignInData, SignInSchema } from './validate.ts';
+import { SESION_LIFESPAN_IN_DAYS } from 'src/middleware/auth.ts';
 
 export const authRoutes = new Hono();
 
@@ -133,8 +134,7 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 	}
 
 	const sessionToken = crypto.randomUUID();
-	const hoursOffset = 24;
-	const tokenExpiryISO = addHours(new Date(), hoursOffset).toISOString();
+	const tokenExpiryISO = addDays(new Date(), SESION_LIFESPAN_IN_DAYS).toISOString();
 	const sessionDataObject: SessionData = {
 		id: profileId,
 		email: parsedBody.email,
