@@ -242,7 +242,7 @@ export const protectedAuthRoutes = new OpenAPIHono<EnvironmentBindings>({
 protectedAuthRoutes.openapi(
 	createRoute({
 		method: 'get',
-		path: '/',
+		path: '/heartbeat',
 		operationId: 'getHeartbeat',
 		summary: 'Check if authenticated and get name, avatar and access',
 		descrition: 'Every protected UI page will make a heartbeat check and if successful will receive name, avatar and access in order to generate custsom content',
