@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS profile_links (
 	url TEXT NOT NULL,
 
 	PRIMARY KEY (id),
-	FOREIGN KEY (profile_id) REFERENCES profile(id)
+	FOREIGN KEY (profile_id) REFERENCES profile(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 DROP TABLE IF EXISTS profile_skills;
@@ -85,5 +85,5 @@ CREATE TABLE IF NOT EXISTS profile_skills (
 	skill_name TEXT NOT NULL,
 
 	PRIMARY KEY (id),
-	FOREIGN KEY (profile_id) REFERENCES profile(id)
+	FOREIGN KEY (profile_id) REFERENCES profile(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
