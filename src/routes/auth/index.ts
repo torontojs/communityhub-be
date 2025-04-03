@@ -248,8 +248,8 @@ protectedAuthRoutes.openapi(
 		descrition: 'Every protected UI page will make a heartbeat check and if successful will receive name, avatar and access in order to generate custsom content',
 		tags: ['heartbeat'],
 		responses: {
-			[StatusCodes.INTERNAL_SERVER_ERROR]: {
-				description: 'Internal error getting profile that shoudl exist',
+			[StatusCodes.NOT_FOUND]: {
+				description: 'Internal error getting profile that should exist',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
 			[StatusCodes.UNAUTHORIZED]: {
@@ -273,7 +273,7 @@ protectedAuthRoutes.openapi(
 		const profile = await getProfileById(context.env.database, sessionData.id);
 
 		if (!profile) {
-			return context.json({ message: 'Internal error getting profile that shoudl exist' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+			return context.json({ message: 'Internal error getting profile that should exist' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
 		const { name } = profile;
 		const { access } = sessionData;
