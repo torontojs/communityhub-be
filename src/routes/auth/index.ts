@@ -148,3 +148,18 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 
 	return context.json(sessionToken);
 });
+
+authRoutes.post('/sign-out', async (context: Context<EnvironmentBindings>) => {
+	const sessionToken: string | undefined = getCookie(context, 'auth_token');
+
+	if (!sessionToken) {
+		return context.json({ message: 'Invalid or missing token' }, StatusCodes.BAD_REQUEST);
+	}
+	// Delete cookie on the server
+	await context.env.SESSION_TOKENS.delete(sessionToken);
+
+	// Delete cookie on the client
+	context.header('Set-Cookie', `auth_token=deleted; HttpOnly; Secure; SameSite=Strict; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/;`);
+
+	return context.json(StatusCodes.NO_CONTENT);
+});
