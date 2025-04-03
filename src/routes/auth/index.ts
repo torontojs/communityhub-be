@@ -1,6 +1,7 @@
 import sgMail from '@sendgrid/mail';
 import { addHours } from 'date-fns';
 import { type Context, Hono } from 'hono';
+import { getCookie } from 'hono/cookie';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
 import type { SessionData } from '../../types/data/session';
 import { hashPassword, validatePassword } from '../../utils/password-hashing.ts';
@@ -90,6 +91,13 @@ authRoutes.get('/activate', async (context: Context<EnvironmentBindings>) => {
 });
 
 authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
+	const existingSessionToken = getCookie(context, 'auth_token') ?? '';
+	const existingSessionData = await context.env.SESSION_TOKENS.get<SessionData>(existingSessionToken, 'json');
+
+	if (existingSessionData) {
+		return context.json({ message: "You're already logged in" }, StatusCodes.BAD_REQUEST);
+	}
+
 	let parsedBody: SignInData;
 
 	try {
