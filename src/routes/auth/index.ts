@@ -101,7 +101,7 @@ publicAuthRoutes.openapi(
 		description: 'Received activation email and clicked on activation link',
 		tags: ['Activate'],
 		request: {
-			body: { content: { 'application/json': { schema: SignUpSchema } }, required: true }
+			params: { content: { 'application/json': { schema: SignUpSchema } }, required: true }
 		},
 		responses: {
 			[StatusCodes.BAD_REQUEST]: {
