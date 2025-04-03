@@ -15,7 +15,7 @@ function shouldSessionExtend(sessionExpiryISO: string) {
 	const isExpired = isSesionExpired(sessionExpiryISO);
 
 	if (isExpired) {
-		throw new Error('Invalid session')
+		throw new Error('Invalid session');
 	}
 
 	const TWO = 2;
@@ -112,10 +112,12 @@ async function extendExistingSession({
 	context
 }: ExtendSessionInput) {
 	const tokenExpiry = addDays(new Date(), SESION_LIFESPAN_IN_DAYS).toISOString();
-	const updatedSessionData = JSON.stringify({
-		...session,
-		expiry: tokenExpiry
-	} satisfies SessionData);
+	const updatedSessionData = JSON.stringify(
+		{
+			...session,
+			expiry: tokenExpiry
+		} satisfies SessionData
+	);
 	await context.env.SESSION_TOKENS.put(sessionToken, updatedSessionData);
 }
 
