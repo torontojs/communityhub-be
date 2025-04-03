@@ -1,10 +1,7 @@
 import sgMail from '@sendgrid/mail';
-import { addDays } from 'date-fns';
 import { type Context, Hono } from 'hono';
-import { getCookie } from 'hono/cookie';
-import { SESION_LIFESPAN_IN_DAYS } from 'src/middleware/auth.ts';
+import { createSession, deleteSession, getSession } from 'src/utils/auth.ts';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
-import type { SessionData } from '../../types/data/session';
 import { hashPassword, validatePassword } from '../../utils/password-hashing.ts';
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { insertProfile } from '../profile/data.ts';
@@ -92,10 +89,9 @@ authRoutes.get('/activate', async (context: Context<EnvironmentBindings>) => {
 });
 
 authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
-	const existingSessionToken = getCookie(context, 'auth_token') ?? '';
-	const existingSessionData = await context.env.SESSION_TOKENS.get<SessionData>(existingSessionToken, 'json');
+	const { session } = await getSession(context);
 
-	if (existingSessionData) {
+	if (session) {
 		return context.json({ message: "You're already logged in" }, StatusCodes.BAD_REQUEST);
 	}
 
@@ -133,33 +129,25 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 		return context.json<StatusResponse>({ message: genericSignInError }, StatusCodes.UNAUTHORIZED);
 	}
 
-	const sessionToken = crypto.randomUUID();
-	const tokenExpiryISO = addDays(new Date(), SESION_LIFESPAN_IN_DAYS).toISOString();
-	const sessionDataObject: SessionData = {
+	const sessionDataObject = {
 		id: profileId,
 		email: parsedBody.email,
-		access: accessLevel,
-		expiry: tokenExpiryISO
+		access: accessLevel
 	};
-	const sessionData = JSON.stringify(sessionDataObject);
-	await context.env.SESSION_TOKENS.put(sessionToken, sessionData);
 
-	context.header('Set-Cookie', `auth_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Expires=${tokenExpiryISO}; Path=/;`);
+	await createSession({ session: sessionDataObject, context });
 
-	return context.json(sessionToken);
+	return context.json({ message: 'Signed in successfully' });
 });
 
 authRoutes.post('/sign-out', async (context: Context<EnvironmentBindings>) => {
-	const sessionToken: string | undefined = getCookie(context, 'auth_token');
+	const { session, sessionToken } = await getSession(context);
 
-	if (!sessionToken) {
+	if (!session) {
 		return context.json({ message: 'Invalid or missing token' }, StatusCodes.BAD_REQUEST);
 	}
-	// Delete cookie on the server
-	await context.env.SESSION_TOKENS.delete(sessionToken);
 
-	// Delete cookie on the client
-	context.header('Set-Cookie', `auth_token=deleted; HttpOnly; Secure; SameSite=Strict; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/;`);
+	await deleteSession({ context, sessionToken });
 
 	return context.json(StatusCodes.NO_CONTENT);
 });
