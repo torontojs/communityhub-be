@@ -129,7 +129,7 @@ protectedProfileRoutes.openapi(
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
 		},
-		middleware: [authMiddleware, authMiddleware, authorizeOrganizer] as const
+		middleware: [authMiddleware, authorizeOrganizer] as const
 	}),
 	async (context) => {
 		const body = context.req.valid('json');
