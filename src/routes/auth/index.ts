@@ -7,7 +7,7 @@ import { hashPassword, validatePassword } from '../../utils/password-hashing.ts'
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
-import { activateProfile, checkEmail, checkProfile, getAccessLevel, getProfileIdPassword } from './data.ts';
+import { activateProfile, checkEmail, getLoginInfo } from './data.ts';
 import { type SignInData, SignInSchema } from './validate.ts';
 
 export const authRoutes = new Hono();
@@ -102,24 +102,26 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 		throw error;
 	}
 
-	const { id: profileId, password: storedPassword } = await getProfileIdPassword(context.env.database, parsedBody.email);
-	if (!profileId || !storedPassword) {
-		return context.json<StatusResponse>({ message: 'Invalid email' }, StatusCodes.UNAUTHORIZED);
+	const results = await getLoginInfo(context.env.database, parsedBody.email);
+
+	const genericSignInError = 'Either your email/password combination is invalid, or your account is not active';
+	if (!results) {
+		return context.json<StatusResponse>({ message: genericSignInError }, StatusCodes.UNAUTHORIZED);
 	}
 
-	const isProfileValid = await checkProfile(context.env.database, profileId);
-	if (!isProfileValid) {
-		return context.json<StatusResponse>({ message: 'Invalid profile id or Account not activated' }, StatusCodes.UNAUTHORIZED);
-	}
+	const {
+		storedPassword,
+		accessLevel,
+		profileId
+	} = results;
 
-	const accessLevel = await getAccessLevel(context.env.database, profileId);
-	if (!accessLevel) {
-		return context.json<StatusResponse>({ message: 'Access not found' }, StatusCodes.NOT_FOUND);
+	if (!storedPassword) {
+		return context.json<StatusResponse>({ message: genericSignInError }, StatusCodes.UNAUTHORIZED);
 	}
 
 	const isValid = await validatePassword(parsedBody.password, storedPassword);
 	if (!isValid) {
-		return context.json<StatusResponse>({ message: 'Invalid email or password' }, StatusCodes.UNAUTHORIZED);
+		return context.json<StatusResponse>({ message: genericSignInError }, StatusCodes.UNAUTHORIZED);
 	}
 
 	const sessionToken = crypto.randomUUID();
