@@ -9,7 +9,7 @@ import { hashPassword, validatePassword } from '../../utils/password-hashing.ts'
 import { type HeartbeatResponse, HeartbeatResponseSchema, StatusCodes, type StatusResponse, statusResponseFormatter, StatusResponseSchema } from '../../utils/responses.ts';
 import { getProfileById, insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
-import { activateProfile, checkEmail, checkProfile, getAccessLevel, getProfileIdPassword } from './data.ts';
+import { activateProfile, checkEmail, getLoginInfo } from './data.ts';
 import { ActivateSchema, type SignInData, SignInSchema, SignUpSchema } from './validate.ts';
 export const authRoutes = new Hono();
 
@@ -196,19 +196,21 @@ publicAuthRoutes.openapi(
 			throw error;
 		}
 
-		const { id: profileId, password: storedPassword } = await getProfileIdPassword(context.env.database, parsedBody.email);
-		if (!profileId || !storedPassword) {
-			return context.json({ message: 'Invalid email' } satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
+		const results = await getLoginInfo(context.env.database, parsedBody.email);
+
+		const genericSignInError = 'Either your email/password combination is invalid, or your account is not active';
+		if (!results) {
+			return context.json({ message: genericSignInError } satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
 		}
 
-		const isProfileValid = await checkProfile(context.env.database, profileId);
-		if (!isProfileValid) {
-			return context.json({ message: 'Invalid profile id or Account not activated' } satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
-		}
+		const {
+			storedPassword,
+			accessLevel,
+			profileId
+		} = results;
 
-		const accessLevel = await getAccessLevel(context.env.database, profileId);
-		if (!accessLevel) {
-			return context.json({ message: 'Access not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
+		if (!storedPassword) {
+			return context.json({ message: genericSignInError } satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
 		}
 
 		const isValid = await validatePassword(parsedBody.password, storedPassword);
