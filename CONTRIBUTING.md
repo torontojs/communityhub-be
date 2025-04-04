@@ -12,6 +12,7 @@ Here is a list of the tools used to develop the project, followed by details on 
 
 - **Required:** [`node.js`](https://nodejs.org/en/download/prebuilt-installer) (Preferably managed by [`volta`](https://docs.volta.sh/guide/getting-started))
 - **Required:** [Commit signing configured](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits), without it, the pull requests **WILL NOT BE ACCEPTED!**
+- **Required:** [SendGrid account](https://sendgrid.com) (Used for sending emails)
 - _Recommended:_ [VS Code](https://code.visualstudio.com/Download)
 
 ### `node.js` and `volta`
@@ -19,6 +20,15 @@ Here is a list of the tools used to develop the project, followed by details on 
 Most of the tools used are based on `node.js`, so you should have it installed on your machine. It may be installed from an installer, or a version manager for node.
 
 Our recommendation is using `volta` for managing the node versions, it is already configured for the project, so you only need to install `volta` on your machine and it will take care of downloading the correct version of node when you first try installing the dependencies.
+
+If you already have `nvm` installed we recommend you uninstall since it may conflict with `volta`.
+
+To install `volta` with bash, run the following command:
+
+```shell
+curl https://get.volta.sh | bash
+source ~/.bashrc
+```
 
 ### Commit signing
 
@@ -28,15 +38,43 @@ In order to improve the trust and security of the code contributed we require th
 
 Our editor of choice is Visual Studio Code (VS Code), it is not required for working with the code, but is recommended for sharing code and contributing with others.
 
-## Installing dependencies
+### SendGrid
 
-Once you have cloned the repository, to install the dependencies run:
+1. Go to [SendGrid](https://sendgrid.com/) and create an account and complete your email verification.
+2. Once you have created your account, log in
+3. Send Grid may show a 3-step process when you first log in which you can skip. There will be a button on the top-right corner to "Skip to dashboard". Click on it.
+4. Click on "Settings" dropdown on the left sidebar and click "API Keys".
+5. Generate a new API key with "Full Access" and click "Create & View".
+6. Keep the API key handy, you will need it later.
 
-```shell
-npm install --save-dev
-```
+## Setting up the project
 
-This will install all of the needed dependencies.
+1. Clone the repository
+
+   ```shell
+   git clone https://github.com/torontojs/vms.git
+   cd vms
+   ```
+2. Install the dependencies
+   ```shell
+   npm install
+   ```
+
+3. Copy the `.dev.vars.example` file to `.dev.vars` for providing environment secrets during development.
+   ```shell
+   cp .dev.vars.example .dev.vars
+   ```
+4. Set up SendGrid secrets
+
+- Copy the API Key and paste it in the `.dev.vars` file under the `SENDGRID_API_KEY` variable.
+- Also, in the `.dev.vars` file, update the `SENDER_EMAIL` variable to be the email you used for your SendGrid account.
+
+5. Run migrations to create your tables and seed the database with some initial data.
+
+   ```shell
+   npm run db:setup
+   npm run db:seed
+   ```
 
 ## Starting the project
 
@@ -47,6 +85,10 @@ npm run dev
 ```
 
 the project will start in development mode and watch for code changes.
+
+## Resetting the database
+
+From time to time, you may want to reset the database. To do so, you'll need to delete the `.wrangler` folder and run the `db:setup` and `db:seed` scripts again.
 
 ## Coding standards and guidelines
 

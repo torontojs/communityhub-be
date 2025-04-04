@@ -60,21 +60,6 @@ CREATE TABLE IF NOT EXISTS profile (
 	PRIMARY KEY (id)
 );
 
-DROP TABLE IF EXISTS passwords;
-
-CREATE TABLE IF NOT EXISTS passwords (
-	-- The UUID of the profile this link belongs to
-	id TEXT NOT NULL UNIQUE COLLATE BINARY,
-	-- Schema version to use
-	-- Here it is useful if we update the password encryption algorithm in the future
-	schemaVersion INTEGER NOT NULL DEFAULT 1,
-	-- The person's account password
-	-- This should be propperly hashed and salted!
-	password TEXT NOT NULL,
-
-	FOREIGN KEY (id) REFERENCES profile(id)
-);
-
 DROP TABLE IF EXISTS profile_links;
 
 CREATE TABLE IF NOT EXISTS profile_links (

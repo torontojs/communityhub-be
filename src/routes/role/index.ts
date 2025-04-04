@@ -1,6 +1,7 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { z } from 'zod';
 import { DBTables } from '../../constants/db.ts';
+import { authorizeOrganizer } from '../../middleware/createMiddleware.ts';
 import {
 	type DataResponse,
 	generateDataResponeSchema,
@@ -15,92 +16,13 @@ import { IdParamSchema, validateExistingId } from '../../utils/validation.ts';
 import { deleteRoleById, getAllRoles, getRoleById, insertRole, updateRoleById } from './data.ts';
 import { CreateRoleSchema, RoleSchema, UpdateRoleSchema } from './validation.ts';
 
-export const roleRoutes = new OpenAPIHono<EnvironmentBindings>({
+// Public routes (GET only)
+export const publicRoleRoutes = new OpenAPIHono<EnvironmentBindings>({
 	defaultHook: statusResponseFormatter
 });
 
-roleRoutes.openapi(
-	createRoute({
-		method: 'post',
-		path: '/',
-		operationId: 'createNewRole',
-		summary: 'Create new role',
-		description: 'Add a new role to the VMS including basic information about this role.',
-		tags: ['Role'],
-		request: {
-			body: { content: { 'application/json': { schema: CreateRoleSchema } }, required: true }
-		},
-		responses: {
-			[StatusCodes.CREATED]: {
-				description: 'Successful response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			},
-			[StatusCodes.INTERNAL_SERVER_ERROR]: {
-				description: 'Server Error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			}
-		}
-	}),
-	async (context) => {
-		const body = context.req.valid('json');
-		const { success } = await insertRole(context.env.database, body);
-
-		if (!success) {
-			return context.json({ message: 'Role not saved' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
-		}
-
-		return context.json({ message: 'Role created successfully' } satisfies StatusResponse, StatusCodes.CREATED);
-	}
-);
-
-roleRoutes.openapi(
-	createRoute({
-		method: 'patch',
-		path: '/{id}',
-		operationId: 'updateRole',
-		summary: 'Update existing role',
-		description: "Update information for an existing role based on it's id.",
-		tags: ['Role'],
-		request: {
-			body: { content: { 'application/json': { schema: UpdateRoleSchema } }, required: true },
-			params: IdParamSchema
-		},
-		responses: {
-			[StatusCodes.OKAY]: {
-				description: 'Successful response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			},
-			[StatusCodes.NOT_FOUND]: {
-				description: 'Error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			},
-			[StatusCodes.INTERNAL_SERVER_ERROR]: {
-				description: 'Server error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			}
-		}
-	}),
-	async (context) => {
-		const { id } = context.req.valid('param');
-		const body = context.req.valid('json');
-
-		const isRoleIdValid = await validateExistingId(context.env.database, DBTables.ROLE, id);
-
-		if (!isRoleIdValid) {
-			return context.json({ message: 'Role not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
-		}
-
-		const isUpdated = await updateRoleById(context.env.database, id, body);
-
-		if (!isUpdated) {
-			return context.json({ message: 'Role not updated' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
-		}
-
-		return context.json({ message: 'Role updated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
-	}
-);
-
-roleRoutes.openapi(
+// GET role
+publicRoleRoutes.openapi(
 	createRoute({
 		method: 'get',
 		path: '/{id}',
@@ -141,7 +63,8 @@ roleRoutes.openapi(
 	}
 );
 
-roleRoutes.openapi(
+// GET role by id
+publicRoleRoutes.openapi(
 	createRoute({
 		method: 'get',
 		path: '/',
@@ -180,7 +103,96 @@ roleRoutes.openapi(
 	}
 );
 
-roleRoutes.openapi(
+// Private routes (POST, PATCH, DELETE)
+export const privateRolesRoutes = new OpenAPIHono<EnvironmentBindings>({
+	defaultHook: statusResponseFormatter
+});
+
+// POST role
+privateRolesRoutes.openapi(
+	createRoute({
+		method: 'post',
+		path: '/',
+		operationId: 'createNewRole',
+		summary: 'Create new role',
+		description: 'Add a new role to the VMS including basic information about this role.',
+		tags: ['Role'],
+		request: {
+			body: { content: { 'application/json': { schema: CreateRoleSchema } }, required: true }
+		},
+		responses: {
+			[StatusCodes.CREATED]: {
+				description: 'Successful response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.INTERNAL_SERVER_ERROR]: {
+				description: 'Server Error response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			}
+		},
+		middleware: [authorizeOrganizer] as const
+	}),
+	async (context) => {
+		const body = context.req.valid('json');
+		const { success } = await insertRole(context.env.database, body);
+
+		if (!success) {
+			return context.json({ message: 'Role not saved' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		}
+
+		return context.json({ message: 'Role created successfully' } satisfies StatusResponse, StatusCodes.CREATED);
+	}
+);
+
+// PATCH role
+privateRolesRoutes.openapi(
+	createRoute({
+		method: 'patch',
+		path: '/{id}',
+		operationId: 'updateRole',
+		summary: 'Update existing role',
+		description: "Update information for an existing role based on it's id.",
+		tags: ['Role'],
+		request: {
+			body: { content: { 'application/json': { schema: UpdateRoleSchema } }, required: true },
+			params: IdParamSchema
+		},
+		responses: {
+			[StatusCodes.OKAY]: {
+				description: 'Successful response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.NOT_FOUND]: {
+				description: 'Error response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.INTERNAL_SERVER_ERROR]: {
+				description: 'Server error response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			}
+		},
+		middleware: [authorizeOrganizer] as const
+	}),
+	async (context) => {
+		const { id } = context.req.valid('param');
+		const body = context.req.valid('json');
+
+		const isRoleIdValid = await validateExistingId(context.env.database, DBTables.ROLE, id);
+
+		if (!isRoleIdValid) {
+			return context.json({ message: 'Role not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
+		}
+
+		const isUpdated = await updateRoleById(context.env.database, id, body);
+
+		if (!isUpdated) {
+			return context.json({ message: 'Role not updated' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+		}
+
+		return context.json({ message: 'Role updated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
+	}
+);
+privateRolesRoutes.openapi(
 	createRoute({
 		method: 'delete',
 		path: '/{id}',
@@ -204,7 +216,8 @@ roleRoutes.openapi(
 				description: 'Server error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
-		}
+		},
+		middleware: [authorizeOrganizer] as const
 	}),
 	async (context) => {
 		const { id } = context.req.valid('param');
