@@ -10,7 +10,7 @@ import { type HeartbeatResponse, HeartbeatResponseSchema, StatusCodes, type Stat
 import { getProfileById, insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
 import { activateProfile, checkEmail, checkProfile, getAccessLevel, getProfileIdPassword } from './data.ts';
-import { type SignInData, SignInSchema, SignUpSchema } from './validate.ts';
+import { ActivateSchema, type SignInData, SignInSchema, SignUpSchema } from './validate.ts';
 export const authRoutes = new Hono();
 
 // Public Routes (Post, Get)
@@ -101,7 +101,7 @@ publicAuthRoutes.openapi(
 		description: 'Received activation email and clicked on activation link',
 		tags: ['Activate'],
 		request: {
-			params: { content: { 'application/json': { schema: SignUpSchema } }, required: true }
+			params: ActivateSchema
 		},
 		responses: {
 			[StatusCodes.BAD_REQUEST]: {
