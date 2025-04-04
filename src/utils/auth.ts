@@ -29,13 +29,13 @@ function shouldSessionExtend(sessionExpiryISO: string) {
 interface ExtendSessionInput {
 	sessionToken: string;
 	session: SessionData;
-	context: Context<EnvironmentBindings>;
+	sessionKV: Context<EnvironmentBindings>['env']['SESSION_TOKENS'];
 }
 
 async function extendExistingSession({
 	sessionToken,
 	session,
-	context
+	sessionKV
 }: ExtendSessionInput) {
 	const tokenExpiry = addDays(new Date(), SESION_LIFESPAN_IN_DAYS).toISOString();
 	const updatedSessionData = JSON.stringify(
@@ -44,7 +44,7 @@ async function extendExistingSession({
 			expiry: tokenExpiry
 		} satisfies SessionData
 	);
-	await context.env.SESSION_TOKENS.put(sessionToken, updatedSessionData);
+	await sessionKV.put(sessionToken, updatedSessionData);
 }
 
 interface DeleteSessionInput {
@@ -74,8 +74,8 @@ async function getSession(context: Context<EnvironmentBindings>) {
 		};
 	}
 
-	const sessionData = await context.env.SESSION_TOKENS.get<SessionData>(sessionToken, 'json');
-	if (!sessionData) {
+	const session = await context.env.SESSION_TOKENS.get<SessionData>(sessionToken, 'json');
+	if (!session) {
 		// User has a session token but it's invalid so delete it
 		await deleteSession({ context, sessionToken });
 		return {
@@ -84,7 +84,7 @@ async function getSession(context: Context<EnvironmentBindings>) {
 		};
 	}
 
-	if (isSesionExpired(sessionData.expiry)) {
+	if (isSesionExpired(session.expiry)) {
 		await deleteSession({ context, sessionToken });
 		return {
 			session: null,
@@ -92,16 +92,20 @@ async function getSession(context: Context<EnvironmentBindings>) {
 		};
 	}
 
-	if (shouldSessionExtend(sessionData.expiry)) {
-		await extendExistingSession({ context, sessionToken, session: sessionData });
+	if (shouldSessionExtend(session.expiry)) {
+		await extendExistingSession({
+			sessionKV: context.env.SESSION_TOKENS,
+			sessionToken,
+			session
+		});
 		return {
-			session: sessionData,
+			session,
 			sessionToken
 		};
 	}
 
 	return {
-		session: sessionData,
+		session,
 		sessionToken
 	};
 }
