@@ -26,6 +26,27 @@ function shouldSessionExtend(sessionExpiryISO: string) {
 	return daysUntilTokenExpiry < HALF_SESSION_LIFESPAN_IN_DAYS;
 }
 
+interface ExtendSessionInput {
+	sessionToken: string;
+	session: SessionData;
+	context: Context<EnvironmentBindings>;
+}
+
+async function extendExistingSession({
+	sessionToken,
+	session,
+	context
+}: ExtendSessionInput) {
+	const tokenExpiry = addDays(new Date(), SESION_LIFESPAN_IN_DAYS).toISOString();
+	const updatedSessionData = JSON.stringify(
+		{
+			...session,
+			expiry: tokenExpiry
+		} satisfies SessionData
+	);
+	await context.env.SESSION_TOKENS.put(sessionToken, updatedSessionData);
+}
+
 interface DeleteSessionInput {
 	context: Context<EnvironmentBindings>;
 	sessionToken: string;
@@ -71,6 +92,14 @@ async function getSession(context: Context<EnvironmentBindings>) {
 		};
 	}
 
+	if (shouldSessionExtend(sessionData.expiry)) {
+		await extendExistingSession({ context, sessionToken, session: sessionData });
+		return {
+			session: sessionData,
+			sessionToken
+		};
+	}
+
 	return {
 		session: sessionData,
 		sessionToken
@@ -108,27 +137,6 @@ async function createSession({
 	});
 
 	return sessionToken;
-}
-
-interface ExtendSessionInput {
-	sessionToken: string;
-	session: SessionData;
-	context: Context<EnvironmentBindings>;
-}
-
-async function extendExistingSession({
-	sessionToken,
-	session,
-	context
-}: ExtendSessionInput) {
-	const tokenExpiry = addDays(new Date(), SESION_LIFESPAN_IN_DAYS).toISOString();
-	const updatedSessionData = JSON.stringify(
-		{
-			...session,
-			expiry: tokenExpiry
-		} satisfies SessionData
-	);
-	await context.env.SESSION_TOKENS.put(sessionToken, updatedSessionData);
 }
 
 export {
