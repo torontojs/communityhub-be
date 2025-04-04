@@ -17,8 +17,11 @@ export const ProfileSchema = BaseDbEntitySchema.merge(z.object({
 		.describe('Pronouns the user prescribes to'),
 	birthday: z
 		.string()
-		.refine((mmdd) => Array.isArray(/([0][1-9]|[1][0-2])-([0][1-9]|[1-2][0-9]|[3][0-1])/u.exec(mmdd)), { message: 'Birthday must be valid MM-DD format' })
 		.optional()
+		.refine(
+			(data) => data ? /^\d{2}-\d{2}$/iu.test(data) : true,
+			{ message: 'Birthday must be valid MM-DD format' }
+		)
 		.describe('Birthday of user'),
 	isBasedOnGTA: z
 		.number()
