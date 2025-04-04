@@ -7,6 +7,7 @@ import { protectedProfileRoutes, publicProfileRoutes } from './routes/profile/in
 import { privateRolesRoutes, publicRoleRoutes } from './routes/role/index.ts';
 import { protectedTeamRoutes, publicTeamRoutes } from './routes/team/index.ts';
 import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
+import { authMiddleware } from './middleware/auth.ts';
 
 const app = new OpenAPIHono<EnvironmentBindings>({
 	defaultHook: statusResponseFormatter
@@ -54,14 +55,12 @@ app.doc('/open-api.json', {
 	}
 });
 
-// Public routes
-app.route('/auth', publicAuthRoutes);
-app.route('/roles', publicRoleRoutes);
+
 // Handle static assets using Cloudflare Workers
 app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.env.ASSETS.fetch(context.req.raw));
 
 // Public routes
-app.route('/auth', authRoutes);
+app.route('/auth', publicAuthRoutes);
 app.route('/roles', publicRoleRoutes);
 app.route('/profiles', publicProfileRoutes);
 app.route('/teams', publicTeamRoutes);
