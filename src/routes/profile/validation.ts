@@ -11,36 +11,40 @@ export const ProfileSchema = BaseDbEntitySchema.merge(z.object({
 		.trim()
 		.min(1, 'Name should be 1 or more characters long.')
 		.describe('The name this person would like to be refered to.'),
+	description: z
+		.string()
+		.optional()
+		.describe('A description for this person, may be written in markdown.'),
+	isBasedOnGTA: z
+		.boolean()
+		.describe('A flag indicating if the user is based on the Grater Toronto Area (GTA).'),
+	canJoinLocalEvents: z
+		.boolean()
+		.describe('A flag indicating if the user is available to join local/in-person events.'),
 	pronouns: z
 		.string()
 		.optional()
-		.describe('Pronouns the user prescribes to'),
+		.describe('The pronouns the person identifies with.'),
 	birthday: z
 		.string()
 		.optional()
 		.refine(
 			(data) => data ? /^\d{2}-\d{2}$/iu.test(data) : true,
-			{ message: 'Birthday must be valid MM-DD format' }
+			{ message: 'Birthday must be in the format "MM-DD".' }
 		)
-		.describe('Birthday of user'),
-	isBasedOnGTA: z
-		.number()
-		.describe('User is based in GTA'),
-	canJoinLocalEvents: z
-		.number()
-		.describe("User can participate in TorontoJS's local events"),
+		.describe('Birthday of user.'),
 	avatar: z
 		.string()
-		.url('Invalid url.')
+		.url('Must be a valid URL.')
 		.optional()
-		.describe('URL source of user avatar'),
-	description: z
-		.string()
-		.optional()
-		.describe('A description for this person, may be written in markdown.'),
+		.describe("The user's avatar URL."),
 	links: z.array(z.string().url('Invalid url.'))
 		.optional()
-		.describe('A list of links for social media and platforms the person want to make available on the Community Hub.')
+		.describe('A list of links for social media and platforms the person want to make available on the Community Hub.'),
+	deletedReason: z
+		.string()
+		.optional()
+		.describe('The reason this perofile was marked deleted.')
 }));
 
 export type Profile = z.infer<typeof ProfileSchema>;
