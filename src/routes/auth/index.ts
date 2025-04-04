@@ -138,5 +138,5 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 
 	context.header('Set-Cookie', `auth_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Expires=${tokenExpiryISO}; Path=/;`);
 
-	return context.json(sessionToken);
+	return context.json({ message: 'Successfully signed in' });
 });
