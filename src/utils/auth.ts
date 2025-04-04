@@ -46,7 +46,7 @@ async function deleteSession({ context, sessionToken }: DeleteSessionInput) {
 
 async function getSession(context: Context<EnvironmentBindings>) {
 	const sessionToken = getCookie(context, SESSION_COOKIE_NAME);
-	if (!sessionToken) {
+	if (!sessionToken || sessionToken === 'deleted') {
 		return {
 			session: null,
 			sessionToken: null
@@ -55,6 +55,16 @@ async function getSession(context: Context<EnvironmentBindings>) {
 
 	const sessionData = await context.env.SESSION_TOKENS.get<SessionData>(sessionToken, 'json');
 	if (!sessionData) {
+		// User has a session token but it's invalid so delete it
+		await deleteSession({ context, sessionToken });
+		return {
+			session: null,
+			sessionToken: null
+		};
+	}
+
+	if (isSesionExpired(sessionData.expiry)) {
+		await deleteSession({ context, sessionToken });
 		return {
 			session: null,
 			sessionToken: null
