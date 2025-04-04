@@ -14,19 +14,15 @@ interface SetCookieInput {
 	name: string;
 	value: string;
 	expires: Date;
-	options?: CookieOptions;
 }
 
 function setCookie({
 	context,
 	name,
 	value,
-	expires,
-	options = DEFAULT_COOKIE_OPTIONS
+	expires
 }: SetCookieInput) {
-	const optionsToSet = options
-		? { ...options, ...DEFAULT_COOKIE_OPTIONS, expires }
-		: { ...DEFAULT_COOKIE_OPTIONS, expires } satisfies CookieOptions;
+	const optionsToSet = { ...DEFAULT_COOKIE_OPTIONS, expires } satisfies CookieOptions;
 
 	setHonoCookie(context, name, value, optionsToSet);
 }
