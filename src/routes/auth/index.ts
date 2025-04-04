@@ -1,6 +1,6 @@
 import sgMail from '@sendgrid/mail';
 import { type Context, Hono } from 'hono';
-import { createSession, deleteSession, getSession } from 'src/utils/auth.ts';
+import { createSession, getSession } from 'src/utils/auth.ts';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
 import { hashPassword, validatePassword } from '../../utils/password-hashing.ts';
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
@@ -138,16 +138,4 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 	await createSession({ session: sessionDataObject, context });
 
 	return context.json({ message: 'Signed in successfully' });
-});
-
-authRoutes.post('/sign-out', async (context: Context<EnvironmentBindings>) => {
-	const { session, sessionToken } = await getSession(context);
-
-	if (!session) {
-		return context.json({ message: 'Invalid or missing token' }, StatusCodes.BAD_REQUEST);
-	}
-
-	await deleteSession({ context, sessionToken });
-
-	return context.json(StatusCodes.NO_CONTENT);
 });
