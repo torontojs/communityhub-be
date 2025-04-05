@@ -20,7 +20,7 @@ const envSchema = z.object(
 	} satisfies Record<EnvKeys, ZodSchema>
 );
 
-function checkEnvVars(env: Context<EnvironmentBindings>["env"]) {
+function checkEnvVars(env: Context<EnvironmentBindings>['env']) {
 	return envSchema.safeParse(env);
 }
 
