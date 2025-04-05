@@ -2,7 +2,6 @@ import { OpenAPIHono } from '@hono/zod-openapi';
 import type { Context } from 'hono';
 import { cors } from 'hono/cors';
 import packageJson from '../package.json';
-import { authMiddleware } from './middleware/auth.ts';
 import { protectedAuthRoutes, publicAuthRoutes } from './routes/auth/index.ts';
 import { protectedProfileRoutes, publicProfileRoutes } from './routes/profile/index.ts';
 import { protectedRolesRoutes, publicRoleRoutes } from './routes/role/index.ts';
@@ -64,8 +63,7 @@ app.route('/roles', publicRoleRoutes);
 app.route('/profiles', publicProfileRoutes);
 app.route('/teams', publicTeamRoutes);
 
-// Protected routes (after auth middleware)
-app.use('/*', authMiddleware);
+// Protected routes
 app.route('/auth', protectedAuthRoutes);
 app.route('/profiles', protectedProfileRoutes);
 app.route('/teams', protectedTeamRoutes);
