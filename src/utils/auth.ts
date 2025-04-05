@@ -4,7 +4,7 @@ import { getCookie } from 'hono/cookie';
 import type { SessionData } from 'src/types/data/session';
 import { setCookie } from './cookie';
 
-export const SESION_LIFESPAN_IN_DAYS = 90;
+const SESION_LIFESPAN_IN_DAYS = 90;
 const SESSION_COOKIE_NAME = 'auth_token';
 
 function isSesionExpired(sessionExpiryISO: string) {
