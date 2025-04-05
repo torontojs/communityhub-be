@@ -283,6 +283,6 @@ protectedAuthRoutes.openapi(
 		// STUB: Avatar upload and resource under construction
 		const avatar = 'https://gravatar.com/avatar/f8eb6ba9cc4ad24f3b79897a8596ee90?s=400&d=robohash&r=x';
 
-		return context.json({ message: 'Heartbeat succesful', access, name, avatar } satisfies HeartbeatResponse, StatusCodes.OKAY);
+		return context.json({ access, name, avatar } satisfies HeartbeatResponse, StatusCodes.OKAY);
 	}
 );

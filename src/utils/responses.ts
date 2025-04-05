@@ -299,8 +299,6 @@ export function generatePaginatedResponseSchema<T extends unknown[]>(data: ZodTy
 export type PaginatedResponse<T extends unknown[]> = z.infer<ReturnType<typeof generatePaginatedResponseSchema<T>>>;
 
 export const HeartbeatResponseSchema = z.object({
-	message: z.string()
-		.describe('A message reporting the status of the operation.'),
 	access: z.string()
 		.describe('Acces level.'),
 	name: z.string()

@@ -2,12 +2,12 @@ import { OpenAPIHono } from '@hono/zod-openapi';
 import type { Context } from 'hono';
 import { cors } from 'hono/cors';
 import packageJson from '../package.json';
+import { authMiddleware } from './middleware/auth.ts';
 import { protectedAuthRoutes, publicAuthRoutes } from './routes/auth/index.ts';
 import { protectedProfileRoutes, publicProfileRoutes } from './routes/profile/index.ts';
 import { privateRolesRoutes, publicRoleRoutes } from './routes/role/index.ts';
 import { protectedTeamRoutes, publicTeamRoutes } from './routes/team/index.ts';
 import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
-import { authMiddleware } from './middleware/auth.ts';
 
 const app = new OpenAPIHono<EnvironmentBindings>({
 	defaultHook: statusResponseFormatter
@@ -54,7 +54,6 @@ app.doc('/open-api.json', {
 		`
 	}
 });
-
 
 // Handle static assets using Cloudflare Workers
 app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.env.ASSETS.fetch(context.req.raw));
