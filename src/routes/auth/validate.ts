@@ -22,6 +22,8 @@ export const SignInSchema = z.object({
 		.min(1, 'Password must be at least one character long')
 });
 
+export type SignInData = z.infer<typeof SignInSchema>;
+
 export const SignUpSchema = z.object({
 	name: z
 		.string({ required_error: 'Name is required' })
@@ -35,10 +37,8 @@ export const SignUpSchema = z.object({
 		.min(1, 'Password must be at least one character long')
 });
 
-export const ActivateSchema = z.object({ token: z.string().uuid('Invalid ID format') });
-
-export type SignInData = z.infer<typeof SignInSchema>;
-
 export type SignUpData = z.infer<typeof SignUpSchema>;
+
+export const ActivateSchema = z.object({ token: z.string().uuid('Invalid ID format') });
 
 export type ActivateData = z.infer<typeof ActivateSchema>;
