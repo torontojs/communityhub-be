@@ -137,5 +137,5 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 
 	await createSession({ session: sessionDataObject, context });
 
-	return context.json({ message: 'Signed in successfully' });
+	return context.json({ message: 'Successfully signed in' });
 });
