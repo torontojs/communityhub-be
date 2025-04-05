@@ -33,7 +33,7 @@ healthCheckRoutes.openapi(
 		middleware: [authMiddleware] as const
 	}),
 	(context: Context<EnvironmentBindings>) => {
-		const { success, error } = checkEnvVars(context);
+		const { success, error } = checkEnvVars(context.env);
 
 		if (context.env.NODE_ENV === 'production') {
 			if (success) {

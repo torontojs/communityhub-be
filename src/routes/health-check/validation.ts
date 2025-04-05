@@ -20,18 +20,8 @@ const envSchema = z.object(
 	} satisfies Record<EnvKeys, ZodSchema>
 );
 
-function checkEnvVars(context: Context<EnvironmentBindings>) {
-	// NOTE: please add new environment variables here
-	const env: EnvVars = {
-		BASE_URL: context.env.BASE_URL,
-		SENDER_EMAIL: context.env.SENDER_EMAIL,
-		SENDGRID_API_KEY: context.env.SENDGRID_API_KEY,
-		NODE_ENV: context.env.NODE_ENV
-	};
-
-	const result = envSchema.safeParse(env);
-
-	return result;
+function checkEnvVars(env: Context<EnvironmentBindings>["env"]) {
+	return envSchema.safeParse(env);
 }
 
 export {
