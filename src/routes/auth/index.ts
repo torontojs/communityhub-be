@@ -3,6 +3,7 @@ import sgMail from '@sendgrid/mail';
 import { addHours } from 'date-fns';
 import { Hono } from 'hono';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
+import { authMiddleware } from '../../middleware/auth.ts';
 import { authorizeVolunteer } from '../../middleware/createMiddleware.ts';
 import type { SessionData } from '../../types/data/session';
 import { hashPassword, validatePassword } from '../../utils/password-hashing.ts';
@@ -263,7 +264,7 @@ protectedAuthRoutes.openapi(
 				content: { 'application/json': { schema: HeartbeatResponseSchema } }
 			}
 		},
-		middleware: [authorizeVolunteer] as const
+		middleware: [authMiddleware, authorizeVolunteer] as const
 	}),
 	async (context) => {
 		const sessionData = context.get('session');
