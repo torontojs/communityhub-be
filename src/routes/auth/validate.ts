@@ -32,7 +32,7 @@ export const SignUpSchema = z.object({
 		.min(1, 'Password must be at least one character long')
 });
 
-export const ActivateSchema = z.object({ id: z.string().uuid('Invalid ID format') });
+export const ActivateSchema = z.object({ token: z.string().uuid('Invalid ID format') });
 
 export type SignInData = z.infer<typeof SignInSchema>;
 
