@@ -1,4 +1,5 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
+import { authMiddleware } from 'src/middleware/auth.ts';
 import { z } from 'zod';
 import { DBTables } from '../../constants/db.ts';
 import { canModifyProfile } from '../../middleware/canModifyProfile.ts';
@@ -128,7 +129,7 @@ protectedProfileRoutes.openapi(
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
 		},
-		middleware: [authorizeOrganizer] as const
+		middleware: [authMiddleware, authorizeOrganizer] as const
 	}),
 	async (context) => {
 		const body = context.req.valid('json');
@@ -176,7 +177,7 @@ protectedProfileRoutes.openapi(
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
 		},
-		middleware: [authorizeVolunteer, canModifyProfile] as const
+		middleware: [authMiddleware, authorizeVolunteer, canModifyProfile] as const
 	}),
 	async (context) => {
 		const { id } = context.req.valid('param');
@@ -224,7 +225,7 @@ protectedProfileRoutes.openapi(
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
 		},
-		middleware: [authorizeAdmin] as const
+		middleware: [authMiddleware, authorizeAdmin] as const
 	}),
 	async (context) => {
 		const { id } = context.req.valid('param');
