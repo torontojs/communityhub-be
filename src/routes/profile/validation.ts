@@ -38,6 +38,4 @@ export const UpdateProfileSchema = CreateProfileSchema
 
 export type UpdateProfileData = z.infer<typeof UpdateProfileSchema>;
 
-export const NameSchema = ProfileSchema.pick({ name: true });
-
-export type Name = z.infer<typeof NameSchema>;
+export type Name = z.infer<typeof ProfileSchema>['name'];
