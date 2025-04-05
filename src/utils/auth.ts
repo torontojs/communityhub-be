@@ -145,9 +145,5 @@ async function createSession({
 
 export {
 	createSession,
-	deleteSession,
-	extendExistingSession,
-	getSession,
-	isSesionExpired,
-	shouldSessionExtend
+	getSession
 };
