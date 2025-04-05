@@ -5,7 +5,7 @@ import packageJson from '../package.json';
 import { authMiddleware } from './middleware/auth.ts';
 import { protectedAuthRoutes, publicAuthRoutes } from './routes/auth/index.ts';
 import { protectedProfileRoutes, publicProfileRoutes } from './routes/profile/index.ts';
-import { privateRolesRoutes, publicRoleRoutes } from './routes/role/index.ts';
+import { protectedRolesRoutes, publicRoleRoutes } from './routes/role/index.ts';
 import { protectedTeamRoutes, publicTeamRoutes } from './routes/team/index.ts';
 import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
 
@@ -69,6 +69,6 @@ app.use('/*', authMiddleware);
 app.route('/auth', protectedAuthRoutes);
 app.route('/profiles', protectedProfileRoutes);
 app.route('/teams', protectedTeamRoutes);
-app.route('/roles', privateRolesRoutes);
+app.route('/roles', protectedRolesRoutes);
 
 export default app;
