@@ -23,6 +23,9 @@ export const SignInSchema = z.object({
 });
 
 export const SignUpSchema = z.object({
+	name: z
+		.string({ required_error: "Name is required"})
+		.min(1,'Name must be at least one character long'),
 	email: z
 		.string({ required_error: 'Email is required' })
 		.min(1, 'Email must be at least one character long')

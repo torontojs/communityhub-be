@@ -22,7 +22,7 @@ export const publicAuthRoutes = new OpenAPIHono<EnvironmentBindings>({
 publicAuthRoutes.openapi(
 	createRoute({
 		method: 'post',
-		path: '/',
+		path: '/sign-up',
 		operationId: 'signUp',
 		description: 'Sign up to community hub account',
 		tags: ['Sign-up'],
@@ -158,7 +158,7 @@ publicAuthRoutes.openapi(
 publicAuthRoutes.openapi(
 	createRoute({
 		method: 'post',
-		path: '/',
+		path: '/sign-in',
 		operationId: 'signIn',
 		description: 'Sign in to community hub account',
 		tags: ['Sign-in'],
