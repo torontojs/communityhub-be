@@ -13,7 +13,7 @@ export function presetSetCookie(
 	context: Context<EnvironmentBindings>,
 	name: string,
 	value: string,
-	expires: Date,
+	expires: Date
 ): void {
 	setCookie(context, name, value, {
 		...DEFAULT_COOKIE_OPTIONS,

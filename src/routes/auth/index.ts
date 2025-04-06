@@ -10,6 +10,7 @@ import { insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
 import { activateProfile, checkEmail, checkProfile, getAccessLevel, getProfileIdPassword } from './data.ts';
 import { type SignInData, SignInSchema } from './validate.ts';
+import { presetSetCookie } from '../../utils/cookie.ts';
 
 export const authRoutes = new Hono();
 
@@ -135,18 +136,12 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 	const sessionData = JSON.stringify(sessionDataObject);
 	await context.env.SESSION_TOKENS.put(sessionToken, sessionData);
 
-	setCookie(
+	presetSetCookie(
 		context,
 		'auth_token',
 		sessionToken,
-		{
-			path: '/',
-			secure: true,
-			httpOnly: true,
-			sameSite: 'Strict',
-			expires: new Date(tokenExpiryISO)
-		}
-	);
+		new Date(tokenExpiryISO)
+	)
 
 	return context.json(sessionToken);
 });
@@ -160,17 +155,11 @@ authRoutes.post('/sign-out', async (context: Context<EnvironmentBindings>) => {
 	// Delete cookie on the server
 	await context.env.SESSION_TOKENS.delete(sessionToken);
 
-	setCookie(
+	presetSetCookie(
 		context,
 		'auth_token',
 		'deleted',
-		{
-			path: '/',
-			secure: true,
-			httpOnly: true,
-			sameSite: 'Strict',
-			expires: new Date(0)
-		}
+		new Date(0)
 	);
 	return context.json(StatusCodes.NO_CONTENT);
 });
