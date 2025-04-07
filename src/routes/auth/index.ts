@@ -10,9 +10,8 @@ import { type HeartbeatResponse, HeartbeatResponseSchema } from '../../utils/hea
 import { hashPassword, validatePassword } from '../../utils/password-hashing.ts';
 import { StatusCodes, type StatusResponse, statusResponseFormatter, StatusResponseSchema } from '../../utils/responses.ts';
 import { getProfileById, insertProfile } from '../profile/data.ts';
-import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
 import { activateProfile, checkEmail, getLoginInfo } from './data.ts';
-import { ActivateSchema, type SignInData, SignInSchema, SignUpSchema } from './validate.ts';
+import { ActivateSchema, SignInSchema, SignUpSchema } from './validate.ts';
 export const authRoutes = new Hono();
 
 // Public Routes (Post, Get)
@@ -46,17 +45,7 @@ publicAuthRoutes.openapi(
 		}
 	}),
 	async (context) => {
-		let parsedBody: CreateProfileRequestBody;
-
-		try {
-			const body = await context.req.json();
-			parsedBody = CreateProfileSchema.parse(body);
-		} catch (error) {
-			if (error instanceof SyntaxError) {
-				return context.json({ message: `Invalid JSON format: ${error.message}` } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
-			}
-			throw error;
-		}
+		const parsedBody = await context.req.valid('json');
 
 		const emailExists = await checkEmail(context.env.database, parsedBody.email);
 		if (emailExists) {
@@ -186,17 +175,7 @@ publicAuthRoutes.openapi(
 		}
 	}),
 	async (context) => {
-		let parsedBody: SignInData;
-
-		try {
-			const body = await context.req.json();
-			parsedBody = SignInSchema.parse(body);
-		} catch (error) {
-			if (error instanceof SyntaxError) {
-				return context.json({ message: `Invalid JSON format: ${error.message}` } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
-			}
-			throw error;
-		}
+		const parsedBody = await context.req.valid('json');
 
 		const results = await getLoginInfo(context.env.database, parsedBody.email);
 
