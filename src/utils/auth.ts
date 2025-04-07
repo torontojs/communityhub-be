@@ -65,7 +65,7 @@ async function deleteSession({ context, sessionToken }: DeleteSessionInput) {
 	});
 }
 
-async function getSession(context: Context<EnvironmentBindings>) {
+async function getValidatedSession(context: Context<EnvironmentBindings>) {
 	const sessionToken = getCookie(context, SESSION_COOKIE_NAME);
 	if (!sessionToken || sessionToken === 'deleted') {
 		return {
@@ -145,5 +145,5 @@ async function createSession({
 
 export {
 	createSession,
-	getSession
+	getValidatedSession
 };

@@ -1,11 +1,11 @@
 import type { Context, Next } from 'hono';
 import {
-	getSession
+	getValidatedSession
 } from 'src/utils/auth.ts';
 import { StatusCodes } from '../utils/responses.ts';
 
 export const authMiddleware = async (context: Context, next: Next) => {
-	const { session } = await getSession(context);
+	const { session } = await getValidatedSession(context);
 
 	const invalidSessionResponse = { message: 'Invalid session' };
 
