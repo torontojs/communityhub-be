@@ -1,16 +1,16 @@
 import sgMail from '@sendgrid/mail';
 import { addHours } from 'date-fns';
 import { type Context, Hono } from 'hono';
-import { getCookie, setCookie } from 'hono/cookie';
+import { getCookie } from 'hono/cookie';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
 import type { SessionData } from '../../types/data/session';
+import { presetSetCookie } from '../../utils/cookie.ts';
 import { hashPassword, validatePassword } from '../../utils/password-hashing.ts';
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
 import { activateProfile, checkEmail, checkProfile, getAccessLevel, getProfileIdPassword } from './data.ts';
 import { type SignInData, SignInSchema } from './validate.ts';
-import { presetSetCookie } from '../../utils/cookie.ts';
 
 export const authRoutes = new Hono();
 
@@ -141,7 +141,7 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 		'auth_token',
 		sessionToken,
 		new Date(tokenExpiryISO)
-	)
+	);
 
 	return context.json(sessionToken);
 });
