@@ -103,7 +103,7 @@ publicAuthRoutes.openapi(
 		description: 'Received activation email and clicked on activation link',
 		tags: ['Activate'],
 		request: {
-			params: ActivateSchema
+			query: ActivateSchema
 		},
 		responses: {
 			[StatusCodes.BAD_REQUEST]: {
