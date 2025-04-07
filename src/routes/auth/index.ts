@@ -129,7 +129,7 @@ publicAuthRoutes.openapi(
 		}
 	}),
 	async (context) => {
-		const { token } = context.req.valid('param');
+		const { token } = context.req.valid('query');
 		if (!token) {
 			return context.json({ message: 'Invalid or missing token' }, StatusCodes.BAD_REQUEST);
 		}
