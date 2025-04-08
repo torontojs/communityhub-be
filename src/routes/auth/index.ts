@@ -1,6 +1,6 @@
 import sgMail from '@sendgrid/mail';
 import { type Context, Hono } from 'hono';
-import { createSession, getValidatedSession } from 'src/utils/auth.ts';
+import { createSession, getSession } from 'src/utils/auth.ts';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
 import { hashPassword, validatePassword } from '../../utils/password-hashing.ts';
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
@@ -89,7 +89,7 @@ authRoutes.get('/activate', async (context: Context<EnvironmentBindings>) => {
 });
 
 authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
-	const { session } = await getValidatedSession(context);
+	const { session } = await getSession(context);
 
 	if (session) {
 		return context.json({ message: "You're already logged in" }, StatusCodes.BAD_REQUEST);
