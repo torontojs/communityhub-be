@@ -1,10 +1,10 @@
-import { addDays, differenceInDays } from 'date-fns';
+import { addHours, differenceInHours } from 'date-fns';
 import type { Context } from 'hono';
 import { getCookie } from 'hono/cookie';
 import type { SessionData } from 'src/types/data/session';
 import { setCookie } from './cookie';
 
-const SESION_LIFESPAN_IN_DAYS = 90;
+const SESION_LIFESPAN_IN_HOURS = 24;
 const SESSION_COOKIE_NAME = 'auth_token';
 
 function isSesionExpired(sessionExpiryISO: string) {
@@ -19,11 +19,11 @@ function shouldSessionExtend(sessionExpiryISO: string) {
 	}
 
 	const TWO = 2;
-	const HALF_SESSION_LIFESPAN_IN_DAYS = Math.floor(SESION_LIFESPAN_IN_DAYS / TWO);
+	const HALF_SESSION_LIFESPAN_IN_HOURS = Math.floor(SESION_LIFESPAN_IN_HOURS / TWO);
 
-	const daysUntilTokenExpiry = differenceInDays(new Date(sessionExpiryISO), new Date());
+	const daysUntilTokenExpiry = differenceInHours(new Date(sessionExpiryISO), new Date());
 
-	return daysUntilTokenExpiry < HALF_SESSION_LIFESPAN_IN_DAYS;
+	return daysUntilTokenExpiry < HALF_SESSION_LIFESPAN_IN_HOURS;
 }
 
 interface ExtendSessionInput {
@@ -37,7 +37,7 @@ async function extendExistingSession({
 	session,
 	sessionKV
 }: ExtendSessionInput) {
-	const tokenExpiry = addDays(new Date(), SESION_LIFESPAN_IN_DAYS).toISOString();
+	const tokenExpiry = addHours(new Date(), SESION_LIFESPAN_IN_HOURS).toISOString();
 	const updatedSessionData = JSON.stringify(
 		{
 			...session,
@@ -109,7 +109,7 @@ async function createSession({
 	context
 }: CreateSessionInput) {
 	const sessionToken = crypto.randomUUID();
-	const tokenExpiryISO = addDays(new Date(), SESION_LIFESPAN_IN_DAYS).toISOString();
+	const tokenExpiryISO = addHours(new Date(), SESION_LIFESPAN_IN_HOURS).toISOString();
 	const sessionDataObject: SessionData = {
 		id: session.id,
 		email: session.email,
