@@ -5,7 +5,7 @@ import {
 import { StatusCodes } from '../utils/responses.ts';
 
 export const authMiddleware = async (context: Context, next: Next) => {
-	const { session } = await getSession(context);
+	const session = await getSession(context);
 
 	const invalidSessionResponse = { message: 'Invalid session' };
 

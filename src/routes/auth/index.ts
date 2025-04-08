@@ -89,7 +89,7 @@ authRoutes.get('/activate', async (context: Context<EnvironmentBindings>) => {
 });
 
 authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
-	const { session } = await getSession(context);
+	const session = await getSession(context);
 
 	if (session) {
 		return context.json({ message: "You're already logged in" }, StatusCodes.BAD_REQUEST);

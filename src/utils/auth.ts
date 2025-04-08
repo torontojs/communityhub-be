@@ -45,6 +45,9 @@ async function extendExistingSession({
 		} satisfies SessionData
 	);
 	await sessionKV.put(sessionToken, updatedSessionData);
+
+	const updatedSession = await sessionKV.get<SessionData>(sessionToken, 'json');
+	return updatedSession;
 }
 
 interface DeleteSessionInput {
@@ -68,46 +71,32 @@ async function deleteSession({ context, sessionToken }: DeleteSessionInput) {
 async function getSession(context: Context<EnvironmentBindings>) {
 	const sessionToken = getCookie(context, SESSION_COOKIE_NAME);
 	if (!sessionToken || sessionToken === 'deleted') {
-		return {
-			session: null,
-			sessionToken: null
-		};
+		return null;
 	}
 
 	const session = await context.env.SESSION_TOKENS.get<SessionData>(sessionToken, 'json');
 	if (!session) {
 		// User has a session token but it's invalid so delete it
 		await deleteSession({ context, sessionToken });
-		return {
-			session: null,
-			sessionToken: null
-		};
+		return null;
 	}
 
 	if (isSesionExpired(session.expiry)) {
 		await deleteSession({ context, sessionToken });
-		return {
-			session: null,
-			sessionToken: null
-		};
+		return null;
 	}
 
 	if (shouldSessionExtend(session.expiry)) {
-		await extendExistingSession({
+		const extendedSession = await extendExistingSession({
 			sessionKV: context.env.SESSION_TOKENS,
 			sessionToken,
 			session
 		});
-		return {
-			session,
-			sessionToken
-		};
+
+		return extendedSession;
 	}
 
-	return {
-		session,
-		sessionToken
-	};
+	return session;
 }
 
 interface CreateSessionInput {
