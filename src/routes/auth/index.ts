@@ -102,11 +102,12 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 		throw error;
 	}
 
+	const genericSignInResponse = { message: 'Either your email/password combination is invalid, or your account is not active' };
+
 	const results = await getLoginInfo(context.env.database, parsedBody.email);
 
-	const genericSignInError = 'Either your email/password combination is invalid, or your account is not active';
 	if (!results) {
-		return context.json<StatusResponse>({ message: genericSignInError }, StatusCodes.UNAUTHORIZED);
+		return context.json<StatusResponse>(genericSignInResponse, StatusCodes.UNAUTHORIZED);
 	}
 
 	const {
@@ -116,12 +117,12 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 	} = results;
 
 	if (!storedPassword) {
-		return context.json<StatusResponse>({ message: genericSignInError }, StatusCodes.UNAUTHORIZED);
+		return context.json<StatusResponse>(genericSignInResponse, StatusCodes.UNAUTHORIZED);
 	}
 
 	const isValid = await validatePassword(parsedBody.password, storedPassword);
 	if (!isValid) {
-		return context.json<StatusResponse>({ message: genericSignInError }, StatusCodes.UNAUTHORIZED);
+		return context.json<StatusResponse>(genericSignInResponse, StatusCodes.UNAUTHORIZED);
 	}
 
 	const sessionToken = crypto.randomUUID();

@@ -1,11 +1,17 @@
+type NodeEnvironment = 'development' | 'local' | 'production';
+
+interface EnvVars {
+	BASE_URL: string;
+	SENDER_EMAIL: string;
+	SENDGRID_API_KEY: string;
+	NODE_ENV: NodeEnvironment;
+}
+
 interface EnvironmentBindings {
-	Bindings: {
+	Bindings: EnvVars & {
 		database: D1Database,
 		SESSION_TOKENS: KVNamespace,
 		ACTIVATION_TOKENS: KVNamespace,
-		BASE_URL: string,
-		SENDER_EMAIL: string,
-		SENDGRID_API_KEY: string,
 		ASSETS: Fetcher
 	};
 }
