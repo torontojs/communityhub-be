@@ -1,4 +1,4 @@
-import { addHours, differenceInHours } from 'date-fns';
+import { addHours } from 'date-fns';
 import type { Context } from 'hono';
 import { getCookie } from 'hono/cookie';
 import type { SessionData } from 'src/types/data/session';
@@ -9,21 +9,6 @@ const SESSION_COOKIE_NAME = 'auth_token';
 
 function isSesionExpired(sessionExpiryISO: string) {
 	return new Date() > new Date(sessionExpiryISO);
-}
-
-function shouldSessionExtend(sessionExpiryISO: string) {
-	const isExpired = isSesionExpired(sessionExpiryISO);
-
-	if (isExpired) {
-		throw new Error('Invalid session');
-	}
-
-	const TWO = 2;
-	const HALF_SESSION_LIFESPAN_IN_HOURS = Math.floor(SESION_LIFESPAN_IN_HOURS / TWO);
-
-	const daysUntilTokenExpiry = differenceInHours(new Date(sessionExpiryISO), new Date());
-
-	return daysUntilTokenExpiry < HALF_SESSION_LIFESPAN_IN_HOURS;
 }
 
 interface ExtendSessionInput {
@@ -86,17 +71,13 @@ async function getSession(context: Context<EnvironmentBindings>) {
 		return null;
 	}
 
-	if (shouldSessionExtend(session.expiry)) {
-		const extendedSession = await extendExistingSession({
-			sessionKV: context.env.SESSION_TOKENS,
-			sessionToken,
-			session
-		});
+	const extendedSession = await extendExistingSession({
+		sessionToken,
+		session,
+		sessionKV: context.env.SESSION_TOKENS
+	});
 
-		return extendedSession;
-	}
-
-	return session;
+	return extendedSession;
 }
 
 interface CreateSessionInput {
