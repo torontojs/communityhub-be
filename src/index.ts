@@ -3,6 +3,7 @@ import type { Context } from 'hono';
 import { cors } from 'hono/cors';
 import packageJson from '../package.json';
 import { authRoutes } from './routes/auth/index.ts';
+import { healthCheckRoutes } from './routes/health-check/index.ts';
 import { protectedProfileRoutes, publicProfileRoutes } from './routes/profile/index.ts';
 import { privateRolesRoutes, publicRoleRoutes } from './routes/role/index.ts';
 import { protectedTeamRoutes, publicTeamRoutes } from './routes/team/index.ts';
@@ -64,6 +65,7 @@ app.route('/profiles', publicProfileRoutes);
 app.route('/teams', publicTeamRoutes);
 
 // Private routes
+app.route('/health-check', healthCheckRoutes);
 app.route('/profiles', protectedProfileRoutes);
 app.route('/teams', protectedTeamRoutes);
 app.route('/roles', privateRolesRoutes);
