@@ -14,13 +14,13 @@ function isSesionExpired(sessionExpiryISO: string) {
 interface ExtendSessionInput {
 	sessionToken: string;
 	session: SessionData;
-	sessionKV: Context<EnvironmentBindings>['env']['SESSION_TOKENS'];
+	context: Context<EnvironmentBindings>;
 }
 
 async function extendExistingSession({
 	sessionToken,
 	session,
-	sessionKV
+	context
 }: ExtendSessionInput) {
 	const tokenExpiry = addHours(new Date(), SESION_LIFESPAN_IN_HOURS).toISOString();
 	const updatedSessionData = JSON.stringify(
@@ -29,9 +29,19 @@ async function extendExistingSession({
 			expiry: tokenExpiry
 		} satisfies SessionData
 	);
-	await sessionKV.put(sessionToken, updatedSessionData);
 
-	const updatedSession = await sessionKV.get<SessionData>(sessionToken, 'json');
+	// Update session on server
+	await context.env.SESSION_TOKENS.put(sessionToken, updatedSessionData);
+
+	// Update session on client
+	setCookie({
+		context,
+		name: SESSION_COOKIE_NAME,
+		value: sessionToken,
+		expires: new Date(tokenExpiry)
+	});
+
+	const updatedSession = await context.env.SESSION_TOKENS.get<SessionData>(sessionToken, 'json');
 	return updatedSession;
 }
 
@@ -74,7 +84,7 @@ async function getSession(context: Context<EnvironmentBindings>) {
 	const extendedSession = await extendExistingSession({
 		sessionToken,
 		session,
-		sessionKV: context.env.SESSION_TOKENS
+		context
 	});
 
 	return extendedSession;
