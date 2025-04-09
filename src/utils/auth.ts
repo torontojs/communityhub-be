@@ -55,7 +55,7 @@ async function deleteSession({ context, sessionToken }: DeleteSessionInput) {
 
 async function getSession(context: Context<EnvironmentBindings>) {
 	const sessionToken = getCookie(context, SESSION_COOKIE_NAME);
-	if (!sessionToken || sessionToken === 'deleted') {
+	if (!sessionToken) {
 		return null;
 	}
 
