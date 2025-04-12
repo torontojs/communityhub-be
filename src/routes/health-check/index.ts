@@ -1,6 +1,5 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import type { Context } from 'hono';
-import { authMiddleware } from 'src/middleware/auth';
 import { StatusCodes, type StatusResponse, statusResponseFormatter, StatusResponseSchema } from 'src/utils/responses';
 import { checkEnvVars } from './validation';
 
@@ -12,10 +11,10 @@ healthCheckRoutes.openapi(
 	createRoute({
 		method: 'get',
 		path: '/',
-		operationId: 'getHealthCheck',
-		summary: 'Get health check',
+		operationId: 'Health-check',
+		summary: 'Get server status.',
 		description: 'Checks if the server is missing any environment variables needed for it to run correctly.',
-		tags: ['Health Check'],
+		tags: ['Server status'],
 		responses: {
 			[StatusCodes.OKAY]: {
 				description: 'Successful response',
@@ -29,8 +28,7 @@ healthCheckRoutes.openapi(
 				description: 'Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
-		},
-		middleware: [authMiddleware] as const
+		}
 	}),
 	(context: Context<EnvironmentBindings>) => {
 		const { success, error } = checkEnvVars(context.env);

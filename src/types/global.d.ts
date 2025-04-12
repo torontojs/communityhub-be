@@ -1,14 +1,9 @@
-type NodeEnvironment = 'development' | 'local' | 'production';
+/* eslint-disable @typescript-eslint/consistent-type-imports */
 
-interface EnvVars {
-	BASE_URL: string;
-	SENDER_EMAIL: string;
-	SENDGRID_API_KEY: string;
-	NODE_ENV: NodeEnvironment;
-}
+type NodeEnvironment = import('../routes/health-check/validation.ts').NodeEnv;
 
 interface EnvironmentBindings {
-	Bindings: EnvVars & {
+	Bindings: import('../routes/health-check/validation.ts').EnvVars & {
 		database: D1Database,
 		SESSION_TOKENS: KVNamespace,
 		ACTIVATION_TOKENS: KVNamespace,
@@ -16,7 +11,6 @@ interface EnvironmentBindings {
 	};
 
 	Variables: {
-		// eslint-disable-next-line @typescript-eslint/consistent-type-imports
 		session: import('../utils/auth.ts').SessionData
 	};
 }

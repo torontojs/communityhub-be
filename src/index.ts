@@ -58,14 +58,12 @@ app.doc('/open-api.json', {
 // Handle static assets using Cloudflare Workers
 app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.env.ASSETS.fetch(context.req.raw));
 
-// Public routes
+app.route('/', healthCheckRoutes);
 app.route('/auth', authRoutes);
 app.route('/roles', publicRoleRoutes);
 app.route('/profiles', publicProfileRoutes);
 app.route('/teams', publicTeamRoutes);
 
-// Protected routes
-app.route('/health-check', healthCheckRoutes);
 app.route('/profiles', protectedProfileRoutes);
 app.route('/teams', protectedTeamRoutes);
 app.route('/roles', protectedRolesRoutes);
