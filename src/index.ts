@@ -1,3 +1,4 @@
+import { swaggerUI } from '@hono/swagger-ui';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import type { Context } from 'hono';
 import { cors } from 'hono/cors';
@@ -54,6 +55,8 @@ app.doc('/open-api.json', {
 		`
 	}
 });
+
+app.get('/docs', swaggerUI({ url: '/open-api.json' }));
 
 // Handle static assets using Cloudflare Workers
 app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.env.ASSETS.fetch(context.req.raw));

@@ -16,9 +16,9 @@
 		"db:seed": "wrangler d1 execute vms-local --local --persist-to=.wrangler/state --file=./seeds/seed-data.sql"
 	},
 	"dependencies": {
+		"@hono/swagger-ui": "0.5.1",
 		"@hono/zod-openapi": "0.19.4",
 		"@sendgrid/mail": "^8.1.5",
-		"date-fns": "^4.1.0",
 		"hono": "^4.7.6"
 	},
 	"devDependencies": {
