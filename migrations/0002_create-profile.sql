@@ -31,10 +31,8 @@ CREATE TABLE IF NOT EXISTS profile (
 	-- The person's birthday, saved as month and day only
 	-- In the format: MM-DD
 	birthday TEXT,
-	-- The user avatar reference,
+	-- The user avatar url for the user.
 	avatar TEXT,
-	-- The avatar may be a url, or an id for a file hosted on the platform
-	avatarSource TEXT DEFAULT 'id' CHECK(avatarSource IS NULL OR avatarSource IN ('id', 'url')),
 	-- The date this person has joined Toronto JS, saved as an ISO timestamp
 	happenedAt DATETIME NOT NULL,
 	-- The date this profile was added to the database, saved as an ISO timestamp
