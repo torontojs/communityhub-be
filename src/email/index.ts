@@ -1,5 +1,3 @@
-import { generateEmailHtml } from './templates/confirm-email.ts';
-
 interface AccountConfirmationEmailParams {
 	baseUrl: string;
 	token: string;
