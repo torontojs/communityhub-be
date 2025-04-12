@@ -19,7 +19,7 @@ authRoutes.openapi(
 		method: 'post',
 		path: '/sign-up',
 		operationId: 'Create account',
-		summary: 'Create a new Community Hub account.',
+		summary: 'Create a new Community Hub account',
 		description: 'This is the entry point for the Community Hub. It allows users to register new accounts.',
 		tags: ['Authentication'],
 		request: {
@@ -71,7 +71,7 @@ authRoutes.openapi(
 		method: 'get',
 		path: '/activate',
 		operationId: 'Activate account',
-		summary: 'Activate a newly created account.',
+		summary: 'Activate a newly created account',
 		description: 'Received activation email and clicked on activation link.',
 		tags: ['Authentication'],
 		request: {
@@ -130,7 +130,7 @@ authRoutes.openapi(
 		method: 'post',
 		path: '/sign-in',
 		operationId: 'Sign-in',
-		summary: 'Sign in to Community Hub account.',
+		summary: 'Sign in to Community Hub account',
 		description: 'Signs the user in to the Community Hub.',
 		tags: ['Authentication'],
 		request: {
@@ -180,10 +180,11 @@ authRoutes.openapi(
 	createRoute({
 		method: 'get',
 		path: '/heartbeat',
-		operationId: 'getHeartbeat',
-		summary: 'Check if authenticated and get name, avatar and access',
-		descrition: 'Every protected UI page will make a heartbeat check and if successful will receive name, avatar and access in order to generate custsom content',
-		tags: ['heartbeat'],
+		operationId: 'Heartbeat',
+		summary: 'Check for basic logged in user information',
+		descrition:
+			'Check if authenticated and get name, avatar and access. Every protected UI page will make a heartbeat check and if successful will receive name, avatar and access in order to generate custsom content',
+		tags: ['Heartbeat'],
 		responses: {
 			[StatusCodes.NOT_FOUND]: {
 				description: 'Internal error getting profile that should exist',
@@ -219,7 +220,7 @@ authRoutes.openapi(
 		operationId: 'Sign-out',
 		summary: 'Signs the user out.',
 		description: 'Signs the user out from this device, removing the current session.',
-		tags: ['Authorization'],
+		tags: ['Authentication'],
 		responses: {
 			[StatusCodes.BAD_REQUEST]: {
 				description: 'Invalid token is provided.',
