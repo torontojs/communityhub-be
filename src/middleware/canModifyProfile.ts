@@ -1,6 +1,5 @@
 import type { Context, Next } from 'hono';
-import { Access } from '../types/data/access.ts';
-import { getSession } from '../utils/auth.ts';
+import { Access, getSession } from '../utils/auth.ts';
 import { StatusCodes } from '../utils/responses.ts';
 
 export const canModifyProfile = async (context: Context<EnvironmentBindings>, next: Next) => {
