@@ -1,15 +1,13 @@
 import sgMail from '@sendgrid/mail';
-import { addHours } from 'date-fns';
 import { type Context, Hono } from 'hono';
-import { getCookie } from 'hono/cookie';
+import { createSession, deleteSession, getSession, SESSION_COOKIE_NAME } from 'src/utils/auth.ts';
+import { getCookie } from 'src/utils/cookie.ts';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
-import type { SessionData } from '../../types/data/session';
-import { presetSetCookie } from '../../utils/cookie.ts';
 import { hashPassword, validatePassword } from '../../utils/password-hashing.ts';
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
-import { activateProfile, checkEmail, checkProfile, getAccessLevel, getProfileIdPassword } from './data.ts';
+import { activateProfile, checkEmail, getLoginInfo } from './data.ts';
 import { type SignInData, SignInSchema } from './validate.ts';
 
 export const authRoutes = new Hono();
@@ -92,6 +90,12 @@ authRoutes.get('/activate', async (context: Context<EnvironmentBindings>) => {
 });
 
 authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
+	const session = await getSession(context);
+
+	if (session) {
+		return context.json({ message: "You're already logged in" }, StatusCodes.BAD_REQUEST);
+	}
+
 	let parsedBody: SignInData;
 
 	try {
@@ -104,62 +108,53 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 		throw error;
 	}
 
-	const { id: profileId, password: storedPassword } = await getProfileIdPassword(context.env.database, parsedBody.email);
-	if (!profileId || !storedPassword) {
-		return context.json<StatusResponse>({ message: 'Invalid email' }, StatusCodes.UNAUTHORIZED);
+	const genericSignInResponse = { message: 'Either your email/password combination is invalid, or your account is not active' };
+
+	const results = await getLoginInfo(context.env.database, parsedBody.email);
+
+	if (!results) {
+		return context.json<StatusResponse>(genericSignInResponse, StatusCodes.UNAUTHORIZED);
 	}
 
-	const isProfileValid = await checkProfile(context.env.database, profileId);
-	if (!isProfileValid) {
-		return context.json<StatusResponse>({ message: 'Invalid profile id or Account not activated' }, StatusCodes.UNAUTHORIZED);
-	}
+	const {
+		storedPassword,
+		accessLevel,
+		profileId
+	} = results;
 
-	const accessLevel = await getAccessLevel(context.env.database, profileId);
-	if (!accessLevel) {
-		return context.json<StatusResponse>({ message: 'Access not found' }, StatusCodes.NOT_FOUND);
+	if (!storedPassword) {
+		return context.json<StatusResponse>(genericSignInResponse, StatusCodes.UNAUTHORIZED);
 	}
 
 	const isValid = await validatePassword(parsedBody.password, storedPassword);
 	if (!isValid) {
-		return context.json<StatusResponse>({ message: 'Invalid email or password' }, StatusCodes.UNAUTHORIZED);
+		return context.json<StatusResponse>(genericSignInResponse, StatusCodes.UNAUTHORIZED);
 	}
 
-	const sessionToken = crypto.randomUUID();
-	const hoursOffset = 24;
-	const tokenExpiryISO = addHours(new Date(), hoursOffset).toISOString();
-	const sessionDataObject: SessionData = {
+	const sessionDataObject = {
 		id: profileId,
 		email: parsedBody.email,
-		access: accessLevel,
-		expiry: tokenExpiryISO
+		access: accessLevel
 	};
-	const sessionData = JSON.stringify(sessionDataObject);
-	await context.env.SESSION_TOKENS.put(sessionToken, sessionData);
 
-	presetSetCookie(
-		context,
-		'auth_token',
-		sessionToken,
-		new Date(tokenExpiryISO)
-	);
+	await createSession({ session: sessionDataObject, context });
 
-	return context.json(sessionToken);
+	return context.json({ message: 'Successfully signed in' });
 });
 
 authRoutes.post('/sign-out', async (context: Context<EnvironmentBindings>) => {
-	const sessionToken: string | undefined = getCookie(context, 'auth_token');
+	const session = await getSession(context);
+
+	if (!session) {
+		return context.json({ message: 'Invalid or missing token' }, StatusCodes.BAD_REQUEST);
+	}
+
+	const sessionToken = getCookie({ context, name: SESSION_COOKIE_NAME });
 
 	if (!sessionToken) {
 		return context.json({ message: 'Invalid or missing token' }, StatusCodes.BAD_REQUEST);
 	}
-	// Delete cookie on the server
-	await context.env.SESSION_TOKENS.delete(sessionToken);
 
-	presetSetCookie(
-		context,
-		'auth_token',
-		'deleted',
-		new Date(0)
-	);
+	await deleteSession({ context, sessionToken });
 	return context.json(StatusCodes.NO_CONTENT);
 });
