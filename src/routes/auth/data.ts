@@ -11,11 +11,11 @@ export async function getLoginInfo(database: D1Database, email: string) {
 			FROM ${DBTables.ACCESS}
 			INNER JOIN
 				${DBTables.PROFILE}
-				ON profile.id = access.id
+				ON ${DBTables.PROFILE}.id = access.id
 			WHERE
-				profile.email = ?
-				AND profile.activatedAt IS NOT NULL
-				AND profile.deactivatedAt IS NULL
+				${DBTables.PROFILE}.email = ?
+				AND ${DBTables.PROFILE}.activatedAt IS NOT NULL
+				AND ${DBTables.PROFILE}.deactivatedAt IS NULL
 			LIMIT 1
 		`)
 		.bind(email)
@@ -35,11 +35,11 @@ export async function getHeartbeatInfo(database: D1Database, id: string) {
 			FROM ${DBTables.ACCESS}
 			INNER JOIN
 				${DBTables.PROFILE}
-				ON profile.id = access.id
+				ON ${DBTables.PROFILE}.id = access.id
 			WHERE
-				profile.id = ?
-				AND profile.activatedAt IS NOT NULL
-				AND profile.deactivatedAt IS NULL
+				${DBTables.PROFILE}.id = ?
+				AND ${DBTables.PROFILE}.activatedAt IS NOT NULL
+				AND ${DBTables.PROFILE}.deactivatedAt IS NULL
 			LIMIT 1
 		`)
 		.bind(id)
