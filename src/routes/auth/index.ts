@@ -1,13 +1,11 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import sgMail from '@sendgrid/mail';
-import { addHours } from 'date-fns';
 import { type Context, Hono } from 'hono';
 import { createSession, deleteSession, getSession, SESSION_COOKIE_NAME } from 'src/utils/auth.ts';
 import { getCookie } from 'src/utils/cookie.ts';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
 import { authMiddleware } from '../../middleware/auth.ts';
 import { authorizeVolunteer } from '../../middleware/createMiddleware.ts';
-import type { SessionData } from '../../types/data/session';
 import { type HeartbeatResponse, HeartbeatResponseSchema } from '../../utils/heartbeat.ts';
 import { hashPassword, validatePassword } from '../../utils/password-hashing.ts';
 import { StatusCodes, type StatusResponse, statusResponseFormatter, StatusResponseSchema } from '../../utils/responses.ts';
