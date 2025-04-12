@@ -1,7 +1,7 @@
 import { DBTables, DEFAULT_TEAM_ID, generateBaseDBfields } from '../../constants/db.ts';
 import type { CreateProfileData, Profile, UpdateProfileData } from './validation.ts';
 
-export async function insertProfile(database: D1Database, { email, name, password, description }: Partial<CreateProfileData>) {
+export async function insertProfile(database: D1Database, { email, name, password }: CreateProfileData) {
 	const { id, schemaVersion, happenedAt, insertedAt } = generateBaseDBfields();
 
 	const results = await database.batch([
@@ -9,12 +9,10 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 			INSERT INTO ${DBTables.PROFILE} (
 				id, schemaVersion, happenedAt, insertedAt,
 				email, name
-				${description ? ', description' : ''}
 			)
 			VALUES (
 				?, ?, ?, ?,
 				?, ?
-				${description ? ', ?' : ''}
 			)
 		`).bind(
 			id,
@@ -22,10 +20,10 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 			happenedAt,
 			insertedAt,
 			email,
-			name,
-			description
+			name
 		),
-		// TODO: insert into links table
+
+		// TODO: save links and skills
 		database.prepare(`
 			INSERT INTO ${DBTables.ACCESS} (
 				id, schemaVersion, access_level, password, email
@@ -50,7 +48,7 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 			happenedAt,
 			insertedAt,
 			'volunteer',
-			'',
+			'Volunteer at Toronto JS',
 			DEFAULT_TEAM_ID,
 			id
 		)
@@ -60,6 +58,7 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 }
 
 export async function updateProfileById(database: D1Database, id: string, data: UpdateProfileData) {
+	// TODO: do separate update for links and skills
 	const { success } = await database
 		.prepare(`
 			UPDATE ${DBTables.PROFILE}
@@ -73,62 +72,34 @@ export async function updateProfileById(database: D1Database, id: string, data: 
 }
 
 export async function getProfileById(database: D1Database, id: string) {
-	const { results } = await database
+	// TODO: join links and skills
+	const profile = await database
 		.prepare(`SELECT * FROM ${DBTables.PROFILE} WHERE id = ? LIMIT 1`)
 		.bind(id)
-		.run<Profile>();
+		.first<Profile>();
 
-	return results?.[0];
+	return profile;
 }
 
 export async function getAllProfiles(database: D1Database) {
+	// TODO: join links and skills
 	const { results } = await database.prepare(`SELECT * FROM ${DBTables.PROFILE}`).run<Profile>();
 
 	return results;
 }
 
 export async function deleteProfileById(database: D1Database, id: string) {
+	const now = new Date().toISOString();
+
 	const { success } = await database
-		.prepare(`DELETE FROM ${DBTables.PROFILE} WHERE id = ?`)
-		.bind(id)
+		.prepare(`
+			UPDATE ${DBTables.PROFILE}
+			SET deactivatedAt = ?
+			WHERE id = ?
+			LIMIT 1
+		`)
+		.bind(now, id)
 		.run();
 
 	return success;
-}
-
-interface UpdateProfileParams {
-	id: string;
-	data: Partial<{
-		name: string,
-		description: string,
-		links: string,
-		happenedAt: string
-	}>;
-	database: D1Database;
-}
-
-export async function updateProfile({
-	id,
-	data,
-	database
-}: UpdateProfileParams) {
-	const entries = Object.entries(data).filter(
-		([, value]) => value !== undefined
-	);
-	const setClause = entries.map(([key]) => `${key} = ?`).join(', ');
-	const query = `UPDATE ${DBTables.PROFILE} SET ${setClause} WHERE id = ?`;
-
-	return database
-		.prepare(query)
-		.bind(...entries.map(([, value]) => value), id)
-		.run();
-}
-
-export async function validateExistingEmail(database: D1Database, email: string) {
-	const { email: existingEmail } = await database
-		.prepare(`SELECT email FROM ${DBTables.PROFILE} WHERE email = ? LIMIT 1`)
-		.bind(email)
-		.first<{ email: string }>() ?? {};
-
-	return Boolean(existingEmail);
 }

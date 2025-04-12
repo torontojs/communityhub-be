@@ -41,6 +41,9 @@ export const ProfileSchema = BaseDbEntitySchema.merge(z.object({
 	links: z.array(z.string().url('Invalid url.'))
 		.optional()
 		.describe('A list of links for social media and platforms the person want to make available on the Community Hub.'),
+	skills: z.array(z.string())
+		.optional()
+		.describe('A list of skills the person has provided.'),
 	deletedReason: z
 		.string()
 		.optional()
@@ -49,14 +52,12 @@ export const ProfileSchema = BaseDbEntitySchema.merge(z.object({
 
 export type Profile = z.infer<typeof ProfileSchema>;
 
-export const CreateProfileSchema = ProfileSchema.omit(BaseDBFieldsToOmit).merge(z.object({ password: z.string() }));
-
-export type CreateProfileRequestBody = z.infer<typeof CreateProfileSchema>;
+export const CreateProfileSchema = ProfileSchema.pick({ name: true, email: true }).merge(z.object({ password: z.string() }));
 
 export type CreateProfileData = z.infer<typeof CreateProfileSchema>;
 
-export const UpdateProfileSchema = CreateProfileSchema
-	.omit({ email: true, password: true })
+export const UpdateProfileSchema = ProfileSchema
+	.omit({ ...BaseDBFieldsToOmit, email: true })
 	.partial()
 	.refine(
 		(data) => Object.keys(data).length === 0,
