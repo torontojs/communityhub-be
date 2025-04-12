@@ -14,7 +14,7 @@ import {
 	StatusResponseSchema
 } from '../../utils/responses.ts';
 import { IdParamSchema, validateExistingId } from '../../utils/validation.ts';
-import { deleteTeamById, getAllTeams, getTeamById, insertTeam, updateTeamById } from './data.ts';
+import { deleteTeamById, doesTeamExist, getAllTeams, getTeamById, insertTeam, updateTeamById } from './data.ts';
 import { CreateTeamSchema, TeamSchema, UpdateTeamSchema } from './validation.ts';
 
 export const teamRoutes = new OpenAPIHono<EnvironmentBindings>({
@@ -130,14 +130,15 @@ teamRoutes.openapi(
 	}),
 	async (context) => {
 		const { id } = context.req.valid('param');
+		const { id: profileId } = context.get('session');
 
-		const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
+		const isTeamIdValid = await doesTeamExist(context.env.database, id);
 
 		if (!isTeamIdValid) {
 			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
 
-		const isDeleted = await deleteTeamById(context.env.database, id);
+		const isDeleted = await deleteTeamById(context.env.database, profileId, id);
 
 		if (!isDeleted) {
 			return context.json({ message: 'Team not deleted' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
@@ -171,8 +172,9 @@ teamRoutes.openapi(
 		middleware: [authMiddleware, authorizeAdmin] as const
 	}),
 	async (context) => {
+		const { id: profileId } = context.get('session');
 		const body = context.req.valid('json');
-		const { success } = await insertTeam(context.env.database, body);
+		const { success } = await insertTeam(context.env.database, profileId, body);
 
 		if (!success) {
 			return context.json({ message: 'Team not saved' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);

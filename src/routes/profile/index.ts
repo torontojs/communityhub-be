@@ -1,3 +1,5 @@
+// FIXME: readd checks for existing ids, based on the doesTeamExist function
+
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { authMiddleware } from 'src/middleware/auth.ts';
 import { z } from 'zod';
