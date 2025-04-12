@@ -18,7 +18,6 @@
 	"dependencies": {
 		"@hono/swagger-ui": "0.5.1",
 		"@hono/zod-openapi": "0.19.4",
-		"@sendgrid/mail": "^8.1.5",
 		"hono": "^4.7.6"
 	},
 	"devDependencies": {
