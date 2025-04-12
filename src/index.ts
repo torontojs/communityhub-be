@@ -2,10 +2,10 @@ import { OpenAPIHono } from '@hono/zod-openapi';
 import type { Context } from 'hono';
 import { cors } from 'hono/cors';
 import packageJson from '../package.json';
-import { authRoutes } from './routes/auth/index.ts';
+import { protectedAuthRoutes, publicAuthRoutes } from './routes/auth/index.ts';
 import { healthCheckRoutes } from './routes/health-check/index.ts';
 import { protectedProfileRoutes, publicProfileRoutes } from './routes/profile/index.ts';
-import { privateRolesRoutes, publicRoleRoutes } from './routes/role/index.ts';
+import { protectedRolesRoutes, publicRoleRoutes } from './routes/role/index.ts';
 import { protectedTeamRoutes, publicTeamRoutes } from './routes/team/index.ts';
 import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
 
@@ -59,15 +59,16 @@ app.doc('/open-api.json', {
 app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.env.ASSETS.fetch(context.req.raw));
 
 // Public routes
-app.route('/auth', authRoutes);
+app.route('/auth', publicAuthRoutes);
 app.route('/roles', publicRoleRoutes);
 app.route('/profiles', publicProfileRoutes);
 app.route('/teams', publicTeamRoutes);
 
-// Private routes
+// Protected routes
 app.route('/health-check', healthCheckRoutes);
+app.route('/auth', protectedAuthRoutes);
 app.route('/profiles', protectedProfileRoutes);
 app.route('/teams', protectedTeamRoutes);
-app.route('/roles', privateRolesRoutes);
+app.route('/roles', protectedRolesRoutes);
 
 export default app;

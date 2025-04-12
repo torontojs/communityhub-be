@@ -64,3 +64,5 @@ export const UpdateProfileSchema = CreateProfileSchema
 	);
 
 export type UpdateProfileData = z.infer<typeof UpdateProfileSchema>;
+
+export type Name = z.infer<typeof ProfileSchema>['name'];

@@ -105,12 +105,12 @@ publicRoleRoutes.openapi(
 );
 
 // Private routes (POST, PATCH, DELETE)
-export const privateRolesRoutes = new OpenAPIHono<EnvironmentBindings>({
+export const protectedRolesRoutes = new OpenAPIHono<EnvironmentBindings>({
 	defaultHook: statusResponseFormatter
 });
 
 // POST role
-privateRolesRoutes.openapi(
+protectedRolesRoutes.openapi(
 	createRoute({
 		method: 'post',
 		path: '/',
@@ -146,7 +146,7 @@ privateRolesRoutes.openapi(
 );
 
 // PATCH role
-privateRolesRoutes.openapi(
+protectedRolesRoutes.openapi(
 	createRoute({
 		method: 'patch',
 		path: '/{id}',
@@ -193,7 +193,7 @@ privateRolesRoutes.openapi(
 		return context.json({ message: 'Role updated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
 	}
 );
-privateRolesRoutes.openapi(
+protectedRolesRoutes.openapi(
 	createRoute({
 		method: 'delete',
 		path: '/{id}',
