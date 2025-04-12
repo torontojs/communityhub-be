@@ -17,16 +17,15 @@ import { IdParamSchema, validateExistingId } from '../../utils/validation.ts';
 import { deleteTeamById, getAllTeams, getTeamById, insertTeam, updateTeamById } from './data.ts';
 import { CreateTeamSchema, TeamSchema, UpdateTeamSchema } from './validation.ts';
 
-export const publicTeamRoutes = new OpenAPIHono<EnvironmentBindings>({
+export const teamRoutes = new OpenAPIHono<EnvironmentBindings>({
 	defaultHook: statusResponseFormatter
 });
 
-// GET team by ID
-publicTeamRoutes.openapi(
+teamRoutes.openapi(
 	createRoute({
 		method: 'get',
 		path: '/{id}',
-		operationId: 'getTeam',
+		operationId: 'Get team',
 		summary: 'Get team by ID',
 		description: "Retrieves a single team based on it's id.",
 		tags: ['Team'],
@@ -63,14 +62,13 @@ publicTeamRoutes.openapi(
 	}
 );
 
-// GET all teams
-publicTeamRoutes.openapi(
+teamRoutes.openapi(
 	createRoute({
 		method: 'get',
 		path: '/',
-		operationId: 'getTeams',
-		summary: 'Get teams',
-		description: 'Retrieves a list of teams',
+		operationId: 'List teams',
+		summary: 'Get a list of teams',
+		description: 'Retrieves a list of teams.',
 		tags: ['Team'],
 		responses: {
 			[StatusCodes.OKAY]: {
@@ -103,19 +101,13 @@ publicTeamRoutes.openapi(
 	}
 );
 
-// Protected routes (POST, PATCH, DELETE)
-export const protectedTeamRoutes = new OpenAPIHono<EnvironmentBindings>({
-	defaultHook: statusResponseFormatter
-});
-
-// DELETE team by ID
-protectedTeamRoutes.openapi(
+teamRoutes.openapi(
 	createRoute({
 		method: 'delete',
 		path: '/{id}',
-		operationId: 'deleteTeam',
+		operationId: 'Delete team',
 		summary: 'Delete team by ID',
-		description: "Deletes a single team based on it's id",
+		description: "Deletes a single team based on it's id.",
 		tags: ['Team'],
 		request: {
 			params: IdParamSchema
@@ -155,12 +147,11 @@ protectedTeamRoutes.openapi(
 	}
 );
 
-// POST new team
-protectedTeamRoutes.openapi(
+teamRoutes.openapi(
 	createRoute({
 		method: 'post',
 		path: '/',
-		operationId: 'createNewTeam',
+		operationId: 'Create team',
 		summary: 'Create new team',
 		description: 'Add a new team to the VMS including basic information about this team.',
 		tags: ['Team'],
@@ -191,12 +182,11 @@ protectedTeamRoutes.openapi(
 	}
 );
 
-// PATCH team by ID
-protectedTeamRoutes.openapi(
+teamRoutes.openapi(
 	createRoute({
 		method: 'patch',
 		path: '/{id}',
-		operationId: 'updateTeam',
+		operationId: 'Update team',
 		summary: 'Update existing team',
 		description: "Update information for an existing team based on it's id.",
 		tags: ['Team'],

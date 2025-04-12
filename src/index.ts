@@ -7,7 +7,7 @@ import { authRoutes } from './routes/auth/index.ts';
 import { healthCheckRoutes } from './routes/health-check/index.ts';
 import { profileRoutes } from './routes/profile/index.ts';
 import { protectedRolesRoutes, publicRoleRoutes } from './routes/team-members/index.ts';
-import { protectedTeamRoutes, publicTeamRoutes } from './routes/team/index.ts';
+import { teamRoutes } from './routes/team/index.ts';
 import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
 
 const app = new OpenAPIHono<EnvironmentBindings>({
@@ -65,9 +65,8 @@ app.route('/', healthCheckRoutes);
 app.route('/auth', authRoutes);
 app.route('/profiles', profileRoutes);
 app.route('/roles', publicRoleRoutes);
-app.route('/teams', publicTeamRoutes);
+app.route('/teams', teamRoutes);
 
-app.route('/teams', protectedTeamRoutes);
 app.route('/roles', protectedRolesRoutes);
 
 export default app;

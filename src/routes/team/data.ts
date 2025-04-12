@@ -26,8 +26,11 @@ export async function updateTeamById(database: D1Database, id: string, data: Upd
 	const { success } = await database
 		.prepare(`
 			UPDATE ${DBTables.TEAM}
-			SET ${Object.keys(data).join(', ')}
-			WHERE id = ?
+			SET
+				${Object.keys(data).join(', ')}
+			WHERE
+				id = ?
+				AND deletedAt IS NULL
 		`)
 		.bind(...Object.values(data), id)
 		.run();
@@ -36,24 +39,43 @@ export async function updateTeamById(database: D1Database, id: string, data: Upd
 }
 
 export async function getTeamById(database: D1Database, id: string) {
-	const { results } = await database
-		.prepare(`SELECT * FROM ${DBTables.TEAM} WHERE id = ?`)
+	const team = await database
+		.prepare(`
+			SELECT *
+			FROM ${DBTables.TEAM}
+			WHERE
+				id = ?
+				AND deletedAt IS NULL
+			LIMIT 1
+		`)
 		.bind(id)
-		.run<Team>();
+		.first<Team>();
 
-	return results?.[0];
+	return team;
 }
 
 export async function getAllTeams(database: D1Database) {
-	const { results } = await database.prepare(`SELECT * FROM ${DBTables.TEAM}`).run<Team>();
+	const { results } = await database.prepare(`
+		SELECT *
+		FROM ${DBTables.TEAM}
+		WHERE deletedAt IS NULL
+	`).run<Team>();
 
 	return results;
 }
 
 export async function deleteTeamById(database: D1Database, id: string) {
+	const now = new Date().toISOString();
+
 	const { success } = await database
-		.prepare(`UPDATE ${DBTables.TEAM} SET deletedAt = ? WHERE id = ?`)
-		.bind(new Date().toISOString(), id)
+		.prepare(`
+			UPDATE ${DBTables.TEAM}
+			SET
+				deletedAt = ?
+			WHERE
+				id = ?
+		`)
+		.bind(now, id)
 		.run();
 
 	return success;
