@@ -184,9 +184,9 @@ publicAuthRoutes.openapi(
 		}
 	}),
 	async (context) => {
-		const session = await getSession(context);
+		const existingSession = await getSession(context);
 
-		if (!session) {
+		if (existingSession) {
 			return context.json({ message: 'You are already signed in' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
 		}
 
@@ -225,19 +225,13 @@ publicAuthRoutes.openapi(
 			return context.json(genericSignInResponse satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
 		}
 
-		const sessionToken = crypto.randomUUID();
-		const hoursOffset = 24;
-		const tokenExpiryISO = addHours(new Date(), hoursOffset).toISOString();
-		const sessionDataObject: SessionData = {
+		const session = {
 			id: profileId,
 			email: parsedBody.email,
-			access: accessLevel,
-			expiry: tokenExpiryISO
+			access: accessLevel
 		};
-		const sessionData = JSON.stringify(sessionDataObject);
-		await context.env.SESSION_TOKENS.put(sessionToken, sessionData);
 
-		await createSession({ session: sessionDataObject, context });
+		await createSession({ session, context });
 
 		return context.json({ message: 'Sign in successful' } satisfies StatusResponse, StatusCodes.CREATED);
 	}
