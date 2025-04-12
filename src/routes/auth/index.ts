@@ -1,8 +1,7 @@
 import sgMail from '@sendgrid/mail';
-import { addHours } from 'date-fns';
 import { type Context, Hono } from 'hono';
+import { createSession, getSession } from 'src/utils/auth.ts';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
-import type { SessionData } from '../../types/data/session';
 import { hashPassword, validatePassword } from '../../utils/password-hashing.ts';
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { insertProfile } from '../profile/data.ts';
@@ -90,6 +89,12 @@ authRoutes.get('/activate', async (context: Context<EnvironmentBindings>) => {
 });
 
 authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
+	const session = await getSession(context);
+
+	if (session) {
+		return context.json({ message: "You're already logged in" }, StatusCodes.BAD_REQUEST);
+	}
+
 	let parsedBody: SignInData;
 
 	try {
@@ -125,19 +130,13 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 		return context.json<StatusResponse>(genericSignInResponse, StatusCodes.UNAUTHORIZED);
 	}
 
-	const sessionToken = crypto.randomUUID();
-	const hoursOffset = 24;
-	const tokenExpiryISO = addHours(new Date(), hoursOffset).toISOString();
-	const sessionDataObject: SessionData = {
+	const sessionDataObject = {
 		id: profileId,
 		email: parsedBody.email,
-		access: accessLevel,
-		expiry: tokenExpiryISO
+		access: accessLevel
 	};
-	const sessionData = JSON.stringify(sessionDataObject);
-	await context.env.SESSION_TOKENS.put(sessionToken, sessionData);
 
-	context.header('Set-Cookie', `auth_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Expires=${tokenExpiryISO}; Path=/;`);
+	await createSession({ session: sessionDataObject, context });
 
 	return context.json({ message: 'Successfully signed in' });
 });
