@@ -19,8 +19,7 @@ app.onError((err, context) => {
 	// TODO: add better error logging?
 
 	if (err instanceof ZodError) {
-		const INDENDATION_SPACING = 2;
-		console.error(JSON.stringify(err, null, INDENDATION_SPACING));
+		console.error(err.toString());
 	} else {
 		console.error(err);
 	}
