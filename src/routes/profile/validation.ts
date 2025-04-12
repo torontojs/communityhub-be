@@ -71,7 +71,7 @@ export const ProfileLinkSchema = z.object({
 		.string()
 		.uuid()
 		.describe('The Link id.'),
-	profile_id: z
+	profileId: z
 		.string()
 		.uuid()
 		.describe('The profile id.'),
@@ -88,7 +88,7 @@ export const ProfileSkillSchema = z.object({
 		.string()
 		.uuid()
 		.describe('The Link id.'),
-	profile_id: z
+	profileId: z
 		.string()
 		.uuid()
 		.describe('The profile id.'),

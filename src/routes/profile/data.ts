@@ -50,7 +50,7 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 		),
 		database.prepare(`
 			INSERT INTO ${DBTables.ACCESS} (
-				id, schemaVersion, access_level, password, email
+				id, schemaVersion, accessLevel, password, email
 			)
 			VALUES (
 				?, ?, ?, ?, ?
@@ -127,7 +127,7 @@ export async function updateProfileById(
 
 			return database.prepare(`
 				INSERT INTO ${DBTables.PROFILE_LINKS} (
-					id, url, profile_id
+					id, url, profileId
 				)
 				SELECT
 					?, ?, id
@@ -144,7 +144,7 @@ export async function updateProfileById(
 
 			return database.prepare(`
 				INSERT INTO ${DBTables.PROFILE_SKILLS} (
-					id, skill, profile_id
+					id, skill, profileId
 				)
 				SELECT
 					?, ?, id
@@ -173,8 +173,8 @@ export async function getProfileById(database: D1Database, id: string) {
 				AND deletedAt IS NULL
 			LIMIT 1
 		`).bind(id),
-		database.prepare(`SELECT url FROM ${DBTables.PROFILE_LINKS} WHERE profile_id = ?`).bind(id),
-		database.prepare(`SELECT skill FROM ${DBTables.PROFILE_SKILLS} WHERE profile_id = ?`).bind(id)
+		database.prepare(`SELECT url FROM ${DBTables.PROFILE_LINKS} WHERE profileId = ?`).bind(id),
+		database.prepare(`SELECT skill FROM ${DBTables.PROFILE_SKILLS} WHERE profileId = ?`).bind(id)
 	]);
 
 	const profile = results[0]?.results[0] as Profile | undefined;
@@ -199,8 +199,8 @@ export async function getAllProfiles(database: D1Database) {
 				AND deletedAt IS NULL
 		`),
 		// TODO: narrow down queries to only active profiles
-		database.prepare(`SELECT profile_id, url FROM ${DBTables.PROFILE_LINKS}`),
-		database.prepare(`SELECT profile_id, skill FROM ${DBTables.PROFILE_SKILLS}`)
+		database.prepare(`SELECT profileId, url FROM ${DBTables.PROFILE_LINKS}`),
+		database.prepare(`SELECT profileId, skill FROM ${DBTables.PROFILE_SKILLS}`)
 	]);
 
 	const profiles = new Map(
@@ -209,8 +209,8 @@ export async function getAllProfiles(database: D1Database) {
 	);
 
 	// Assign links to profiles
-	(results[1]?.results as ProfileLink[] | undefined ?? []).forEach(({ profile_id, url }) => {
-		const profile = profiles.get(profile_id);
+	(results[1]?.results as ProfileLink[] | undefined ?? []).forEach(({ profileId, url }) => {
+		const profile = profiles.get(profileId);
 
 		if (profile) {
 			profile.links ??= [];
@@ -219,8 +219,8 @@ export async function getAllProfiles(database: D1Database) {
 	});
 
 	// Assign skills to profiles
-	(results[2]?.results as ProfileSkill[] | undefined ?? []).forEach(({ profile_id, skill }) => {
-		const profile = profiles.get(profile_id);
+	(results[2]?.results as ProfileSkill[] | undefined ?? []).forEach(({ profileId, skill }) => {
+		const profile = profiles.get(profileId);
 
 		if (profile) {
 			profile.skills ??= [];

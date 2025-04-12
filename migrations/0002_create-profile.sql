@@ -58,36 +58,36 @@ CREATE TABLE IF NOT EXISTS profile (
 	PRIMARY KEY (id)
 );
 
-DROP INDEX IF EXISTS idx_links_profile_id ON profile_links;
+DROP INDEX IF EXISTS idx_links_profileId ON profile_links;
 DROP TABLE IF EXISTS profile_links;
 
 CREATE TABLE IF NOT EXISTS profile_links (
 	-- The UUID of the link, stored as text
 	id TEXT NOT NULL UNIQUE COLLATE BINARY,
 	-- The UUID of the profile this link belongs to
-	profile_id TEXT NOT NULL,
+	profileId TEXT NOT NULL,
 	-- The URL of the link
 	url TEXT NOT NULL,
 
 	PRIMARY KEY (id),
-	FOREIGN KEY (profile_id) REFERENCES profile(id)
+	FOREIGN KEY (profileId) REFERENCES profile(id)
 );
 
-CREATE INDEX idx_links_profile_id ON profile_links (profile_id);
+CREATE INDEX idx_links_profileId ON profile_links (profileId);
 
-DROP INDEX IF EXISTS idx_skills_profile_id ON profile_skills;
+DROP INDEX IF EXISTS idx_skills_profileId ON profile_skills;
 DROP TABLE IF EXISTS profile_skills;
 
 CREATE TABLE IF NOT EXISTS profile_skills (
 	-- The UUID of the skill, stored as text
 	id TEXT NOT NULL UNIQUE COLLATE BINARY,
 	-- The UUID of the profile this skill belongs to
-	profile_id TEXT NOT NULL,
+	profileId TEXT NOT NULL,
 	-- The name of the skill
 	skill TEXT NOT NULL,
 
 	PRIMARY KEY (id),
-	FOREIGN KEY (profile_id) REFERENCES profile(id)
+	FOREIGN KEY (profileId) REFERENCES profile(id)
 );
 
-CREATE INDEX idx_skills_profile_id ON profile_skills (profile_id);
+CREATE INDEX idx_skills_profileId ON profile_skills (profileId);

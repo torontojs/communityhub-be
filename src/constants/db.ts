@@ -61,7 +61,7 @@ export function generateBaseDBfields() {
 }
 
 export interface AccessSchema extends IdAndSchemaVersion {
-	access_level: AccessLevel;
+	accessLevel: AccessLevel;
 	password: string;
 	email: string;
 }

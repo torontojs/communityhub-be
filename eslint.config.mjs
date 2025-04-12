@@ -8,7 +8,7 @@ const rules = {
 	'array-callback-return': 'error',
 	'arrow-body-style': 'error',
 	'block-scoped-var': 'warn',
-	'camelcase': ['warn', { allow: ['profile_id'] }],
+	'camelcase': 'warn',
 	'capitalized-comments': 'warn',
 	'class-methods-use-this': 'off',
 	'complexity': 'error',
