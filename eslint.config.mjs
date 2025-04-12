@@ -8,7 +8,7 @@ const rules = {
 	'array-callback-return': 'error',
 	'arrow-body-style': 'error',
 	'block-scoped-var': 'warn',
-	'camelcase': 'warn',
+	'camelcase': ['warn', { allow: ['profile_id'] }],
 	'capitalized-comments': 'warn',
 	'class-methods-use-this': 'off',
 	'complexity': 'error',
@@ -249,7 +249,7 @@ const rules = {
 		leadingUnderscore: 'allow',
 		trailingUnderscore: 'forbid',
 		filter: {
-			regex: '^(_id|__v|_links)$',
+			regex: '(?:^(_id|__v|_links)$)|(?:_id$)',
 			match: false
 		}
 	}, {
@@ -263,7 +263,7 @@ const rules = {
 		leadingUnderscore: 'forbid',
 		trailingUnderscore: 'forbid',
 		filter: {
-			regex: '^(_id|__v|_links)$',
+			regex: '(?:^(_id|__v|_links)$)|(?:_id$)',
 			match: false
 		}
 	}, {
@@ -283,7 +283,7 @@ const rules = {
 		leadingUnderscore: 'forbid',
 		trailingUnderscore: 'forbid',
 		filter: {
-			regex: '^(_id|__v|_links)$',
+			regex: '(?:^(_id|__v|_links)$)|(?:_id$)',
 			match: false
 		}
 	}, {
@@ -292,7 +292,7 @@ const rules = {
 		leadingUnderscore: 'forbid',
 		trailingUnderscore: 'forbid',
 		filter: {
-			regex: '^(_id|__v|_links)$',
+			regex: '(?:^(_id|__v|_links)$)|(?:_id$)',
 			match: false
 		}
 	}, {
