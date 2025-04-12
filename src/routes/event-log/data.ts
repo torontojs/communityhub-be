@@ -1,0 +1,78 @@
+import { DBTables, DEFAULT_TEAM_ID, generateBaseDBfields } from '../../constants/db.ts';
+import { type EventLog as EventLogType, LogItemSource } from './validation.ts';
+
+export class EventLog {
+	static createLogEntry(
+		database: D1Database,
+		{ object, objectSource, subject, subjectSource, verb }: Pick<EventLogType, 'object' | 'objectSource' | 'subject' | 'subjectSource' | 'verb'>
+	) {
+		const { id, happenedAt, insertedAt, schemaVersion } = generateBaseDBfields();
+
+		return database
+			.prepare(`
+			INSERT INTO ${DBTables.EVENT_LOG} (
+				id, schemaVersion, happenedAt, insertedAt,
+				subject, subjectSource,
+				verb,
+				object, objectSource
+			)
+			VALUES (
+				?, ?, ?, ?,
+				?, ?,
+				?,
+				?, ?
+			)
+		`)
+			.bind(id, schemaVersion, happenedAt, insertedAt, subject, subjectSource, verb, object, objectSource);
+	}
+
+	static joinTorontoJS(database: D1Database, profileId: string) {
+		return EventLog.createLogEntry(database, {
+			subject: profileId,
+			subjectSource: LogItemSource.PROFILE,
+			verb: 'joined',
+			object: DEFAULT_TEAM_ID,
+			objectSource: LogItemSource.SPECIAL
+		});
+	}
+
+	static createTeam(database: D1Database, profileId: string, teamId: string) {
+		return EventLog.createLogEntry(database, {
+			subject: profileId,
+			subjectSource: LogItemSource.PROFILE,
+			verb: 'created',
+			object: teamId,
+			objectSource: LogItemSource.TEAM
+		});
+	}
+
+	static closeTeam(database: D1Database, profileId: string, teamId: string) {
+		return EventLog.createLogEntry(database, {
+			subject: profileId,
+			subjectSource: LogItemSource.PROFILE,
+			verb: 'created',
+			object: teamId,
+			objectSource: LogItemSource.TEAM
+		});
+	}
+
+	static joinTeam(database: D1Database, profileId: string, teamId: string) {
+		return EventLog.createLogEntry(database, {
+			subject: profileId,
+			subjectSource: LogItemSource.PROFILE,
+			verb: 'joined',
+			object: teamId,
+			objectSource: LogItemSource.TEAM
+		});
+	}
+
+	static leaveTeam(database: D1Database, profileId: string, teamId: string) {
+		return EventLog.createLogEntry(database, {
+			subject: profileId,
+			subjectSource: LogItemSource.PROFILE,
+			verb: 'left',
+			object: teamId,
+			objectSource: LogItemSource.TEAM
+		});
+	}
+}
