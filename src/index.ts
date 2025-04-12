@@ -6,7 +6,7 @@ import packageJson from '../package.json';
 import { authRoutes } from './routes/auth/index.ts';
 import { healthCheckRoutes } from './routes/health-check/index.ts';
 import { profileRoutes } from './routes/profile/index.ts';
-import { protectedRolesRoutes, publicRoleRoutes } from './routes/role/index.ts';
+import { protectedRolesRoutes, publicRoleRoutes } from './routes/team-members/index.ts';
 import { protectedTeamRoutes, publicTeamRoutes } from './routes/team/index.ts';
 import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
 
