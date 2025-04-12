@@ -1,10 +1,16 @@
 import type { Context } from 'hono';
-import { getCookie } from 'hono/cookie';
-import { setCookie } from './cookie';
+import { getCookie, setCookie } from 'hono/cookie';
+import type { CookieOptions } from 'hono/utils/cookie';
 
 const SESSION_LIFESPAN_IN_HOURS = 24;
 const SESSION_COOKIE_NAME = 'auth_token';
 const DELETED_COOKIE_VALUE = 'DELETED';
+const DEFAULT_COOKIE_OPTIONS = {
+	httpOnly: true,
+	path: '/',
+	secure: true,
+	sameSite: 'Strict'
+} satisfies CookieOptions;
 
 export const Access = {
 	ADMIN: 'admin',
@@ -36,12 +42,15 @@ export async function deleteSession({ context, sessionToken }: DeleteSessionPara
 	await context.env.SESSION_TOKENS.delete(sessionToken);
 
 	// Delete session on client
-	setCookie({
+	setCookie(
 		context,
-		name: SESSION_COOKIE_NAME,
-		value: DELETED_COOKIE_VALUE,
-		expires: new Date(0)
-	});
+		SESSION_COOKIE_NAME,
+		DELETED_COOKIE_VALUE,
+		{
+			...DEFAULT_COOKIE_OPTIONS,
+			expires: new Date(0)
+		}
+	);
 }
 
 export function getSession(context: Context<EnvironmentBindings>) {
@@ -74,12 +83,15 @@ async function extendExistingSession({
 	);
 
 	// Update session on client
-	setCookie({
+	setCookie(
 		context,
-		name: SESSION_COOKIE_NAME,
-		value: sessionToken,
-		expires: tokenExpiry
-	});
+		SESSION_COOKIE_NAME,
+		sessionToken,
+		{
+			...DEFAULT_COOKIE_OPTIONS,
+			expires: tokenExpiry
+		}
+	);
 
 	return updatedSession;
 }
@@ -143,12 +155,15 @@ export async function createSession({
 	);
 
 	// Send session to client
-	setCookie({
+	setCookie(
 		context,
-		name: SESSION_COOKIE_NAME,
-		value: sessionToken,
-		expires: tokenExpiry
-	});
+		SESSION_COOKIE_NAME,
+		sessionToken,
+		{
+			...DEFAULT_COOKIE_OPTIONS,
+			expires: tokenExpiry
+		}
+	);
 
 	return sessionToken;
 }
