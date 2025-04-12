@@ -1,19 +1,24 @@
+import type { Access } from 'src/types/data/access.ts';
 import { DBTables } from '../../constants/db.ts';
-import type { Profile, SignInData } from './validate.ts';
 
-export async function getPassword(database: D1Database, body: SignInData): Promise<string> {
-	const { results } = await database
-		.prepare(`SELECT password FROM ${DBTables.PROFILE} WHERE email = ? AND activatedAt IS NOT NULL LIMIT 1`)
-		.bind(body.email)
-		.run<Profile>();
+export async function getLoginInfo(database: D1Database, email: string) {
+	const results = await database
+		.prepare(`
+       SELECT
+           access.password as storedPassword,
+           access.access_level as accessLevel,
+           profile.id as profileId
+       FROM access
+       INNER JOIN
+       profile
+       ON profile.id = access.id
+       WHERE profile.email = ? AND profile.activatedAt IS NOT NULL AND profile.deactivatedAt IS NULL
+       LIMIT 1
+    `)
+		.bind(email)
+		.first<{ storedPassword: string, accessLevel: Access, profileId: string }>();
 
-	const password = results[0]?.password;
-
-	if (!password) {
-		throw new Error('No active account found with the provided email');
-	}
-
-	return password;
+	return results;
 }
 
 export async function checkEmail(database: D1Database, email: string) {

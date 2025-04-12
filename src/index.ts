@@ -3,9 +3,10 @@ import type { Context } from 'hono';
 import { cors } from 'hono/cors';
 import packageJson from '../package.json';
 import { authRoutes } from './routes/auth/index.ts';
-import { profileRoutes } from './routes/profile/index.ts';
-import { roleRoutes } from './routes/role/index.ts';
-import { teamRoutes } from './routes/team/index.ts';
+import { healthCheckRoutes } from './routes/health-check/index.ts';
+import { protectedProfileRoutes, publicProfileRoutes } from './routes/profile/index.ts';
+import { privateRolesRoutes, publicRoleRoutes } from './routes/role/index.ts';
+import { protectedTeamRoutes, publicTeamRoutes } from './routes/team/index.ts';
 import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
 
 const app = new OpenAPIHono<EnvironmentBindings>({
@@ -54,11 +55,19 @@ app.doc('/open-api.json', {
 	}
 });
 
-app.route('/profiles', profileRoutes);
-app.route('/teams', teamRoutes);
-app.route('/auth', authRoutes);
-app.route('/roles', roleRoutes);
 // Handle static assets using Cloudflare Workers
 app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.env.ASSETS.fetch(context.req.raw));
+
+// Public routes
+app.route('/auth', authRoutes);
+app.route('/roles', publicRoleRoutes);
+app.route('/profiles', publicProfileRoutes);
+app.route('/teams', publicTeamRoutes);
+
+// Private routes
+app.route('/health-check', healthCheckRoutes);
+app.route('/profiles', protectedProfileRoutes);
+app.route('/teams', protectedTeamRoutes);
+app.route('/roles', privateRolesRoutes);
 
 export default app;

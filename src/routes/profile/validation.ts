@@ -15,9 +15,36 @@ export const ProfileSchema = BaseDbEntitySchema.merge(z.object({
 		.string()
 		.optional()
 		.describe('A description for this person, may be written in markdown.'),
+	isBasedOnGTA: z
+		.boolean()
+		.describe('A flag indicating if the user is based on the Grater Toronto Area (GTA).'),
+	canJoinLocalEvents: z
+		.boolean()
+		.describe('A flag indicating if the user is available to join local/in-person events.'),
+	pronouns: z
+		.string()
+		.optional()
+		.describe('The pronouns the person identifies with.'),
+	birthday: z
+		.string()
+		.optional()
+		.refine(
+			(data) => data ? /^\d{2}-\d{2}$/iu.test(data) : true,
+			{ message: 'Birthday must be in the format "MM-DD".' }
+		)
+		.describe('Birthday of user.'),
+	avatar: z
+		.string()
+		.url('Must be a valid URL.')
+		.optional()
+		.describe("The user's avatar URL."),
 	links: z.array(z.string().url('Invalid url.'))
 		.optional()
-		.describe('A list of links for social media and platforms the person want to make available on the VMS.')
+		.describe('A list of links for social media and platforms the person want to make available on the Community Hub.'),
+	deletedReason: z
+		.string()
+		.optional()
+		.describe('The reason this perofile was marked deleted.')
 }));
 
 export type Profile = z.infer<typeof ProfileSchema>;

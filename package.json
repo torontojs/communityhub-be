@@ -12,12 +12,13 @@
 		"typecheck": "tsc --noEmit",
 		"lint:js": "eslint --fix",
 		"lint": "npm run typecheck && npm run lint:js",
-		"db:setup": "wrangler d1 migrations apply vms-local --local --persist-to=db",
-		"db:setup:linux-file-auth": "./migration/wrangler-development-script.sh"
+		"db:setup": "wrangler d1 migrations apply vms-local --local --persist-to=.wrangler/state",
+		"db:seed": "wrangler d1 execute vms-local --local --persist-to=.wrangler/state --file=./seeds/seed-data.sql"
 	},
 	"dependencies": {
-		"@sendgrid/mail": "^8.1.4",
 		"@hono/zod-openapi": "0.18.3",
+		"@sendgrid/mail": "^8.1.4",
+		"date-fns": "^4.1.0",
 		"hono": "^4.6.17"
 	},
 	"devDependencies": {
@@ -30,9 +31,9 @@
 		"globals": "15.13.0",
 		"husky": "9.1.7",
 		"typescript": "5.7.2",
+		"vitest": "^2.1.9",
 		"wrangler": "^3.103.2",
-		"zod": "^3.24.1",
-		"vitest": "^2.1.9"
+		"zod": "^3.24.1"
 	},
 	"volta": {
 		"node": "22.12.0"

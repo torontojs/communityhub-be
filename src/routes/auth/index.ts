@@ -1,11 +1,13 @@
 import sgMail from '@sendgrid/mail';
+import { addHours } from 'date-fns';
 import { type Context, Hono } from 'hono';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
+import type { SessionData } from '../../types/data/session';
 import { hashPassword, validatePassword } from '../../utils/password-hashing.ts';
 import { StatusCodes, type StatusResponse } from '../../utils/responses.ts';
 import { insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
-import { activateProfile, checkEmail, getPassword } from './data.ts';
+import { activateProfile, checkEmail, getLoginInfo } from './data.ts';
 import { type SignInData, SignInSchema } from './validate.ts';
 
 export const authRoutes = new Hono();
@@ -76,7 +78,10 @@ authRoutes.get('/activate', async (context: Context<EnvironmentBindings>) => {
 		return context.json({ message: 'User not found' }, StatusCodes.NOT_FOUND);
 	}
 
-	await activateProfile(context.env.database, email);
+	const activated = await activateProfile(context.env.database, email);
+	if (!activated) {
+		return context.json({ message: 'Failed to activate account' }, StatusCodes.INTERNAL_SERVER_ERROR);
+	}
 
 	// Remove token after successful activation
 	await context.env.ACTIVATION_TOKENS.delete(token);
@@ -97,26 +102,42 @@ authRoutes.post('/sign-in', async (context: Context<EnvironmentBindings>) => {
 		throw error;
 	}
 
-	const hashedPasswordWithSalt = await getPassword(context.env.database, parsedBody);
-	if (!hashedPasswordWithSalt) {
-		return context.json<StatusResponse>({ message: 'Invalid email or password' }, StatusCodes.UNAUTHORIZED);
+	const genericSignInResponse = { message: 'Either your email/password combination is invalid, or your account is not active' };
+
+	const results = await getLoginInfo(context.env.database, parsedBody.email);
+
+	if (!results) {
+		return context.json<StatusResponse>(genericSignInResponse, StatusCodes.UNAUTHORIZED);
 	}
 
-	const isValid = await validatePassword(parsedBody.password, hashedPasswordWithSalt);
+	const {
+		storedPassword,
+		accessLevel,
+		profileId
+	} = results;
+
+	if (!storedPassword) {
+		return context.json<StatusResponse>(genericSignInResponse, StatusCodes.UNAUTHORIZED);
+	}
+
+	const isValid = await validatePassword(parsedBody.password, storedPassword);
 	if (!isValid) {
-		return context.json<StatusResponse>({ message: 'Invalid email or password' }, StatusCodes.UNAUTHORIZED);
+		return context.json<StatusResponse>(genericSignInResponse, StatusCodes.UNAUTHORIZED);
 	}
 
 	const sessionToken = crypto.randomUUID();
-	const hoursAhead = 1;
-	const tokenExpiryISO = new Date(Date.now() + hoursAhead * 60 * 60 * 1000).toISOString();
-	const sessionData = JSON.stringify({
-		expiry: tokenExpiryISO,
-		email: parsedBody.email
-	});
+	const hoursOffset = 24;
+	const tokenExpiryISO = addHours(new Date(), hoursOffset).toISOString();
+	const sessionDataObject: SessionData = {
+		id: profileId,
+		email: parsedBody.email,
+		access: accessLevel,
+		expiry: tokenExpiryISO
+	};
+	const sessionData = JSON.stringify(sessionDataObject);
 	await context.env.SESSION_TOKENS.put(sessionToken, sessionData);
 
 	context.header('Set-Cookie', `auth_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Expires=${tokenExpiryISO}; Path=/;`);
 
-	return context.json(sessionToken);
+	return context.json({ message: 'Successfully signed in' });
 });
