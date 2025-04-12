@@ -5,7 +5,7 @@ import type { SessionData } from 'src/types/data/session';
 import { setCookie } from './cookie';
 
 const SESION_LIFESPAN_IN_HOURS = 24;
-const SESSION_COOKIE_NAME = 'auth_token';
+export const SESSION_COOKIE_NAME = 'auth_token';
 
 function isSesionExpired(sessionExpiryISO: string) {
 	return new Date() > new Date(sessionExpiryISO);
@@ -125,5 +125,6 @@ async function createSession({
 
 export {
 	createSession,
+	deleteSession,
 	getSession
 };

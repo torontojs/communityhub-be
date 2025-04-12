@@ -1,5 +1,5 @@
 import type { Context } from 'hono';
-import { setCookie as setHonoCookie } from 'hono/cookie';
+import { getCookie as getHonoCookie, setCookie as setHonoCookie } from 'hono/cookie';
 import type { CookieOptions } from 'hono/utils/cookie';
 
 const DEFAULT_COOKIE_OPTIONS = {
@@ -27,6 +27,19 @@ function setCookie({
 	setHonoCookie(context, name, value, optionsToSet);
 }
 
+interface GetCookieInput {
+	context: Context<EnvironmentBindings>;
+	name: string;
+}
+
+function getCookie({
+	context,
+	name
+}: GetCookieInput) {
+	return getHonoCookie(context, name);
+}
+
 export {
+	getCookie,
 	setCookie
 };
