@@ -8,7 +8,9 @@ export const DBTables = {
 	PROFILE: 'profile',
 	TEAM: 'team',
 	ROLE: 'role',
-	ACCESS: 'access'
+	ACCESS: 'access',
+	PROFILE_SKILLS: 'profile_skills',
+	PROFILE_LINKS: 'profile_links'
 } as const;
 
 export const IdAndSchemaVersionSchema = z.object({
