@@ -302,7 +302,7 @@ publicAuthRoutes.openapi(
 		tags: ['Sign-out'],
 		responses: {
 			[StatusCodes.BAD_REQUEST]: {
-				description: 'User has a session and is already logged out',
+				description: 'User is already logged out',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
 			[StatusCodes.NO_CONTENT]: {
@@ -313,14 +313,16 @@ publicAuthRoutes.openapi(
 	async (context) => {
 		const session = await getSession(context);
 
+		const alreadyLoggedOutResponse = { message: 'You are already logged out' };
+
 		if (!session) {
-			return context.json({ message: 'Invalid or missing token' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+			return context.json(alreadyLoggedOutResponse satisfies StatusResponse, StatusCodes.BAD_REQUEST);
 		}
 
 		const sessionToken = getCookie({ context, name: SESSION_COOKIE_NAME });
 
 		if (!sessionToken) {
-			return context.json({ message: 'Invalid or missing token' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+			return context.json(alreadyLoggedOutResponse satisfies StatusResponse, StatusCodes.BAD_REQUEST);
 		}
 
 		await deleteSession({ context, sessionToken });
