@@ -105,7 +105,7 @@ publicAuthRoutes.openapi(
 		description: 'Received activation email and clicked on activation link',
 		tags: ['Activate'],
 		request: {
-			params: ActivateSchema
+			query: ActivateSchema
 		},
 		responses: {
 			[StatusCodes.BAD_REQUEST]: {
@@ -131,7 +131,7 @@ publicAuthRoutes.openapi(
 		}
 	}),
 	async (context) => {
-		const { token } = context.req.valid('param');
+		const { token } = context.req.valid('query');
 		if (!token) {
 			return context.json({ message: 'Invalid or missing token' }, StatusCodes.BAD_REQUEST);
 		}
