@@ -2,8 +2,10 @@ import { DBTables, DEFAULT_TEAM_ID, generateBaseDBfields } from '../../constants
 import type { CreateProfileData, Profile, ProfileLink, ProfileSkill, UpdateProfileData } from './validation.ts';
 
 function transformProfile(profile: Profile) {
+	const filteredProfile = Object.fromEntries(Object.entries(profile).filter(([, value]) => Boolean(value))) as Profile;
+
 	return {
-		...Object.fromEntries(Object.entries(profile).filter(([, value]) => value)),
+		...filteredProfile,
 		isBasedOnGTA: Boolean(profile.isBasedOnGTA),
 		canJoinLocalEvents: Boolean(profile.canJoinLocalEvents),
 		links: profile.links ?? [],
