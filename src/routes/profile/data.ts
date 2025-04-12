@@ -13,6 +13,20 @@ function transformProfile(profile: Profile) {
 	};
 }
 
+export async function doesProfileExist(database: D1Database, id: string) {
+	const profile = await database.prepare(`
+		SELECT id
+		FROM ${DBTables.PROFILE}
+		WHERE
+			id = ?
+			AND activatedAt IS NOT NULL
+			AND deletedAt IS NULL
+		LIMIT 1
+	`).bind(id).first<{ id: string }>();
+
+	return Boolean(profile);
+}
+
 export async function insertProfile(database: D1Database, { email, name, password }: CreateProfileData) {
 	const { id, schemaVersion, happenedAt, insertedAt } = generateBaseDBfields();
 
@@ -148,6 +162,7 @@ export async function updateProfileById(
 }
 
 export async function getProfileById(database: D1Database, id: string) {
+	// TODO: try to refactor to a single query (join)
 	const results = await database.batch([
 		database.prepare(`
 			SELECT *

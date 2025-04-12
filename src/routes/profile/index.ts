@@ -14,7 +14,7 @@ import {
 	StatusResponseSchema
 } from '../../utils/responses.ts';
 import { IdParamSchema } from '../../utils/validation.ts';
-import { deleteProfileById, getAllProfiles, getProfileById, updateProfileById } from './data.ts';
+import { deleteProfileById, doesProfileExist, getAllProfiles, getProfileById, updateProfileById } from './data.ts';
 import { ProfileSchema, UpdateProfileSchema } from './validation.ts';
 
 export const profileRoutes = new OpenAPIHono<EnvironmentBindings>({
@@ -135,6 +135,11 @@ profileRoutes.openapi(
 			return context.json({ message: 'Can only modify own profile' }, StatusCodes.FORBIDDEN);
 		}
 
+		const isProfileIdValid = await doesProfileExist(context.env.database, id);
+		if (!isProfileIdValid) {
+			return context.json({ message: 'Profile does not exist' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
+		}
+
 		const body = context.req.valid('json');
 		const isUpdated = await updateProfileById(context.env.database, id, body);
 
@@ -175,6 +180,11 @@ profileRoutes.openapi(
 	}),
 	async (context) => {
 		const { id } = context.req.valid('param');
+
+		const isProfileIdValid = await doesProfileExist(context.env.database, id);
+		if (!isProfileIdValid) {
+			return context.json({ message: 'Profile does not exist' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
+		}
 
 		const isDeleted = await deleteProfileById(context.env.database, id);
 
