@@ -170,7 +170,7 @@ publicAuthRoutes.openapi(
 		},
 		responses: {
 			[StatusCodes.BAD_REQUEST]: {
-				description: 'Invalid JSON format:',
+				description: 'Invalid JSON format or already signed in',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
 			[StatusCodes.UNAUTHORIZED]: {
@@ -184,6 +184,12 @@ publicAuthRoutes.openapi(
 		}
 	}),
 	async (context) => {
+		const session = await getSession(context);
+
+		if (!session) {
+			return context.json({ message: 'You are already signed in' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+		}
+
 		let parsedBody: SignInData;
 
 		try {
