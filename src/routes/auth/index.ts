@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import sgMail from '@sendgrid/mail';
 import { addHours } from 'date-fns';
-import { type Context, Hono } from 'hono';
+import { Hono } from 'hono';
 import { createSession, deleteSession, getSession, SESSION_COOKIE_NAME } from 'src/utils/auth.ts';
 import { getCookie } from 'src/utils/cookie.ts';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
@@ -10,7 +10,12 @@ import { authorizeVolunteer } from '../../middleware/createMiddleware.ts';
 import type { SessionData } from '../../types/data/session';
 import { type HeartbeatResponse, HeartbeatResponseSchema } from '../../utils/heartbeat.ts';
 import { hashPassword, validatePassword } from '../../utils/password-hashing.ts';
-import { StatusCodes, type StatusResponse, statusResponseFormatter, StatusResponseSchema } from '../../utils/responses.ts';
+import {
+	StatusCodes,
+	type StatusResponse,
+	statusResponseFormatter,
+	StatusResponseSchema
+} from '../../utils/responses.ts';
 import { getProfileById, insertProfile } from '../profile/data.ts';
 import { type CreateProfileRequestBody, CreateProfileSchema } from '../profile/validation.ts';
 import { activateProfile, checkEmail, getLoginInfo } from './data.ts';
@@ -288,19 +293,37 @@ protectedAuthRoutes.openapi(
 	}
 );
 
-authRoutes.post('/sign-out', async (context: Context<EnvironmentBindings>) => {
-	const session = await getSession(context);
+publicAuthRoutes.openapi(
+	createRoute({
+		method: 'post',
+		path: '/sign-out',
+		operationId: 'signOut',
+		description: 'Sign out of community hub account',
+		tags: ['Sign-out'],
+		responses: {
+			[StatusCodes.BAD_REQUEST]: {
+				description: 'User has a session and is already logged out',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.NO_CONTENT]: {
+				description: 'Successfully logged out'
+			}
+		}
+	}),
+	async (context) => {
+		const session = await getSession(context);
 
-	if (!session) {
-		return context.json({ message: 'Invalid or missing token' }, StatusCodes.BAD_REQUEST);
+		if (!session) {
+			return context.json({ message: 'Invalid or missing token' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+		}
+
+		const sessionToken = getCookie({ context, name: SESSION_COOKIE_NAME });
+
+		if (!sessionToken) {
+			return context.json({ message: 'Invalid or missing token' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+		}
+
+		await deleteSession({ context, sessionToken });
+		return context.json(StatusCodes.NO_CONTENT);
 	}
-
-	const sessionToken = getCookie({ context, name: SESSION_COOKIE_NAME });
-
-	if (!sessionToken) {
-		return context.json({ message: 'Invalid or missing token' }, StatusCodes.BAD_REQUEST);
-	}
-
-	await deleteSession({ context, sessionToken });
-	return context.json(StatusCodes.NO_CONTENT);
-});
+);
