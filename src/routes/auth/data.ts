@@ -15,7 +15,7 @@ export async function getLoginInfo(database: D1Database, email: string) {
 			WHERE
 				${DBTables.PROFILE}.email = ?
 				AND ${DBTables.PROFILE}.activatedAt IS NOT NULL
-				AND ${DBTables.PROFILE}.deactivatedAt IS NULL
+				AND ${DBTables.PROFILE}.deletetAt IS NULL
 			LIMIT 1
 		`)
 		.bind(email)
@@ -39,7 +39,7 @@ export async function getHeartbeatInfo(database: D1Database, id: string) {
 			WHERE
 				${DBTables.PROFILE}.id = ?
 				AND ${DBTables.PROFILE}.activatedAt IS NOT NULL
-				AND ${DBTables.PROFILE}.deactivatedAt IS NULL
+				AND ${DBTables.PROFILE}.deletedAt IS NULL
 			LIMIT 1
 		`)
 		.bind(id)

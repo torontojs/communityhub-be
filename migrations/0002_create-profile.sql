@@ -51,9 +51,9 @@ CREATE TABLE IF NOT EXISTS profile (
 	--
 	-- In the future, we may use this flag as a potential "ban list" for spammers and similar situations.
 	-- If a person thinks it was mistakenly flagged as spam, then contatcing one of the organizers should resolve the issue.
-	deactivatedAt DATETIME DEFAULT NULL,
+	deletedAt DATETIME DEFAULT NULL,
 	-- When a profile is deactivated, this fields enables us to keep notes for other organizers in a future moment.
-	deactivatedReason TEXT DEFAULT NULL,
+	deletedReason TEXT DEFAULT NULL,
 
 	PRIMARY KEY (id)
 );

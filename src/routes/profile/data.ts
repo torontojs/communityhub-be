@@ -105,7 +105,7 @@ export async function updateProfileById(
 			WHERE
 				id = ?
 				AND activatedAt IS NOT NULL
-				AND deactivatedAt IS NULL
+				AND deletedAt IS NULL
 
 		`).bind(...Object.values(fieldsToUpdate), id),
 		...filteredLinks.map((url) => {
@@ -121,7 +121,7 @@ export async function updateProfileById(
 				WHERE
 					id = ?
 					AND activatedAt IS NOT NULL
-					AND deactivatedAt IS NULL
+					AND deletedAt IS NULL
 				LIMIT 1
 			`).bind(linkId, url, id);
 		}),
@@ -138,7 +138,7 @@ export async function updateProfileById(
 				WHERE
 					id = ?
 					AND activatedAt IS NOT NULL
-					AND deactivatedAt IS NULL
+					AND deletedAt IS NULL
 				LIMIT 1
 			`).bind(skillId, skill, id);
 		})
@@ -155,7 +155,7 @@ export async function getProfileById(database: D1Database, id: string) {
 			WHERE
 				id = ?
 				AND activatedAt IS NOT NULL
-				AND deactivatedAt IS NULL
+				AND deletedAt IS NULL
 			LIMIT 1
 		`).bind(id),
 		database.prepare(`SELECT url FROM ${DBTables.PROFILE_LINKS} WHERE profile_id = ?`).bind(id),
@@ -181,7 +181,7 @@ export async function getAllProfiles(database: D1Database) {
 			FROM ${DBTables.PROFILE}
 			WHERE
 				activatedAt IS NOT NULL
-				AND deactivatedAt IS NULL
+				AND deletedAt IS NULL
 		`),
 		// TODO: narrow down queries to only active profiles
 		database.prepare(`SELECT profile_id, url FROM ${DBTables.PROFILE_LINKS}`),
@@ -222,7 +222,7 @@ export async function deleteProfileById(database: D1Database, id: string) {
 	const { success } = await database
 		.prepare(`
 			UPDATE ${DBTables.PROFILE}
-			SET deactivatedAt = ?
+			SET deletedAt = ?
 			WHERE id = ?
 			LIMIT 1
 		`)
