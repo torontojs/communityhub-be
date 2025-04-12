@@ -1,7 +1,9 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import sgMail from '@sendgrid/mail';
 import { addHours } from 'date-fns';
-import { Hono } from 'hono';
+import { type Context, Hono } from 'hono';
+import { createSession, deleteSession, getSession, SESSION_COOKIE_NAME } from 'src/utils/auth.ts';
+import { getCookie } from 'src/utils/cookie.ts';
 import { generateEmailHtml } from '../../email-templates/confirm-email.ts';
 import { authMiddleware } from '../../middleware/auth.ts';
 import { authorizeVolunteer } from '../../middleware/createMiddleware.ts';
@@ -175,10 +177,6 @@ publicAuthRoutes.openapi(
 				description: 'InValid email, profile Id, password or account not activated ',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
-			[StatusCodes.NOT_FOUND]: {
-				description: 'Access not found',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			},
 			[StatusCodes.CREATED]: {
 				description: 'Sign in succesful',
 				content: { 'application/json': { schema: StatusResponseSchema } }
@@ -187,6 +185,7 @@ publicAuthRoutes.openapi(
 	}),
 	async (context) => {
 		let parsedBody: SignInData;
+
 		try {
 			const body = await context.req.json();
 			parsedBody = SignInSchema.parse(body);
@@ -197,11 +196,12 @@ publicAuthRoutes.openapi(
 			throw error;
 		}
 
+		const genericSignInResponse = { message: 'Either your email/password combination is invalid, or your account is not active' };
+
 		const results = await getLoginInfo(context.env.database, parsedBody.email);
 
-		const genericSignInError = 'Either your email/password combination is invalid, or your account is not active';
 		if (!results) {
-			return context.json({ message: genericSignInError } satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
+			return context.json(genericSignInResponse satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
 		}
 
 		const {
@@ -211,12 +211,12 @@ publicAuthRoutes.openapi(
 		} = results;
 
 		if (!storedPassword) {
-			return context.json({ message: genericSignInError } satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
+			return context.json(genericSignInResponse satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
 		}
 
 		const isValid = await validatePassword(parsedBody.password, storedPassword);
 		if (!isValid) {
-			return context.json({ message: 'Invalid email or password' } satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
+			return context.json(genericSignInResponse satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
 		}
 
 		const sessionToken = crypto.randomUUID();
@@ -231,7 +231,7 @@ publicAuthRoutes.openapi(
 		const sessionData = JSON.stringify(sessionDataObject);
 		await context.env.SESSION_TOKENS.put(sessionToken, sessionData);
 
-		context.header('Set-Cookie', `auth_token=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Expires=${tokenExpiryISO}; Path=/;`);
+		await createSession({ session: sessionDataObject, context });
 
 		return context.json({ message: 'Sign in successful' } satisfies StatusResponse, StatusCodes.CREATED);
 	}
@@ -287,3 +287,20 @@ protectedAuthRoutes.openapi(
 		return context.json({ access, name, avatar } satisfies HeartbeatResponse, StatusCodes.OKAY);
 	}
 );
+
+authRoutes.post('/sign-out', async (context: Context<EnvironmentBindings>) => {
+	const session = await getSession(context);
+
+	if (!session) {
+		return context.json({ message: 'Invalid or missing token' }, StatusCodes.BAD_REQUEST);
+	}
+
+	const sessionToken = getCookie({ context, name: SESSION_COOKIE_NAME });
+
+	if (!sessionToken) {
+		return context.json({ message: 'Invalid or missing token' }, StatusCodes.BAD_REQUEST);
+	}
+
+	await deleteSession({ context, sessionToken });
+	return context.json(StatusCodes.NO_CONTENT);
+});
