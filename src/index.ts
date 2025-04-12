@@ -1,6 +1,7 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
 import type { Context } from 'hono';
 import { cors } from 'hono/cors';
+import { ZodError } from 'zod';
 import packageJson from '../package.json';
 import { protectedAuthRoutes, publicAuthRoutes } from './routes/auth/index.ts';
 import { healthCheckRoutes } from './routes/health-check/index.ts';
@@ -16,7 +17,12 @@ const app = new OpenAPIHono<EnvironmentBindings>({
 // Catch all error handler.
 app.onError((err, context) => {
 	// TODO: add better error logging?
-	console.error(err);
+
+	if (err instanceof ZodError) {
+		console.error(err.toString());
+	} else {
+		console.error(err);
+	}
 
 	return context.json({ message: 'An error has occured' }, StatusCodes.INTERNAL_SERVER_ERROR);
 });
