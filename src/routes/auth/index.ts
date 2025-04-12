@@ -1,5 +1,5 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
-import { createSession, deleteSession, getSession } from 'src/utils/auth.ts';
+import { createSession, deleteSession, getSession, revalidateSession } from 'src/utils/auth.ts';
 import { sendAccountConfirmationEmail } from '../../email/index.ts';
 import { authorizeVolunteer } from '../../middleware/access.ts';
 import { authMiddleware } from '../../middleware/auth.ts';
@@ -144,10 +144,19 @@ authRoutes.openapi(
 			[StatusCodes.CREATED]: {
 				description: 'Sign in succesful',
 				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.BAD_REQUEST]: {
+				description: 'Already signed in',
+				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
 		}
 	}),
 	async (context) => {
+		const session = await revalidateSession(context);
+		if (session) {
+			return context.json({ message: 'Already signed in' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+		}
+
 		const { email, password } = context.req.valid('json');
 
 		const genericSignInResponse = { message: 'Either your email/password combination is invalid, or your account is not active' };
