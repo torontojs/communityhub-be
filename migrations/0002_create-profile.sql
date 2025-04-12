@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS profile_skills (
 	-- The UUID of the profile this skill belongs to
 	profile_id TEXT NOT NULL,
 	-- The name of the skill
-	skill_name TEXT NOT NULL,
+	skill TEXT NOT NULL,
 
 	PRIMARY KEY (id),
 	FOREIGN KEY (profile_id) REFERENCES profile(id)
