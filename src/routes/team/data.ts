@@ -1,6 +1,15 @@
 import { DBTables, generateBaseDBfields } from '../../constants/db.ts';
 import type { CreateTeamData, Team, UpdateTeamData } from './validation.ts';
 
+export async function doesTeamExist(database: D1Database, id: string) {
+	const existingTeam = await database
+		.prepare(`SELECT id FROM ${DBTables.TEAM} WHERE id = ? LIMIT 1`)
+		.bind(id)
+		.first<{ id: string }>();
+
+	return Boolean(existingTeam);
+}
+
 export async function insertTeam(database: D1Database, { name, description }: CreateTeamData) {
 	const { id, schemaVersion, happenedAt, insertedAt } = generateBaseDBfields();
 
