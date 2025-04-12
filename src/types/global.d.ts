@@ -14,6 +14,11 @@ interface EnvironmentBindings {
 		ACTIVATION_TOKENS: KVNamespace,
 		ASSETS: Fetcher
 	};
+
+	Variables: {
+		// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+		session: import('../utils/auth.ts').SessionData
+	};
 }
 
 type ISODate = string;

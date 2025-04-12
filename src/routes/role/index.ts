@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { authMiddleware } from 'src/middleware/auth.ts';
 import { z } from 'zod';
 import { DBTables } from '../../constants/db.ts';
-import { authorizeOrganizer } from '../../middleware/createMiddleware.ts';
+import { authorizeOrganizer } from '../../middleware/access.ts';
 import {
 	type DataResponse,
 	generateDataResponeSchema,

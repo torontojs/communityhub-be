@@ -1,7 +1,7 @@
 import { DBTables, DEFAULT_TEAM_ID, generateBaseDBfields } from '../../constants/db.ts';
 import type { CreateProfileData, Profile, UpdateProfileData } from './validation.ts';
 
-export async function insertProfile(database: D1Database, { email, name, password, description }: CreateProfileData) {
+export async function insertProfile(database: D1Database, { email, name, password, description }: Partial<CreateProfileData>) {
 	const { id, schemaVersion, happenedAt, insertedAt } = generateBaseDBfields();
 
 	const results = await database.batch([
@@ -17,8 +17,12 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 				${description ? ', ?' : ''}
 			)
 		`).bind(
-			id, schemaVersion, happenedAt, insertedAt,
-			email, name,
+			id,
+			schemaVersion,
+			happenedAt,
+			insertedAt,
+			email,
+			name,
 			description
 		),
 		// TODO: insert into links table
@@ -41,8 +45,14 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 				?, ?, ?, ?
 			)
 		`).bind(
-			id, schemaVersion, happenedAt, insertedAt,
-			'volunteer', '', DEFAULT_TEAM_ID, id
+			id,
+			schemaVersion,
+			happenedAt,
+			insertedAt,
+			'volunteer',
+			'',
+			DEFAULT_TEAM_ID,
+			id
 		)
 	]);
 

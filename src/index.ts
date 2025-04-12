@@ -2,7 +2,7 @@ import { OpenAPIHono } from '@hono/zod-openapi';
 import type { Context } from 'hono';
 import { cors } from 'hono/cors';
 import packageJson from '../package.json';
-import { protectedAuthRoutes, publicAuthRoutes } from './routes/auth/index.ts';
+import { authRoutes } from './routes/auth/index.ts';
 import { healthCheckRoutes } from './routes/health-check/index.ts';
 import { protectedProfileRoutes, publicProfileRoutes } from './routes/profile/index.ts';
 import { protectedRolesRoutes, publicRoleRoutes } from './routes/role/index.ts';
@@ -59,14 +59,13 @@ app.doc('/open-api.json', {
 app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.env.ASSETS.fetch(context.req.raw));
 
 // Public routes
-app.route('/auth', publicAuthRoutes);
+app.route('/auth', authRoutes);
 app.route('/roles', publicRoleRoutes);
 app.route('/profiles', publicProfileRoutes);
 app.route('/teams', publicTeamRoutes);
 
 // Protected routes
 app.route('/health-check', healthCheckRoutes);
-app.route('/auth', protectedAuthRoutes);
 app.route('/profiles', protectedProfileRoutes);
 app.route('/teams', protectedTeamRoutes);
 app.route('/roles', protectedRolesRoutes);

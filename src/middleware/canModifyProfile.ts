@@ -1,10 +1,10 @@
 import type { Context, Next } from 'hono';
 import { Access } from '../types/data/access.ts';
-import type { SessionData } from '../types/data/session.d.ts';
+import { getSession } from '../utils/auth.ts';
 import { StatusCodes } from '../utils/responses.ts';
 
-export const canModifyProfile = async (context: Context, next: Next) => {
-	const session = context.get('session') as SessionData;
+export const canModifyProfile = async (context: Context<EnvironmentBindings>, next: Next) => {
+	const session = getSession(context);
 	const targetId = context.req.param('id');
 
 	// If admin, allow
