@@ -6,7 +6,7 @@ import packageJson from '../package.json';
 import { authRoutes } from './routes/auth/index.ts';
 import { healthCheckRoutes } from './routes/health-check/index.ts';
 import { profileRoutes } from './routes/profile/index.ts';
-import { protectedRolesRoutes, publicRoleRoutes } from './routes/team-members/index.ts';
+import { teamMemberRoutes } from './routes/team-members/index.ts';
 import { teamRoutes } from './routes/team/index.ts';
 import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
 
@@ -64,9 +64,7 @@ app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.en
 app.route('/', healthCheckRoutes);
 app.route('/auth', authRoutes);
 app.route('/profiles', profileRoutes);
-app.route('/roles', publicRoleRoutes);
 app.route('/teams', teamRoutes);
-
-app.route('/roles', protectedRolesRoutes);
+app.route('/teams', teamMemberRoutes);
 
 export default app;
