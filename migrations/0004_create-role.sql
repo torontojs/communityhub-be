@@ -1,6 +1,5 @@
 -- Migration number: 0004 	 2025-01-30T00:58:39.397Z
 
-DROP INDEX IF EXISTS idx_role_profile_and_team ON role;
 DROP TABLE IF EXISTS role;
 
 -- The role a person may have on a team
@@ -28,4 +27,5 @@ CREATE TABLE IF NOT EXISTS role (
 	FOREIGN KEY (teamId) REFERENCES team(id),
 	FOREIGN KEY (profileId) REFERENCES profile(id)
 );
+
 CREATE INDEX idx_role_profile_and_team ON role (profileId, teamId);

@@ -58,7 +58,8 @@ CREATE TABLE IF NOT EXISTS profile (
 	PRIMARY KEY (id)
 );
 
-DROP INDEX IF EXISTS idx_links_profileId ON profile_links;
+CREATE INDEX IF NOT EXISTS idx_profile_email ON profile (email);
+
 DROP TABLE IF EXISTS profile_links;
 
 CREATE TABLE IF NOT EXISTS profile_links (
@@ -73,9 +74,8 @@ CREATE TABLE IF NOT EXISTS profile_links (
 	FOREIGN KEY (profileId) REFERENCES profile(id)
 );
 
-CREATE INDEX idx_links_profileId ON profile_links (profileId);
+CREATE INDEX IF NOT EXISTS idx_links_profileId ON profile_links (profileId);
 
-DROP INDEX IF EXISTS idx_skills_profileId ON profile_skills;
 DROP TABLE IF EXISTS profile_skills;
 
 CREATE TABLE IF NOT EXISTS profile_skills (
@@ -90,4 +90,4 @@ CREATE TABLE IF NOT EXISTS profile_skills (
 	FOREIGN KEY (profileId) REFERENCES profile(id)
 );
 
-CREATE INDEX idx_skills_profileId ON profile_skills (profileId);
+CREATE INDEX IF NOT EXISTS idx_skills_profileId ON profile_skills (profileId);

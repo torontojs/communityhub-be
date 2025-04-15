@@ -1,6 +1,5 @@
 -- Migration number: 0005 	 2025-01-30T00:58:45.123Z
 
-DROP INDEX IF EXISTS idx_access_email ON access;
 DROP TABLE IF EXISTS access;
 
 -- Store authentication and authorization data separately from profiles
@@ -18,7 +17,8 @@ CREATE TABLE IF NOT EXISTS access (
 	email TEXT NOT NULL UNIQUE,
 
 	PRIMARY KEY (id),
-	FOREIGN KEY (id) REFERENCES profile(id)
+	FOREIGN KEY (id) REFERENCES profile (id),
+	FOREIGN KEY (email) REFERENCES profile (email)
 );
 
 CREATE INDEX idx_access_email ON access (email);
