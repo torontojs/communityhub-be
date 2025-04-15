@@ -148,7 +148,7 @@ teamMemberRoutes.openapi(
 
 		const body = context.req.valid('json');
 
-		const isUpdated = await updateTeamMembers(context.env.database, body);
+		const isUpdated = await updateTeamMembers(context.env.database, id, body);
 
 		if (!isUpdated) {
 			return context.json({ message: 'Team members not updated' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
@@ -157,8 +157,6 @@ teamMemberRoutes.openapi(
 		return context.json({ message: 'Team members updated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
 	}
 );
-
-// TODO: bulk delete members?
 
 teamMemberRoutes.openapi(
 	createRoute({
@@ -170,7 +168,7 @@ teamMemberRoutes.openapi(
 		tags: ['Team Members'],
 		request: {
 			params: IdParamSchema,
-			body: { content: { 'application/json': { schema: z.array(IdParamSchema) } }, required: true }
+			body: { content: { 'application/json': { schema: z.array(z.string()) } }, required: true }
 		},
 		responses: {
 			[StatusCodes.OKAY]: {

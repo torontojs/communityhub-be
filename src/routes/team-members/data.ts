@@ -1,5 +1,4 @@
 import { DBTables, generateBaseDBfields } from '../../constants/db.ts';
-import type { IdParam } from '../../utils/validation.ts';
 import type { Profile } from '../profile/validation.ts';
 import type { AddTeamMembers, UpdateTeamMembers } from './validation.ts';
 
@@ -19,14 +18,23 @@ export async function addTeamMembers(database: D1Database, teamId: string, data:
 					?, ?, ?
 					${description ? ', ?' : ''}
 				)
-			`).bind(id, schemaVersion, happenedAt, insertedAt, name, profileId, teamId, description);
+			`).bind(
+				id,
+				schemaVersion,
+				happenedAt,
+				insertedAt,
+				name,
+				profileId,
+				teamId,
+				description
+			);
 		})
 	]);
 
 	return results.every(({ success }) => success);
 }
 
-export async function updateTeamMembers(database: D1Database, data: UpdateTeamMembers) {
+export async function updateTeamMembers(database: D1Database, teamId: string, data: UpdateTeamMembers) {
 	const results = await database.batch([
 		...data.map(({ id, description, name }) =>
 			database.prepare(`
@@ -36,7 +44,8 @@ export async function updateTeamMembers(database: D1Database, data: UpdateTeamMe
 					description = ?
 				WHERE
 					id = ?
-			`).bind(name ?? '', description ?? '', id)
+					AND teamId = ?
+			`).bind(name ?? '', description ?? '', id, teamId)
 		)
 	]);
 
@@ -63,11 +72,20 @@ export async function getAllMembers(database: D1Database, teamId: string) {
 	return results;
 }
 
-export async function deleteTeamMembers(database: D1Database, id: string, data: IdParam[]) {
-	const { success } = await database
-		.prepare(`UPDATE ${DBTables.ROLE} SET deletedAt = ? WHERE id = ?`)
-		.bind(new Date().toISOString(), id)
-		.run();
+export async function deleteTeamMembers(database: D1Database, teamId: string, data: string[]) {
+	const results = await database.batch(
+		data.map((id) =>
+			database
+				.prepare(`
+					UPDATE ${DBTables.ROLE}
+					SET
+						deletedAt = ?
+					WHERE
+						id = ?
+						AND teamId = ?
+				`).bind(new Date().toISOString(), id, teamId)
+		)
+	);
 
-	return success;
+	return results.every(({ success }) => success);
 }
