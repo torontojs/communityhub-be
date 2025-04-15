@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 
-type NodeEnvironment = import('../routes/health-check/validation.ts').NodeEnv;
+type NodeEnvironment = import('./routes/health-check/validation.ts').NodeEnv;
 
 interface EnvironmentBindings {
-	Bindings: import('../routes/health-check/validation.ts').EnvVars & {
+	Bindings: import('./routes/health-check/validation.ts').EnvVars & {
 		Database: D1Database,
 		SessionTokens: KVNamespace,
 		ActivationTokens: KVNamespace,
