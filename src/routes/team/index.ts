@@ -2,6 +2,7 @@ import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { authMiddleware } from 'src/middleware/auth.ts';
 import { z } from 'zod';
 import { authorizeAdmin, authorizeOrganizer } from '../../middleware/access.ts';
+import { getSession } from '../../utils/auth.ts';
 import { DBTables } from '../../utils/db.ts';
 import {
 	type DataResponse,
@@ -130,7 +131,7 @@ teamRoutes.openapi(
 	}),
 	async (context) => {
 		const { id } = context.req.valid('param');
-		const { id: profileId } = context.get('session');
+		const { id: profileId } = getSession(context);
 
 		const isTeamIdValid = await doesTeamExist(context.env.Database, id);
 
@@ -172,7 +173,7 @@ teamRoutes.openapi(
 		middleware: [authMiddleware, authorizeAdmin] as const
 	}),
 	async (context) => {
-		const { id: profileId } = context.get('session');
+		const { id: profileId } = getSession(context);
 		const body = context.req.valid('json');
 		const { success } = await insertTeam(context.env.Database, profileId, body);
 
