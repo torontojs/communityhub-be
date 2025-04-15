@@ -59,7 +59,6 @@ app.doc('/open-api.json', {
 app.get('/docs', swaggerUI({ url: '/open-api.json' }));
 
 // Handle static assets using Cloudflare Workers
-// eslint-disable-next-line @typescript-eslint/require-await
 app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.env.Assets.fetch(context.req.raw));
 
 app.route('/', healthCheckRoutes);
