@@ -29,16 +29,16 @@ export function checkEnvVars(env: Context<EnvironmentBindings>['env']) {
 	const { success, error, data: parsedEnv } = EnvSchema.safeParse(env);
 
 	if (success) {
-		const allEnvKeys = Object.keys(parsedEnv);
+		const allEnvVars = Object.keys(parsedEnv);
 		const expectedEnvVars = Object.keys(EnvSchema.shape);
 
-		const extraVars = allEnvKeys
-			.filter((key) => !expectedEnvVars.includes(key));
+		const unexpectedEnvVars = allEnvVars
+			.filter((variable) => !expectedEnvVars.includes(variable));
 
 		return {
 			success: true,
 			message: `✅ All required environment variables are set`,
-			warning: `🤷 These variables may not be in use: ${extraVars.join(', ')}`
+			warning: `🤷 These variables may not be in use: ${unexpectedEnvVars.join(', ')}`
 		};
 	}
 
