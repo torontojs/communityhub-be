@@ -43,7 +43,7 @@
 		"sourceMap": false,
 		"strict": true,
 		"target": "ESNext",
-		"tsBuildInfoFile": "dist/.tsbuildinfo",
+		"tsBuildInfoFile": ".wrangler/.tsbuildinfo",
 		"useDefineForClassFields": true,
 		"useUnknownInCatchVariables": false,
 		"verbatimModuleSyntax": true,
