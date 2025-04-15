@@ -23,7 +23,17 @@ export class EventLog {
 				?, ?
 			)
 		`)
-			.bind(id, schemaVersion, happenedAt, insertedAt, subject, subjectSource, verb, object, objectSource);
+			.bind(
+				id,
+				schemaVersion,
+				happenedAt,
+				insertedAt,
+				subject,
+				subjectSource,
+				verb,
+				object,
+				objectSource
+			);
 	}
 
 	static joinTorontoJS(database: D1Database, profileId: string) {

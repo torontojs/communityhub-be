@@ -27,7 +27,14 @@ export async function insertTeam(database: D1Database, profileId: string, { name
 				${description ? ', ?' : ''}
 			)
 		`)
-			.bind(id, schemaVersion, happenedAt, insertedAt, name, description),
+			.bind(
+				id,
+				schemaVersion,
+				happenedAt,
+				insertedAt,
+				name,
+				description
+			),
 		EventLog.createTeam(database, profileId, id)
 	]);
 
