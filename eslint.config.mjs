@@ -8,7 +8,7 @@ const rules = {
 	'array-callback-return': 'error',
 	'arrow-body-style': 'error',
 	'block-scoped-var': 'warn',
-	'camelcase': 'warn',
+	'camelcase': ['warn', { allow: ['required_error|invalid_type_error'] }],
 	'capitalized-comments': ['warn', 'always', { ignorePattern: 'dprint' }],
 	'class-methods-use-this': 'off',
 	'complexity': 'error',
