@@ -40,7 +40,7 @@ teamMemberRoutes.openapi(
 	}),
 	async (context) => {
 		const { id } = context.req.valid('param');
-		const members = await getAllMembers(context.env.database, id);
+		const members = await getAllMembers(context.env.Database, id);
 
 		return context.json(
 			// TODO: implement proper pagination
@@ -94,13 +94,13 @@ teamMemberRoutes.openapi(
 	async (context) => {
 		const { id } = context.req.valid('param');
 
-		const isTeamIdValid = await doesTeamExist(context.env.database, id);
+		const isTeamIdValid = await doesTeamExist(context.env.Database, id);
 		if (!isTeamIdValid) {
 			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
 
 		const body = context.req.valid('json');
-		const success = await addTeamMembers(context.env.database, id, body);
+		const success = await addTeamMembers(context.env.Database, id, body);
 
 		if (!success) {
 			return context.json({ message: 'Team members not saved' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
@@ -141,14 +141,14 @@ teamMemberRoutes.openapi(
 	async (context) => {
 		const { id } = context.req.valid('param');
 
-		const isTeamIdValid = await doesTeamExist(context.env.database, id);
+		const isTeamIdValid = await doesTeamExist(context.env.Database, id);
 		if (!isTeamIdValid) {
 			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
 
 		const body = context.req.valid('json');
 
-		const isUpdated = await updateTeamMembers(context.env.database, id, body);
+		const isUpdated = await updateTeamMembers(context.env.Database, id, body);
 
 		if (!isUpdated) {
 			return context.json({ message: 'Team members not updated' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
@@ -189,13 +189,13 @@ teamMemberRoutes.openapi(
 	async (context) => {
 		const { id } = context.req.valid('param');
 
-		const isTeamIdValid = await doesTeamExist(context.env.database, id);
+		const isTeamIdValid = await doesTeamExist(context.env.Database, id);
 		if (!isTeamIdValid) {
 			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
 
 		const body = context.req.valid('json');
-		const isDeleted = await deleteTeamMembers(context.env.database, id, body);
+		const isDeleted = await deleteTeamMembers(context.env.Database, id, body);
 
 		if (!isDeleted) {
 			return context.json({ message: 'Role not deleted' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);

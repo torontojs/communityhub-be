@@ -6,7 +6,7 @@
 		"prepare": "husky",
 		"start": "npm run dev",
 		"dev": "wrangler dev src/index.ts",
-		"deploy": "wrangler deploy --minify",
+		"deploy:dev": "wrangler deploy --minify --env dev",
 		"deploy:prod": "wrangler deploy --minify --env production",
 		"format": "dprint fmt --staged",
 		"typecheck": "tsc --noEmit",

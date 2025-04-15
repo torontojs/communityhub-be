@@ -21,8 +21,8 @@ const kvSessionMock = {
 };
 
 interface EnvironmentBindings extends Env {
-	database: typeof mockDatabase; // Define the database type
-	SESSION_TOKENS: typeof kvSessionMock;
+	Database: typeof mockDatabase; // Define the database type
+	SessionTokens: typeof kvSessionMock;
 	BASE_URL: string;
 }
 
@@ -31,8 +31,8 @@ const app = new Hono<EnvironmentBindings>();
 
 app.use((ctx, next) => {
 	ctx.env = {
-		database: mockDatabase,
-		SESSION_TOKENS: kvSessionMock,
+		Database: mockDatabase,
+		SessionTokens: kvSessionMock,
 		BASE_URL: 'http://localhost'
 	};
 	return next();

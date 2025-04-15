@@ -59,7 +59,7 @@ app.doc('/open-api.json', {
 app.get('/docs', swaggerUI({ url: '/open-api.json' }));
 
 // Handle static assets using Cloudflare Workers
-app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.env.ASSETS.fetch(context.req.raw));
+app.get('/assets/*', async (context: Context<EnvironmentBindings>) => await context.env.Assets.fetch(context.req.raw));
 
 app.route('/', healthCheckRoutes);
 app.route('/auth', authRoutes);

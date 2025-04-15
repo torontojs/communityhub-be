@@ -39,7 +39,7 @@ interface DeleteSessionParams {
 
 export async function deleteSession({ context, sessionToken }: DeleteSessionParams) {
 	// Delete session on server
-	await context.env.SESSION_TOKENS.delete(sessionToken);
+	await context.env.SessionTokens.delete(sessionToken);
 
 	// Delete session on client
 	setCookie(
@@ -77,7 +77,7 @@ async function extendExistingSession({
 	};
 
 	// Update session on server
-	await context.env.SESSION_TOKENS.put(
+	await context.env.SessionTokens.put(
 		sessionToken,
 		JSON.stringify(updatedSession)
 	);
@@ -102,7 +102,7 @@ export async function revalidateSession(context: Context<EnvironmentBindings>) {
 		return undefined;
 	}
 
-	const session = await context.env.SESSION_TOKENS.get<SessionData>(sessionToken, 'json');
+	const session = await context.env.SessionTokens.get<SessionData>(sessionToken, 'json');
 	if (!session) {
 		// User has a session token but it's invalid so delete it
 		await deleteSession({ context, sessionToken });
@@ -141,7 +141,7 @@ export async function createSession({
 	tokenExpiry.setHours(tokenExpiry.getHours() + SESSION_LIFESPAN_IN_HOURS);
 
 	// Create session on server
-	await context.env.SESSION_TOKENS.put(
+	await context.env.SessionTokens.put(
 		sessionToken,
 		JSON.stringify(
 			{

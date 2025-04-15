@@ -12,14 +12,15 @@ export type NodeEnv = z.infer<typeof NodeEnvSchema>;
 
 export const EnvSchema = z.object({
 	BASE_URL: z
-		.string({ message: 'required for the server to run' })
-		.url({ message: 'must be a valid URL' }),
+		.string({ message: 'Required for the server to run' })
+		.url({ message: 'Must be a valid URL.' }),
 	SENDER_EMAIL: z
-		.string({ message: 'required for emails to be sent' })
-		.email({ message: 'must be a valid email address' }),
+		.string({ message: 'Required for emails to be sent.' })
+		.email({ message: 'Must be a valid email address.' }),
+	/** @deprecated */
 	SENDGRID_API_KEY: z
-		.string({ message: 'required for emails to be sent' })
-		.min(1, { message: 'required for emails to be sent' }),
+		.string({ message: 'Required for emails to be sent.' })
+		.min(1, { message: 'Required for emails to be sent.' }),
 	NODE_ENV: NodeEnvSchema
 });
 

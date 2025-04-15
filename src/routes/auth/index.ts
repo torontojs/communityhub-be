@@ -36,19 +36,19 @@ authRoutes.openapi(
 		const { email, password, name } = context.req.valid('json');
 		const response = { message: 'Created a new profile and sent an email for confirmation' };
 
-		const emailExists = await checkExistingEmail(context.env.database, email);
+		const emailExists = await checkExistingEmail(context.env.Database, email);
 		if (emailExists) {
 			// INFO: Hide non existing emails to reduce attack surface from guessing registered emails.
 			return context.json(response satisfies StatusResponse, StatusCodes.OKAY);
 		}
 
 		const hashedPasswordWithSalt = await hashPassword(password);
-		await insertProfile(context.env.database, { email, password: hashedPasswordWithSalt, name });
+		await insertProfile(context.env.Database, { email, password: hashedPasswordWithSalt, name });
 
 		// eslint-disable-next-line @typescript-eslint/no-magic-numbers
 		const TEN_MINUTES_IN_SECONDS = 60 * 10;
 		const token = crypto.randomUUID();
-		await context.env.ACTIVATION_TOKENS.put(
+		await context.env.ActivationTokens.put(
 			token,
 			email,
 			{ expirationTtl: TEN_MINUTES_IN_SECONDS }
@@ -102,24 +102,24 @@ authRoutes.openapi(
 			return context.json({ message: 'Invalid or missing token' }, StatusCodes.BAD_REQUEST);
 		}
 
-		const email = await context.env.ACTIVATION_TOKENS.get(token);
+		const email = await context.env.ActivationTokens.get(token);
 		if (!email) {
 			return context.json({ message: 'Invalid or expired token' }, StatusCodes.UNAUTHORIZED);
 		}
 
-		const userAlreadyActivated = await checkActiveEmail(context.env.database, email);
+		const userAlreadyActivated = await checkActiveEmail(context.env.Database, email);
 		if (!userAlreadyActivated) {
 			// INFO: Hide non existing emails to reduce attack surface from guessing registered emails.
 			return context.json({ message: 'Account activated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
 		}
 
-		const activated = await activateProfile(context.env.database, email);
+		const activated = await activateProfile(context.env.Database, email);
 		if (!activated) {
 			return context.json({ message: 'Failed to activate account' }, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 
 		// Remove token after successful activation
-		await context.env.ACTIVATION_TOKENS.delete(token);
+		await context.env.ActivationTokens.delete(token);
 
 		return context.json({ message: 'Account activated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
 	}
@@ -161,7 +161,7 @@ authRoutes.openapi(
 
 		const genericSignInResponse = { message: 'Either your email/password combination is invalid, or your account is not active' };
 
-		const results = await getLoginInfo(context.env.database, email);
+		const results = await getLoginInfo(context.env.Database, email);
 		if (!results) {
 			// INFO: Hide specific errors to reduce attack surface and avoid guessing.
 			return context.json(genericSignInResponse satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
@@ -213,7 +213,7 @@ authRoutes.openapi(
 	async (context) => {
 		const sessionData = getSession(context);
 
-		const heartbeatInfo = await getHeartbeatInfo(context.env.database, sessionData.id);
+		const heartbeatInfo = await getHeartbeatInfo(context.env.Database, sessionData.id);
 		if (!heartbeatInfo) {
 			return context.json({ message: 'Internal error getting profile that should exist' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
