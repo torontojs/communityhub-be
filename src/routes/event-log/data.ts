@@ -40,7 +40,7 @@ export class EventLog {
 		return EventLog.createLogEntry(database, {
 			subject: profileId,
 			subjectSource: LogItemSource.PROFILE,
-			verb: 'created',
+			verb: 'closed',
 			object: teamId,
 			objectSource: LogItemSource.TEAM
 		});
