@@ -1,33 +1,42 @@
 import { DBTables, generateBaseDBfields } from '../../utils/db.ts';
+import { EventLog } from '../event-log/data.ts';
 import type { Profile } from '../profile/validation.ts';
 import type { AddTeamMembers, UpdateTeamMembers } from './validation.ts';
 
 export async function addTeamMembers(database: D1Database, teamId: string, data: AddTeamMembers) {
 	const results = await database.batch([
-		...data.map(({ name, profileId, description }) => {
+		...data.flatMap(({ name, profileId, description }) => {
 			const { id, schemaVersion, happenedAt, insertedAt } = generateBaseDBfields();
 
-			return database.prepare(`
-				INSERT INTO ${DBTables.ROLE} (
-					id, schemaVersion, happenedAt, insertedAt,
-					name, profileId, teamId,
-					${description ? ', descrition' : ''}
-				)
-				VALUES (
-					?, ?, ?, ?,
-					?, ?, ?
-					${description ? ', ?' : ''}
-				)
-			`).bind(
-				id,
-				schemaVersion,
-				happenedAt,
-				insertedAt,
-				name,
-				profileId,
-				teamId,
-				description
-			);
+			return [
+				database.prepare(`
+					INSERT INTO ${DBTables.ROLE} (
+						id, schemaVersion, happenedAt, insertedAt,
+						name, profileId, teamId,
+						descrition
+					)
+					SELECT
+						?, ?, ?, ?,
+						?, id, ?,
+						?
+					FROM ${DBTables.PROFILE}
+					WHERE
+						id = ?
+						AND activatedAt IS NOT NULL
+						AND deletedAt IS NULL
+					LIMIT 1
+				`).bind(
+					id,
+					schemaVersion,
+					happenedAt,
+					insertedAt,
+					name,
+					teamId,
+					description ?? '',
+					profileId
+				),
+				EventLog.joinTeam(database, profileId, teamId)
+			];
 		})
 	]);
 
@@ -36,7 +45,7 @@ export async function addTeamMembers(database: D1Database, teamId: string, data:
 
 export async function updateTeamMembers(database: D1Database, teamId: string, data: UpdateTeamMembers) {
 	const results = await database.batch([
-		...data.map(({ id, description, name }) =>
+		...data.map(({ id: roleId, description, name }) =>
 			database.prepare(`
 				UPDATE ${DBTables.ROLE}
 				SET
@@ -45,7 +54,7 @@ export async function updateTeamMembers(database: D1Database, teamId: string, da
 				WHERE
 					id = ?
 					AND teamId = ?
-			`).bind(name ?? '', description ?? '', id, teamId)
+			`).bind(name ?? '', description ?? '', roleId, teamId)
 		)
 	]);
 
@@ -74,7 +83,7 @@ export async function getAllMembers(database: D1Database, teamId: string) {
 
 export async function deleteTeamMembers(database: D1Database, teamId: string, data: string[]) {
 	const results = await database.batch(
-		data.map((id) =>
+		data.flatMap((roleId) => [
 			database
 				.prepare(`
 					UPDATE ${DBTables.ROLE}
@@ -83,8 +92,9 @@ export async function deleteTeamMembers(database: D1Database, teamId: string, da
 					WHERE
 						id = ?
 						AND teamId = ?
-				`).bind(new Date().toISOString(), id, teamId)
-		)
+				`).bind(new Date().toISOString(), roleId, teamId),
+			EventLog.leaveTeam(database, roleId, teamId)
+		])
 	);
 
 	return results.every(({ success }) => success);

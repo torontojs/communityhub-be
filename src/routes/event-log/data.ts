@@ -76,13 +76,36 @@ export class EventLog {
 		});
 	}
 
-	static leaveTeam(database: D1Database, profileId: string, teamId: string) {
-		return EventLog.createLogEntry(database, {
-			subject: profileId,
-			subjectSource: LogItemSource.PROFILE,
-			verb: 'left',
-			object: teamId,
-			objectSource: LogItemSource.TEAM
-		});
+	static leaveTeam(database: D1Database, roleId: string, teamId: string) {
+		const { id, happenedAt, insertedAt, schemaVersion } = generateBaseDBfields();
+
+		return database
+			.prepare(`
+			INSERT INTO ${DBTables.EVENT_LOG} (
+				id, schemaVersion, happenedAt, insertedAt,
+				subject, subjectSource,
+				verb,
+				object, objectSource
+			)
+			SELECT
+				?, ?, ?, ?,
+				profileId, ?,
+				?,
+				?, ?
+			FROM ${DBTables.ROLE}
+			WHERE
+				id = ?
+		`)
+			.bind(
+				id,
+				schemaVersion,
+				happenedAt,
+				insertedAt,
+				LogItemSource.PROFILE,
+				'leave',
+				teamId,
+				LogItemSource.TEAM,
+				roleId
+			);
 	}
 }
