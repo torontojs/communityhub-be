@@ -30,10 +30,10 @@ export function checkEnvVars(env: Context<EnvironmentBindings>['env']) {
 
 	if (success) {
 		const allEnvKeys = Object.keys(parsedEnv);
-		const usedEnvKeys = Object.keys(EnvSchema.shape);
+		const expectedEnvVars = Object.keys(EnvSchema.shape);
 
 		const extraVars = allEnvKeys
-			.filter((key) => !usedEnvKeys.includes(key));
+			.filter((key) => !expectedEnvVars.includes(key));
 
 		return {
 			success: true,
