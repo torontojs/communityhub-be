@@ -108,4 +108,32 @@ export class EventLog {
 				roleId
 			);
 	}
+
+	static attendEvent() {
+		// TODO: person attend event
+	}
+
+	static joinProject() {
+		// TODO: person join project
+	}
+
+	static leaveProject() {
+		// TODO: person leave project
+	}
+
+	static completeSeason() {
+		// TODO: team/project/person complete a season
+	}
+
+	static earnBadge() {
+		// TODO: person earn badge or award
+	}
+
+	static earnCertificate() {
+		// TODO: person earn certificate for event or contribution to the community
+	}
+
+	static workedHours() {
+		// TODO: person worked hours and those got added
+	}
 }
