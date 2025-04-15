@@ -1,4 +1,4 @@
-import { DBTables, DEFAULT_TEAM_ID, generateBaseDBfields } from '../../constants/db.ts';
+import { DBTables, DEFAULT_TEAM_ID, generateBaseDBfields } from '../../utils/db.ts';
 import type { CreateProfileData, Profile, ProfileLink, ProfileSkill, UpdateProfileData } from './validation.ts';
 
 function transformProfile(profile: Profile) {

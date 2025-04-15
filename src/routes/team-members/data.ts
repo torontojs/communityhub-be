@@ -1,4 +1,4 @@
-import { DBTables, generateBaseDBfields } from '../../constants/db.ts';
+import { DBTables, generateBaseDBfields } from '../../utils/db.ts';
 import type { Profile } from '../profile/validation.ts';
 import type { AddTeamMembers, UpdateTeamMembers } from './validation.ts';
 

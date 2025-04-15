@@ -1,4 +1,4 @@
-import { DBTables, generateBaseDBfields } from '../../constants/db.ts';
+import { DBTables, generateBaseDBfields } from '../../utils/db.ts';
 import type { CreateTeamData, Team, UpdateTeamData } from './validation.ts';
 
 export async function doesTeamExist(database: D1Database, id: string) {

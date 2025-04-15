@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { DBTables } from '../constants/db.ts';
+import type { DBTables } from './db.ts';
 
 export const IdParamSchema = z.object({
 	id: z.string().uuid('Invalid ID format')
