@@ -202,6 +202,8 @@ export const StatusCodes = {
 export const StatusResponseSchema = z.object({
 	message: z.string()
 		.describe('A message reporting the status of the operation.'),
+	warning: z.string().optional()
+		.describe('A warning message regarding the status of the operation.'),
 	errors: z.record(z.string(), z.array(z.string()))
 		.optional()
 		.describe('An object where the keys are the fields and the values are a list of errors for each field')

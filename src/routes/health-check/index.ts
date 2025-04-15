@@ -1,7 +1,6 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import type { Context } from 'hono';
-import { StatusCodes, statusResponseFormatter, StatusResponseSchema } from 'src/utils/responses';
-import type { HealthCheckResponse } from './responses';
+import { StatusCodes, type StatusResponse, statusResponseFormatter, StatusResponseSchema } from 'src/utils/responses';
 import { checkEnvVars } from './validation';
 
 export const healthCheckRoutes = new OpenAPIHono<EnvironmentBindings>({
@@ -36,15 +35,15 @@ healthCheckRoutes.openapi(
 
 		if (context.env.NODE_ENV === 'production') {
 			if (success) {
-				return context.json({ message: '✅ OK' } satisfies HealthCheckResponse, StatusCodes.OKAY);
+				return context.json({ message: '✅ OK' } satisfies StatusResponse, StatusCodes.OKAY);
 			}
-			return context.json({ message: '❌ Something is wrong with the server configuration' } satisfies HealthCheckResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+			return context.json({ message: '❌ Something is wrong with the server configuration' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 
 		if (success) {
-			return context.json({ message, warning } satisfies HealthCheckResponse, StatusCodes.OKAY);
+			return context.json({ message, warning } satisfies StatusResponse, StatusCodes.OKAY);
 		}
 
-		return context.json({ message } satisfies HealthCheckResponse, StatusCodes.UNPROCESSABLE_CONTENT);
+		return context.json({ message } satisfies StatusResponse, StatusCodes.UNPROCESSABLE_CONTENT);
 	}
 );
