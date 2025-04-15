@@ -19,7 +19,7 @@ export async function insertTeam(database: D1Database, profileId: string, { name
 			INSERT INTO ${DBTables.TEAM} (
 				id, schemaVersion, happenedAt, insertedAt,
 				name
-				${description ? ', descrition' : ''}
+				${description ? ', description' : ''}
 			)
 			VALUES (
 				?, ?, ?, ?,
