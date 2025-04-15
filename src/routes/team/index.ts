@@ -1,8 +1,8 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { authMiddleware } from 'src/middleware/auth.ts';
 import { z } from 'zod';
-import { DBTables } from '../../constants/db.ts';
 import { authorizeAdmin, authorizeOrganizer } from '../../middleware/access.ts';
+import { DBTables } from '../../utils/db.ts';
 import {
 	type DataResponse,
 	generateDataResponeSchema,
@@ -46,13 +46,13 @@ teamRoutes.openapi(
 	async (context) => {
 		const { id } = context.req.valid('param');
 
-		const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
+		const isTeamIdValid = await validateExistingId(context.env.Database, DBTables.TEAM, id);
 
 		if (!isTeamIdValid) {
 			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
 
-		const team = await getTeamById(context.env.database, id);
+		const team = await getTeamById(context.env.Database, id);
 
 		if (!team) {
 			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
@@ -78,7 +78,7 @@ teamRoutes.openapi(
 		}
 	}),
 	async (context) => {
-		const teams = await getAllTeams(context.env.database);
+		const teams = await getAllTeams(context.env.Database);
 
 		return context.json(
 			// TODO: implement proper pagination
@@ -132,13 +132,13 @@ teamRoutes.openapi(
 		const { id } = context.req.valid('param');
 		const { id: profileId } = context.get('session');
 
-		const isTeamIdValid = await doesTeamExist(context.env.database, id);
+		const isTeamIdValid = await doesTeamExist(context.env.Database, id);
 
 		if (!isTeamIdValid) {
 			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
 
-		const isDeleted = await deleteTeamById(context.env.database, profileId, id);
+		const isDeleted = await deleteTeamById(context.env.Database, profileId, id);
 
 		if (!isDeleted) {
 			return context.json({ message: 'Team not deleted' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
@@ -174,7 +174,7 @@ teamRoutes.openapi(
 	async (context) => {
 		const { id: profileId } = context.get('session');
 		const body = context.req.valid('json');
-		const { success } = await insertTeam(context.env.database, profileId, body);
+		const { success } = await insertTeam(context.env.Database, profileId, body);
 
 		if (!success) {
 			return context.json({ message: 'Team not saved' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
@@ -216,13 +216,13 @@ teamRoutes.openapi(
 		const { id } = context.req.valid('param');
 		const body = context.req.valid('json');
 
-		const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
+		const isTeamIdValid = await validateExistingId(context.env.Database, DBTables.TEAM, id);
 
 		if (!isTeamIdValid) {
 			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
 
-		const isUpdated = await updateTeamById(context.env.database, id, body);
+		const isUpdated = await updateTeamById(context.env.Database, id, body);
 
 		if (!isUpdated) {
 			return context.json({ message: 'Team not updated' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);

@@ -16,7 +16,7 @@ import {
 	StatusResponseSchema
 } from '../../utils/responses.ts';
 import { IdParamSchema } from '../../utils/validation.ts';
-import { deleteProfileById, getAllProfiles, getProfileById, updateProfileById } from './data.ts';
+import { deleteProfileById, doesProfileExist, getAllProfiles, getProfileById, updateProfileById } from './data.ts';
 import { ProfileSchema, UpdateProfileSchema } from './validation.ts';
 
 export const profileRoutes = new OpenAPIHono<EnvironmentBindings>({
@@ -39,7 +39,7 @@ profileRoutes.openapi(
 		}
 	}),
 	async (context) => {
-		const profiles = await getAllProfiles(context.env.database);
+		const profiles = await getAllProfiles(context.env.Database);
 
 		return context.json(
 			{
@@ -86,7 +86,7 @@ profileRoutes.openapi(
 	async (context) => {
 		const { id } = context.req.valid('param');
 
-		const profile = await getProfileById(context.env.database, id);
+		const profile = await getProfileById(context.env.Database, id);
 
 		if (!profile) {
 			return context.json({ message: 'Profile not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
@@ -137,8 +137,13 @@ profileRoutes.openapi(
 			return context.json({ message: 'Can only modify own profile' }, StatusCodes.FORBIDDEN);
 		}
 
+		const isProfileIdValid = await doesProfileExist(context.env.Database, id);
+		if (!isProfileIdValid) {
+			return context.json({ message: 'Profile does not exist' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
+		}
+
 		const body = context.req.valid('json');
-		const isUpdated = await updateProfileById(context.env.database, id, body);
+		const isUpdated = await updateProfileById(context.env.Database, id, body);
 
 		if (!isUpdated) {
 			return context.json({ message: 'Profile not updated' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
@@ -178,7 +183,12 @@ profileRoutes.openapi(
 	async (context) => {
 		const { id } = context.req.valid('param');
 
-		const isDeleted = await deleteProfileById(context.env.database, id);
+		const isProfileIdValid = await doesProfileExist(context.env.Database, id);
+		if (!isProfileIdValid) {
+			return context.json({ message: 'Profile does not exist' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
+		}
+
+		const isDeleted = await deleteProfileById(context.env.Database, id);
 
 		if (!isDeleted) {
 			return context.json({ message: 'Profile not deleted' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);

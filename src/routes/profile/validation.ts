@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { BaseDbEntitySchema, BaseDBFieldsToOmit } from '../../constants/db.ts';
+import { BaseDbEntitySchema, BaseDBFieldsToOmit } from '../../utils/db.ts';
 
 export const ProfileSchema = BaseDbEntitySchema.merge(z.object({
 	email: z
@@ -71,7 +71,7 @@ export const ProfileLinkSchema = z.object({
 		.string()
 		.uuid()
 		.describe('The Link id.'),
-	profile_id: z
+	profileId: z
 		.string()
 		.uuid()
 		.describe('The profile id.'),
@@ -88,7 +88,7 @@ export const ProfileSkillSchema = z.object({
 		.string()
 		.uuid()
 		.describe('The Link id.'),
-	profile_id: z
+	profileId: z
 		.string()
 		.uuid()
 		.describe('The profile id.'),

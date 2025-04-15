@@ -1,21 +1,21 @@
-import { DBTables } from '../../constants/db.ts';
 import type { AccessLevel } from '../../utils/auth.ts';
+import { DBTables } from '../../utils/db.ts';
 
 export async function getLoginInfo(database: D1Database, email: string) {
 	const loginInfo = await database
 		.prepare(`
 			SELECT
 				${DBTables.ACCESS}.password AS password,
-				${DBTables.ACCESS}.access_level AS access,
+				${DBTables.ACCESS}.accessLevel AS access,
 				${DBTables.PROFILE}.id AS id
 			FROM ${DBTables.ACCESS}
 			INNER JOIN
 				${DBTables.PROFILE}
-				ON ${DBTables.PROFILE}.id = access.id
+				ON ${DBTables.PROFILE}.id = ${DBTables.ACCESS}.id
 			WHERE
 				${DBTables.PROFILE}.email = ?
 				AND ${DBTables.PROFILE}.activatedAt IS NOT NULL
-				AND ${DBTables.PROFILE}.deletetAt IS NULL
+				AND ${DBTables.PROFILE}.deletedAt IS NULL
 			LIMIT 1
 		`)
 		.bind(email)
@@ -28,14 +28,14 @@ export async function getHeartbeatInfo(database: D1Database, id: string) {
 	const userInfo = await database
 		.prepare(`
 			SELECT
-				${DBTables.ACCESS}.access_level AS access,
+				${DBTables.ACCESS}.accessLevel AS access,
 				${DBTables.PROFILE}.id AS id,
 				${DBTables.PROFILE}.avatar AS avatar,
 				${DBTables.PROFILE}.name AS name
 			FROM ${DBTables.ACCESS}
 			INNER JOIN
 				${DBTables.PROFILE}
-				ON ${DBTables.PROFILE}.id = access.id
+				ON ${DBTables.PROFILE}.id = ${DBTables.ACCESS}.id
 			WHERE
 				${DBTables.PROFILE}.id = ?
 				AND ${DBTables.PROFILE}.activatedAt IS NOT NULL

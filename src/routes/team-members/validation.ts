@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { BaseDbEntitySchema, BaseDBFieldsToOmit } from '../../constants/db.ts';
+import { BaseDbEntitySchema, BaseDBFieldsToOmit } from '../../utils/db.ts';
 
-export const RoleSchema = BaseDbEntitySchema.merge(z.object({
+export const TeamMembershipSchema = BaseDbEntitySchema.merge(z.object({
 	name: z
 		.string()
 		.trim()
@@ -10,20 +10,31 @@ export const RoleSchema = BaseDbEntitySchema.merge(z.object({
 	description: z
 		.string()
 		.optional()
-		.describe('A description for the role. It may include markdown content.')
+		.describe('A description for the role. It may include markdown content.'),
+	teamId: z
+		.string()
+		.uuid()
+		.describe(''),
+	profileId: z
+		.string()
+		.uuid()
+		.describe('')
 }));
 
-export type Role = z.infer<typeof RoleSchema>;
+export type TeamMembership = z.infer<typeof TeamMembershipSchema>;
 
-export const CreateRoleSchema = RoleSchema.omit(BaseDBFieldsToOmit);
+export const AddTeamMembersSchema = z.array(TeamMembershipSchema.omit({ ...BaseDBFieldsToOmit, teamId: true }));
 
-export type CreateRoleData = z.infer<typeof CreateRoleSchema>;
+export type AddTeamMembers = z.infer<typeof AddTeamMembersSchema>;
 
-export const UpdateRoleSchema = CreateRoleSchema
-	.partial()
-	.refine(
-		(data) => Object.keys(data).length === 0,
-		{ message: 'At least one property is required' }
-	);
+export const UpdateTeamMembersSchema = z.array(
+	TeamMembershipSchema
+		.pick({ id: true })
+		.merge(
+			TeamMembershipSchema
+				.pick({ name: true, description: true })
+				.partial()
+		)
+);
 
-export type UpdateRoleData = z.infer<typeof UpdateRoleSchema>;
+export type UpdateTeamMembers = z.infer<typeof UpdateTeamMembersSchema>;

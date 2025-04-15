@@ -1,4 +1,4 @@
-import { DBTables, generateBaseDBfields } from '../../constants/db.ts';
+import { DBTables, generateBaseDBfields } from '../../utils/db.ts';
 import { EventLog } from '../event-log/data.ts';
 import type { CreateTeamData, Team, UpdateTeamData } from './validation.ts';
 

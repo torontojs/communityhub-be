@@ -28,4 +28,5 @@ CREATE TABLE IF NOT EXISTS role (
 	FOREIGN KEY (team_id) REFERENCES team(id),
 	FOREIGN KEY (profile_id) REFERENCES profile(id)
 );
-CREATE INDEX idx_role_profile_and_team ON role (profile_id, team_id);
+
+CREATE INDEX idx_role_profile_and_team ON role (profileId, teamId);

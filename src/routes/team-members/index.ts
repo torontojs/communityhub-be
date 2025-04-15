@@ -1,11 +1,8 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { authMiddleware } from 'src/middleware/auth.ts';
 import { z } from 'zod';
-import { DBTables } from '../../constants/db.ts';
 import { authorizeOrganizer } from '../../middleware/access.ts';
 import {
-	type DataResponse,
-	generateDataResponeSchema,
 	generatePaginatedResponseSchema,
 	type PaginatedResponse,
 	StatusCodes,
@@ -13,84 +10,46 @@ import {
 	statusResponseFormatter,
 	StatusResponseSchema
 } from '../../utils/responses.ts';
-import { IdParamSchema, validateExistingId } from '../../utils/validation.ts';
-import { deleteRoleById, getAllRoles, getRoleById, insertRole, updateRoleById } from './data.ts';
-import { CreateRoleSchema, RoleSchema, UpdateRoleSchema } from './validation.ts';
+import { IdParamSchema } from '../../utils/validation.ts';
+import { ProfileSchema } from '../profile/validation.ts';
+import { doesTeamExist } from '../team/data.ts';
+import { addTeamMembers, deleteTeamMembers, getAllMembers, updateTeamMembers } from './data.ts';
+import { AddTeamMembersSchema, UpdateTeamMembersSchema } from './validation.ts';
 
-// Public routes (GET only)
-export const publicRoleRoutes = new OpenAPIHono<EnvironmentBindings>({
+export const teamMemberRoutes = new OpenAPIHono<EnvironmentBindings>({
 	defaultHook: statusResponseFormatter
 });
 
-// GET role
-publicRoleRoutes.openapi(
+teamMemberRoutes.openapi(
 	createRoute({
 		method: 'get',
-		path: '/{id}',
-		operationId: 'getRole',
-		summary: 'Get role by ID',
-		description: "Retrieves a single role based on it's id.",
-		tags: ['Role'],
+		path: '/{id}/members',
+		operationId: 'List team members',
+		summary: 'List members of a team',
+		description: 'Retrieves a list of all the members of a team, based on the team id.',
 		request: {
 			params: IdParamSchema
 		},
+		tags: ['Team Members'],
 		responses: {
 			[StatusCodes.OKAY]: {
 				description: 'Successful response',
-				content: { 'application/json': { schema: generateDataResponeSchema(RoleSchema) } }
-			},
-			[StatusCodes.NOT_FOUND]: {
-				description: 'Error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
+				content: { 'application/json': { schema: generatePaginatedResponseSchema(z.array(ProfileSchema.pick({ id: true, name: true, avatar: true }))) } }
 			}
 		}
 	}),
 	async (context) => {
 		const { id } = context.req.valid('param');
-
-		const isRoleIdValid = await validateExistingId(context.env.database, DBTables.ROLE, id);
-
-		if (!isRoleIdValid) {
-			return context.json({ message: 'Role not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
-		}
-
-		const role = await getRoleById(context.env.database, id);
-
-		if (!role) {
-			return context.json({ message: 'Role not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
-		}
-
-		return context.json({ data: role, _links: { self: { href: context.req.url } } } satisfies DataResponse<typeof role>, StatusCodes.OKAY);
-	}
-);
-
-// GET role by id
-publicRoleRoutes.openapi(
-	createRoute({
-		method: 'get',
-		path: '/',
-		operationId: 'getRoles',
-		summary: 'Get roles',
-		description: 'Retrieves a list of roles',
-		tags: ['Role'],
-		responses: {
-			[StatusCodes.OKAY]: {
-				description: 'Successful response',
-				content: { 'application/json': { schema: generatePaginatedResponseSchema(z.array(RoleSchema)) } }
-			}
-		}
-	}),
-	async (context) => {
-		const roles = await getAllRoles(context.env.database);
+		const members = await getAllMembers(context.env.Database, id);
 
 		return context.json(
 			// TODO: implement proper pagination
 			{
-				data: roles,
+				data: members,
 				start: 0,
-				end: roles.length - 1,
-				total: roles.length,
-				size: roles.length,
+				end: members.length - 1,
+				total: members.length,
+				size: members.length,
 				currentPage: 1,
 				lastPage: 1,
 				_links: {
@@ -98,32 +57,31 @@ publicRoleRoutes.openapi(
 					first: { href: context.req.url },
 					last: { href: context.req.url }
 				}
-			} satisfies PaginatedResponse<typeof roles>,
+			} satisfies PaginatedResponse<typeof members>,
 			StatusCodes.OKAY
 		);
 	}
 );
 
-// Private routes (POST, PATCH, DELETE)
-export const protectedRolesRoutes = new OpenAPIHono<EnvironmentBindings>({
-	defaultHook: statusResponseFormatter
-});
-
-// POST role
-protectedRolesRoutes.openapi(
+teamMemberRoutes.openapi(
 	createRoute({
 		method: 'post',
-		path: '/',
-		operationId: 'createNewRole',
-		summary: 'Create new role',
-		description: 'Add a new role to the VMS including basic information about this role.',
-		tags: ['Role'],
+		path: '/{id}/members',
+		operationId: 'Add team members',
+		summary: 'Add new members to a team',
+		description: 'Add a new members to a team, assigning their roles within that team.',
+		tags: ['Team Members'],
 		request: {
-			body: { content: { 'application/json': { schema: CreateRoleSchema } }, required: true }
+			params: IdParamSchema,
+			body: { content: { 'application/json': { schema: AddTeamMembersSchema } }, required: true }
 		},
 		responses: {
 			[StatusCodes.CREATED]: {
 				description: 'Successful response',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.NOT_FOUND]: {
+				description: 'Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
 			},
 			[StatusCodes.INTERNAL_SERVER_ERROR]: {
@@ -134,28 +92,34 @@ protectedRolesRoutes.openapi(
 		middleware: [authMiddleware, authorizeOrganizer] as const
 	}),
 	async (context) => {
+		const { id } = context.req.valid('param');
+
+		const isTeamIdValid = await doesTeamExist(context.env.Database, id);
+		if (!isTeamIdValid) {
+			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
+		}
+
 		const body = context.req.valid('json');
-		const { success } = await insertRole(context.env.database, body);
+		const success = await addTeamMembers(context.env.Database, id, body);
 
 		if (!success) {
-			return context.json({ message: 'Role not saved' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+			return context.json({ message: 'Team members not saved' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 
-		return context.json({ message: 'Role created successfully' } satisfies StatusResponse, StatusCodes.CREATED);
+		return context.json({ message: 'Team members added to the team successfully' } satisfies StatusResponse, StatusCodes.CREATED);
 	}
 );
 
-// PATCH role
-protectedRolesRoutes.openapi(
+teamMemberRoutes.openapi(
 	createRoute({
 		method: 'patch',
-		path: '/{id}',
-		operationId: 'updateRole',
-		summary: 'Update existing role',
-		description: "Update information for an existing role based on it's id.",
-		tags: ['Role'],
+		path: '/{id}/members',
+		operationId: 'Update team members',
+		summary: 'Update existing team members',
+		description: 'Update information for existing team members based on the team id and the member ids.',
+		tags: ['Team Members'],
 		request: {
-			body: { content: { 'application/json': { schema: UpdateRoleSchema } }, required: true },
+			body: { content: { 'application/json': { schema: UpdateTeamMembersSchema } }, required: true },
 			params: IdParamSchema
 		},
 		responses: {
@@ -176,33 +140,35 @@ protectedRolesRoutes.openapi(
 	}),
 	async (context) => {
 		const { id } = context.req.valid('param');
+
+		const isTeamIdValid = await doesTeamExist(context.env.Database, id);
+		if (!isTeamIdValid) {
+			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
+		}
+
 		const body = context.req.valid('json');
 
-		const isRoleIdValid = await validateExistingId(context.env.database, DBTables.ROLE, id);
-
-		if (!isRoleIdValid) {
-			return context.json({ message: 'Role not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
-		}
-
-		const isUpdated = await updateRoleById(context.env.database, id, body);
+		const isUpdated = await updateTeamMembers(context.env.Database, id, body);
 
 		if (!isUpdated) {
-			return context.json({ message: 'Role not updated' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+			return context.json({ message: 'Team members not updated' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 
-		return context.json({ message: 'Role updated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
+		return context.json({ message: 'Team members updated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
 	}
 );
-protectedRolesRoutes.openapi(
+
+teamMemberRoutes.openapi(
 	createRoute({
 		method: 'delete',
-		path: '/{id}',
-		operationId: 'deleteRole',
-		summary: 'Delete role by ID',
-		description: "Deletes a single role based on it's id",
-		tags: ['Role'],
+		path: '/{id}/members',
+		operationId: 'Delete team members',
+		summary: 'Delete existing team members',
+		description: 'Deletes team members based on the team id.',
+		tags: ['Team Members'],
 		request: {
-			params: IdParamSchema
+			params: IdParamSchema,
+			body: { content: { 'application/json': { schema: z.array(z.string()) } }, required: true }
 		},
 		responses: {
 			[StatusCodes.OKAY]: {
@@ -223,13 +189,13 @@ protectedRolesRoutes.openapi(
 	async (context) => {
 		const { id } = context.req.valid('param');
 
-		const isRoleIdValid = await validateExistingId(context.env.database, DBTables.ROLE, id);
-
-		if (!isRoleIdValid) {
-			return context.json({ message: 'Role not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
+		const isTeamIdValid = await doesTeamExist(context.env.Database, id);
+		if (!isTeamIdValid) {
+			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
 
-		const isDeleted = await deleteRoleById(context.env.database, id);
+		const body = context.req.valid('json');
+		const isDeleted = await deleteTeamMembers(context.env.Database, id, body);
 
 		if (!isDeleted) {
 			return context.json({ message: 'Role not deleted' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);

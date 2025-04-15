@@ -1,60 +1,91 @@
-import { DBTables, generateBaseDBfields } from '../../constants/db.ts';
-import type { CreateRoleData, Role, UpdateRoleData } from './validation.ts';
+import { DBTables, generateBaseDBfields } from '../../utils/db.ts';
+import type { Profile } from '../profile/validation.ts';
+import type { AddTeamMembers, UpdateTeamMembers } from './validation.ts';
 
-export async function insertRole(database: D1Database, { name, description }: CreateRoleData) {
-	const { id, schemaVersion, happenedAt, insertedAt } = generateBaseDBfields();
+export async function addTeamMembers(database: D1Database, teamId: string, data: AddTeamMembers) {
+	const results = await database.batch([
+		...data.map(({ name, profileId, description }) => {
+			const { id, schemaVersion, happenedAt, insertedAt } = generateBaseDBfields();
 
-	const { success } = await database.prepare(`
-		INSERT INTO ${DBTables.ROLE} (
-			id, schemaVersion, happenedAt, insertedAt,
-			name
-			${description ? ', descrition' : ''}
+			return database.prepare(`
+				INSERT INTO ${DBTables.ROLE} (
+					id, schemaVersion, happenedAt, insertedAt,
+					name, profileId, teamId,
+					${description ? ', descrition' : ''}
+				)
+				VALUES (
+					?, ?, ?, ?,
+					?, ?, ?
+					${description ? ', ?' : ''}
+				)
+			`).bind(
+				id,
+				schemaVersion,
+				happenedAt,
+				insertedAt,
+				name,
+				profileId,
+				teamId,
+				description
+			);
+		})
+	]);
+
+	return results.every(({ success }) => success);
+}
+
+export async function updateTeamMembers(database: D1Database, teamId: string, data: UpdateTeamMembers) {
+	const results = await database.batch([
+		...data.map(({ id, description, name }) =>
+			database.prepare(`
+				UPDATE ${DBTables.ROLE}
+				SET
+					name = ?,
+					description = ?
+				WHERE
+					id = ?
+					AND teamId = ?
+			`).bind(name ?? '', description ?? '', id, teamId)
 		)
-		VALUES (
-			?, ?, ?, ?,
-			?
-			${description ? ', ?' : ''}
-		)
-	`)
-		.bind(id, schemaVersion, happenedAt, insertedAt, name, description)
-		.run();
+	]);
 
-	return { success, id };
+	return results.every(({ success }) => success);
 }
 
-export async function updateRoleById(database: D1Database, id: string, data: UpdateRoleData) {
-	const { success } = await database
-		.prepare(`
-			UPDATE ${DBTables.ROLE}
-			SET ${Object.keys(data).join(', ')}
-			WHERE id = ?
-		`)
-		.bind(...Object.values(data), id)
-		.run();
-
-	return success;
-}
-
-export async function getRoleById(database: D1Database, id: string) {
-	const { results } = await database
-		.prepare(`SELECT * FROM ${DBTables.ROLE} WHERE id = ?`)
-		.bind(id)
-		.run<Role>();
-
-	return results?.[0];
-}
-
-export async function getAllRoles(database: D1Database) {
-	const { results } = await database.prepare(`SELECT * FROM ${DBTables.ROLE}`).run<Role>();
+export async function getAllMembers(database: D1Database, teamId: string) {
+	const { results } = await database.prepare(`
+		SELECT
+			${DBTables.PROFILE}.id AS id,
+			${DBTables.PROFILE}.name AS name,
+			${DBTables.PROFILE}.avatar AS avatar
+		FROM ${DBTables.ROLE}
+		INNER JOIN
+			${DBTables.PROFILE}
+			ON
+				${DBTables.PROFILE}.id = ${DBTables.ROLE}.id
+				AND ${DBTables.PROFILE}.activatedAt IS NOT NULL
+				AND ${DBTables.PROFILE}.deletedAt IS NULL
+		WHERE
+			${DBTables.ROLE}.teamId = ?
+	`).bind(teamId).run<Pick<Profile, 'avatar' | 'id' | 'name'>>();
 
 	return results;
 }
 
-export async function deleteRoleById(database: D1Database, id: string) {
-	const { success } = await database
-		.prepare(`UPDATE ${DBTables.ROLE} SET deletedAt = ? WHERE id = ?`)
-		.bind(new Date().toISOString(), id)
-		.run();
+export async function deleteTeamMembers(database: D1Database, teamId: string, data: string[]) {
+	const results = await database.batch(
+		data.map((id) =>
+			database
+				.prepare(`
+					UPDATE ${DBTables.ROLE}
+					SET
+						deletedAt = ?
+					WHERE
+						id = ?
+						AND teamId = ?
+				`).bind(new Date().toISOString(), id, teamId)
+		)
+	);
 
-	return success;
+	return results.every(({ success }) => success);
 }
