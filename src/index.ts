@@ -65,6 +65,7 @@ app.route('/', healthCheckRoutes);
 app.route('/auth', authRoutes);
 app.route('/profiles', profileRoutes);
 app.route('/teams', teamRoutes);
+// All routes follow the format /teams/{id}/members
 app.route('/teams', teamMemberRoutes);
 
 export default app;
