@@ -36,15 +36,19 @@ export function checkEnvVars(env: Context<EnvironmentBindings>['env']) {
 			.filter((variable) => !expectedEnvVars.includes(variable));
 
 		return {
-			success: true,
 			message: `✅ All required environment variables are set`,
-			warning: `🤷 These variables may not be in use: ${unexpectedEnvVars.join(', ')}`
+			warnings: unexpectedEnvVars.map((envVar) => ({
+				message: '🤷 This variable may not be in use',
+				variable: envVar
+			}))
 		};
 	}
 
-	const errorMsg = error.issues.map(({ path, message }) => `${path}: ${message}`).join('. ');
 	return {
-		success: false,
-		message: `❌ Required variables missing: ${errorMsg}`
+		message: '❌ Required variables missing',
+		errors: error.issues.map(({ path, message }) => ({
+			path: path.toString(),
+			message
+		}))
 	};
 }
