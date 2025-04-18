@@ -31,20 +31,18 @@ healthCheckRoutes.openapi(
 		}
 	}),
 	(context: Context<EnvironmentBindings>) => {
-		const { success, error } = checkEnvVars(context.env);
+		const { message, warnings, errors } = checkEnvVars(context.env);
 
 		if (context.env.NODE_ENV === 'production') {
-			if (success) {
-				return context.json({ message: '✅ OK' } satisfies StatusResponse, StatusCodes.OKAY);
+			if (errors) {
+				return context.json({ message: '❌ Something is wrong with the server configuration' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
 			}
-			return context.json({ message: '❌ Something is wrong with the server configuration' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+			return context.json({ message: '✅ OK' } satisfies StatusResponse, StatusCodes.OKAY);
 		}
 
-		if (success) {
-			return context.json({ message: '✅ All environment variables are set' } satisfies StatusResponse, StatusCodes.OKAY);
+		if (errors) {
+			return context.json({ message, errors } satisfies StatusResponse, StatusCodes.UNPROCESSABLE_CONTENT);
 		}
-
-		const errorMsg = error.issues.map(({ path, message }) => `❌ ${path}: ${message}`).join(', ');
-		return context.json({ message: errorMsg } satisfies StatusResponse, StatusCodes.UNPROCESSABLE_CONTENT);
+		return context.json({ message, warnings } satisfies StatusResponse, StatusCodes.OKAY);
 	}
 );

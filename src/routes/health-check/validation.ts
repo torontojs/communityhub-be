@@ -22,10 +22,34 @@ export const EnvSchema = z.object({
 		.string({ message: 'Required for emails to be sent.' })
 		.min(1, { message: 'Required for emails to be sent.' }),
 	NODE_ENV: NodeEnvSchema
-});
+}).passthrough();
 
 export type EnvVars = z.infer<typeof EnvSchema>;
 
 export function checkEnvVars(env: Context<EnvironmentBindings>['env']) {
-	return EnvSchema.safeParse(env);
+	const { success, error, data: parsedEnv } = EnvSchema.safeParse(env);
+
+	if (success) {
+		const allEnvVars = Object.keys(parsedEnv);
+		const expectedEnvVars = Object.keys(EnvSchema.shape);
+
+		const unexpectedEnvVars = allEnvVars
+			.filter((variable) => !expectedEnvVars.includes(variable));
+
+		return {
+			message: `✅ All required environment variables are set`,
+			warnings: unexpectedEnvVars.map((envVar) => ({
+				message: '🤷 This variable may not be in use',
+				variable: envVar
+			}))
+		};
+	}
+
+	return {
+		message: '❌ Required variables missing',
+		errors: error.issues.map(({ path, message }) => ({
+			path: path.toString(),
+			message
+		}))
+	};
 }
