@@ -2,7 +2,8 @@ import type { Context } from 'hono';
 import { getCookie } from 'hono/cookie';
 import { setCookie } from './cookie';
 
-const SESSION_LIFESPAN_IN_HOURS = 24;
+// eslint-disable-next-line @typescript-eslint/no-magic-numbers
+const SESSION_LIFESPAN_IN_SECONDS_FROM_NOW = 60 * 60 * 24;
 const MILISECONDS_IN_SECOND = 1000;
 const SESSION_COOKIE_NAME = 'auth_token';
 const DELETED_COOKIE_VALUE = 'DELETED';
@@ -22,13 +23,8 @@ export interface SessionData {
 	token: string;
 }
 
-function getSessionExpirySecondsEpoch() {
-	const tokenExpiry = new Date();
-	tokenExpiry.setHours(tokenExpiry.getHours() + SESSION_LIFESPAN_IN_HOURS);
-
-	const tokenExpirySecondsEpoch = Math.floor(tokenExpiry.valueOf() / MILISECONDS_IN_SECOND);
-
-	return tokenExpirySecondsEpoch;
+function getSessionExpiryAsDate() {
+	return new Date(Date.now() + SESSION_LIFESPAN_IN_SECONDS_FROM_NOW * MILISECONDS_IN_SECOND);
 }
 
 interface DeleteSessionParams {
@@ -64,16 +60,12 @@ async function extendExistingSession({
 	session,
 	context
 }: ExtendSessionParams) {
-	const expirySecondsSinceEpoch = getSessionExpirySecondsEpoch();
 	// Update session on server
 	await context.env.SESSION_TOKENS.put(
 		sessionToken,
 		JSON.stringify(session),
 		{
-			expiration: expirySecondsSinceEpoch,
-			metadata: {
-				expiration: expirySecondsSinceEpoch
-			}
+			expirationTtl: SESSION_LIFESPAN_IN_SECONDS_FROM_NOW
 		}
 	);
 
@@ -82,7 +74,7 @@ async function extendExistingSession({
 		context,
 		name: SESSION_COOKIE_NAME,
 		value: sessionToken,
-		expires: new Date(expirySecondsSinceEpoch * MILISECONDS_IN_SECOND)
+		expires: getSessionExpiryAsDate()
 	});
 
 	return session;
@@ -125,7 +117,6 @@ export async function createSession({
 }: CreateSessionParams) {
 	const sessionToken = crypto.randomUUID();
 
-	const expirySecondsSinceEpoch = getSessionExpirySecondsEpoch();
 	// Create session on server
 	await context.env.SESSION_TOKENS.put(
 		sessionToken,
@@ -138,10 +129,7 @@ export async function createSession({
 			} satisfies SessionData
 		),
 		{
-			expiration: expirySecondsSinceEpoch,
-			metadata: {
-				expiration: expirySecondsSinceEpoch
-			}
+			expirationTtl: SESSION_LIFESPAN_IN_SECONDS_FROM_NOW
 		}
 	);
 
@@ -150,7 +138,7 @@ export async function createSession({
 		context,
 		name: SESSION_COOKIE_NAME,
 		value: sessionToken,
-		expires: new Date(expirySecondsSinceEpoch * MILISECONDS_IN_SECOND)
+		expires: getSessionExpiryAsDate()
 	});
 
 	return sessionToken;
