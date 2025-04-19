@@ -84,6 +84,7 @@ async function extendExistingSession({
 		SESSION_COOKIE_NAME,
 		sessionToken,
 		{
+			...DEFAULT_COOKIE_OPTIONS,
 			expires: getSessionExpiryAsDate()
 		}
 	);
