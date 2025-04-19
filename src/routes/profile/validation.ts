@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { BaseDbEntitySchema, BaseDBFieldsToOmit } from '../../constants/db.ts';
+import { BaseDbEntitySchema, BaseDBFieldsToOmit } from '../../utils/db.ts';
 
 export const ProfileSchema = BaseDbEntitySchema.merge(z.object({
 	email: z
@@ -66,4 +66,35 @@ export const UpdateProfileSchema = ProfileSchema
 
 export type UpdateProfileData = z.infer<typeof UpdateProfileSchema>;
 
-export type Name = z.infer<typeof ProfileSchema>['name'];
+export const ProfileLinkSchema = z.object({
+	id: z
+		.string()
+		.uuid()
+		.describe('The Link id.'),
+	profileId: z
+		.string()
+		.uuid()
+		.describe('The profile id.'),
+	url: z
+		.string()
+		.url()
+		.describe('The link URL.')
+});
+
+export type ProfileLink = z.infer<typeof ProfileLinkSchema>;
+
+export const ProfileSkillSchema = z.object({
+	id: z
+		.string()
+		.uuid()
+		.describe('The Link id.'),
+	profileId: z
+		.string()
+		.uuid()
+		.describe('The profile id.'),
+	skill: z
+		.string()
+		.describe('The link name.')
+});
+
+export type ProfileSkill = z.infer<typeof ProfileSkillSchema>;

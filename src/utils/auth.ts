@@ -1,12 +1,18 @@
 import type { Context } from 'hono';
-import { getCookie } from 'hono/cookie';
-import { setCookie } from './cookie';
+import { getCookie, setCookie } from 'hono/cookie';
+import type { CookieOptions } from 'hono/utils/cookie';
 
 // eslint-disable-next-line @typescript-eslint/no-magic-numbers
 const SESSION_LIFESPAN_IN_SECONDS_FROM_NOW = 60 * 60 * 24;
 const MILISECONDS_IN_SECOND = 1000;
 const SESSION_COOKIE_NAME = 'auth_token';
 const DELETED_COOKIE_VALUE = 'DELETED';
+const DEFAULT_COOKIE_OPTIONS = {
+	httpOnly: true,
+	path: '/',
+	secure: true,
+	sameSite: 'Strict'
+} satisfies CookieOptions;
 
 export const Access = {
 	ADMIN: 'admin',
@@ -34,15 +40,18 @@ interface DeleteSessionParams {
 
 export async function deleteSession({ context, sessionToken }: DeleteSessionParams) {
 	// Delete session on server
-	await context.env.SESSION_TOKENS.delete(sessionToken);
+	await context.env.SessionTokens.delete(sessionToken);
 
 	// Delete session on client
-	setCookie({
+	setCookie(
 		context,
-		name: SESSION_COOKIE_NAME,
-		value: DELETED_COOKIE_VALUE,
-		expires: new Date(0)
-	});
+		SESSION_COOKIE_NAME,
+		DELETED_COOKIE_VALUE,
+		{
+			...DEFAULT_COOKIE_OPTIONS,
+			expires: new Date(0)
+		}
+	);
 }
 
 export function getSession(context: Context<EnvironmentBindings>) {
@@ -61,7 +70,7 @@ async function extendExistingSession({
 	context
 }: ExtendSessionParams) {
 	// Update session on server
-	await context.env.SESSION_TOKENS.put(
+	await context.env.SessionTokens.put(
 		sessionToken,
 		JSON.stringify(session),
 		{
@@ -70,13 +79,14 @@ async function extendExistingSession({
 	);
 
 	// Update session on client
-	setCookie({
+	setCookie(
 		context,
-		name: SESSION_COOKIE_NAME,
-		value: sessionToken,
-		expires: getSessionExpiryAsDate()
-	});
-
+		SESSION_COOKIE_NAME,
+		sessionToken,
+		{
+			expires: getSessionExpiryAsDate()
+		}
+	);
 	return session;
 }
 
@@ -86,7 +96,7 @@ export async function revalidateSession(context: Context<EnvironmentBindings>) {
 		return undefined;
 	}
 
-	const session = await context.env.SESSION_TOKENS.get<SessionData>(sessionToken, 'json');
+	const session = await context.env.SessionTokens.get<SessionData>(sessionToken, 'json');
 	if (!session) {
 		// User has a session token but it's invalid so delete it
 		await deleteSession({ context, sessionToken });
@@ -118,7 +128,7 @@ export async function createSession({
 	const sessionToken = crypto.randomUUID();
 
 	// Create session on server
-	await context.env.SESSION_TOKENS.put(
+	await context.env.SessionTokens.put(
 		sessionToken,
 		JSON.stringify(
 			{
@@ -134,12 +144,15 @@ export async function createSession({
 	);
 
 	// Send session to client
-	setCookie({
+	setCookie(
 		context,
-		name: SESSION_COOKIE_NAME,
-		value: sessionToken,
-		expires: getSessionExpiryAsDate()
-	});
+		SESSION_COOKIE_NAME,
+		sessionToken,
+		{
+			...DEFAULT_COOKIE_OPTIONS,
+			expires: getSessionExpiryAsDate()
+		}
+	);
 
 	return sessionToken;
 }

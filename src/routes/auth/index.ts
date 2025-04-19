@@ -1,5 +1,5 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
-import { createSession, deleteSession, getSession } from 'src/utils/auth.ts';
+import { createSession, deleteSession, getSession, revalidateSession } from 'src/utils/auth.ts';
 import { sendAccountConfirmationEmail } from '../../email/index.ts';
 import { authorizeVolunteer } from '../../middleware/access.ts';
 import { authMiddleware } from '../../middleware/auth.ts';
@@ -19,7 +19,7 @@ authRoutes.openapi(
 		method: 'post',
 		path: '/sign-up',
 		operationId: 'Create account',
-		summary: 'Create a new Community Hub account.',
+		summary: 'Create a new Community Hub account',
 		description: 'This is the entry point for the Community Hub. It allows users to register new accounts.',
 		tags: ['Authentication'],
 		request: {
@@ -36,19 +36,19 @@ authRoutes.openapi(
 		const { email, password, name } = context.req.valid('json');
 		const response = { message: 'Created a new profile and sent an email for confirmation' };
 
-		const emailExists = await checkExistingEmail(context.env.database, email);
+		const emailExists = await checkExistingEmail(context.env.Database, email);
 		if (emailExists) {
 			// INFO: Hide non existing emails to reduce attack surface from guessing registered emails.
 			return context.json(response satisfies StatusResponse, StatusCodes.OKAY);
 		}
 
 		const hashedPasswordWithSalt = await hashPassword(password);
-		await insertProfile(context.env.database, { email, password: hashedPasswordWithSalt, name });
+		await insertProfile(context.env.Database, { email, password: hashedPasswordWithSalt, name });
 
 		// eslint-disable-next-line @typescript-eslint/no-magic-numbers
 		const TEN_MINUTES_IN_SECONDS = 60 * 10;
 		const token = crypto.randomUUID();
-		await context.env.ACTIVATION_TOKENS.put(
+		await context.env.ActivationTokens.put(
 			token,
 			email,
 			{ expirationTtl: TEN_MINUTES_IN_SECONDS }
@@ -71,7 +71,7 @@ authRoutes.openapi(
 		method: 'get',
 		path: '/activate',
 		operationId: 'Activate account',
-		summary: 'Activate a newly created account.',
+		summary: 'Activate a newly created account',
 		description: 'Received activation email and clicked on activation link.',
 		tags: ['Authentication'],
 		request: {
@@ -102,24 +102,24 @@ authRoutes.openapi(
 			return context.json({ message: 'Invalid or missing token' }, StatusCodes.BAD_REQUEST);
 		}
 
-		const email = await context.env.ACTIVATION_TOKENS.get(token);
+		const email = await context.env.ActivationTokens.get(token);
 		if (!email) {
 			return context.json({ message: 'Invalid or expired token' }, StatusCodes.UNAUTHORIZED);
 		}
 
-		const userAlreadyActivated = await checkActiveEmail(context.env.database, email);
+		const userAlreadyActivated = await checkActiveEmail(context.env.Database, email);
 		if (!userAlreadyActivated) {
 			// INFO: Hide non existing emails to reduce attack surface from guessing registered emails.
 			return context.json({ message: 'Account activated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
 		}
 
-		const activated = await activateProfile(context.env.database, email);
+		const activated = await activateProfile(context.env.Database, email);
 		if (!activated) {
 			return context.json({ message: 'Failed to activate account' }, StatusCodes.INTERNAL_SERVER_ERROR);
 		}
 
 		// Remove token after successful activation
-		await context.env.ACTIVATION_TOKENS.delete(token);
+		await context.env.ActivationTokens.delete(token);
 
 		return context.json({ message: 'Account activated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
 	}
@@ -130,7 +130,7 @@ authRoutes.openapi(
 		method: 'post',
 		path: '/sign-in',
 		operationId: 'Sign-in',
-		summary: 'Sign in to Community Hub account.',
+		summary: 'Sign in to Community Hub account',
 		description: 'Signs the user in to the Community Hub.',
 		tags: ['Authentication'],
 		request: {
@@ -144,15 +144,24 @@ authRoutes.openapi(
 			[StatusCodes.CREATED]: {
 				description: 'Sign in succesful',
 				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.BAD_REQUEST]: {
+				description: 'Already signed in',
+				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
 		}
 	}),
 	async (context) => {
+		const session = await revalidateSession(context);
+		if (session) {
+			return context.json({ message: 'Already signed in' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
+		}
+
 		const { email, password } = context.req.valid('json');
 
 		const genericSignInResponse = { message: 'Either your email/password combination is invalid, or your account is not active' };
 
-		const results = await getLoginInfo(context.env.database, email);
+		const results = await getLoginInfo(context.env.Database, email);
 		if (!results) {
 			// INFO: Hide specific errors to reduce attack surface and avoid guessing.
 			return context.json(genericSignInResponse satisfies StatusResponse, StatusCodes.UNAUTHORIZED);
@@ -180,10 +189,11 @@ authRoutes.openapi(
 	createRoute({
 		method: 'get',
 		path: '/heartbeat',
-		operationId: 'getHeartbeat',
-		summary: 'Check if authenticated and get name, avatar and access',
-		descrition: 'Every protected UI page will make a heartbeat check and if successful will receive name, avatar and access in order to generate custsom content',
-		tags: ['heartbeat'],
+		operationId: 'Heartbeat',
+		summary: 'Check for basic logged in user information',
+		descrition:
+			'Check if authenticated and get name, avatar and access. Every protected UI page will make a heartbeat check and if successful will receive name, avatar and access in order to generate custsom content',
+		tags: ['Heartbeat'],
 		responses: {
 			[StatusCodes.NOT_FOUND]: {
 				description: 'Internal error getting profile that should exist',
@@ -203,7 +213,7 @@ authRoutes.openapi(
 	async (context) => {
 		const sessionData = getSession(context);
 
-		const heartbeatInfo = await getHeartbeatInfo(context.env.database, sessionData.id);
+		const heartbeatInfo = await getHeartbeatInfo(context.env.Database, sessionData.id);
 		if (!heartbeatInfo) {
 			return context.json({ message: 'Internal error getting profile that should exist' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
@@ -219,7 +229,7 @@ authRoutes.openapi(
 		operationId: 'Sign-out',
 		summary: 'Signs the user out.',
 		description: 'Signs the user out from this device, removing the current session.',
-		tags: ['Authorization'],
+		tags: ['Authentication'],
 		responses: {
 			[StatusCodes.BAD_REQUEST]: {
 				description: 'Invalid token is provided.',

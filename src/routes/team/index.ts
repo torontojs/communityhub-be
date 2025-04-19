@@ -1,8 +1,8 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { authMiddleware } from 'src/middleware/auth.ts';
 import { z } from 'zod';
-import { DBTables } from '../../constants/db.ts';
 import { authorizeAdmin, authorizeOrganizer } from '../../middleware/access.ts';
+import { DBTables } from '../../utils/db.ts';
 import {
 	type DataResponse,
 	generateDataResponeSchema,
@@ -17,16 +17,15 @@ import { IdParamSchema, validateExistingId } from '../../utils/validation.ts';
 import { deleteTeamById, getAllTeams, getTeamById, insertTeam, updateTeamById } from './data.ts';
 import { CreateTeamSchema, TeamSchema, UpdateTeamSchema } from './validation.ts';
 
-export const publicTeamRoutes = new OpenAPIHono<EnvironmentBindings>({
+export const teamRoutes = new OpenAPIHono<EnvironmentBindings>({
 	defaultHook: statusResponseFormatter
 });
 
-// GET team by ID
-publicTeamRoutes.openapi(
+teamRoutes.openapi(
 	createRoute({
 		method: 'get',
 		path: '/{id}',
-		operationId: 'getTeam',
+		operationId: 'Get team',
 		summary: 'Get team by ID',
 		description: "Retrieves a single team based on it's id.",
 		tags: ['Team'],
@@ -47,13 +46,13 @@ publicTeamRoutes.openapi(
 	async (context) => {
 		const { id } = context.req.valid('param');
 
-		const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
+		const isTeamIdValid = await validateExistingId(context.env.Database, DBTables.TEAM, id);
 
 		if (!isTeamIdValid) {
 			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
 
-		const team = await getTeamById(context.env.database, id);
+		const team = await getTeamById(context.env.Database, id);
 
 		if (!team) {
 			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
@@ -63,14 +62,13 @@ publicTeamRoutes.openapi(
 	}
 );
 
-// GET all teams
-publicTeamRoutes.openapi(
+teamRoutes.openapi(
 	createRoute({
 		method: 'get',
 		path: '/',
-		operationId: 'getTeams',
-		summary: 'Get teams',
-		description: 'Retrieves a list of teams',
+		operationId: 'List teams',
+		summary: 'Get a list of teams',
+		description: 'Retrieves a list of teams.',
 		tags: ['Team'],
 		responses: {
 			[StatusCodes.OKAY]: {
@@ -80,7 +78,7 @@ publicTeamRoutes.openapi(
 		}
 	}),
 	async (context) => {
-		const teams = await getAllTeams(context.env.database);
+		const teams = await getAllTeams(context.env.Database);
 
 		return context.json(
 			// TODO: implement proper pagination
@@ -103,19 +101,13 @@ publicTeamRoutes.openapi(
 	}
 );
 
-// Protected routes (POST, PATCH, DELETE)
-export const protectedTeamRoutes = new OpenAPIHono<EnvironmentBindings>({
-	defaultHook: statusResponseFormatter
-});
-
-// DELETE team by ID
-protectedTeamRoutes.openapi(
+teamRoutes.openapi(
 	createRoute({
 		method: 'delete',
 		path: '/{id}',
-		operationId: 'deleteTeam',
+		operationId: 'Delete team',
 		summary: 'Delete team by ID',
-		description: "Deletes a single team based on it's id",
+		description: "Deletes a single team based on it's id.",
 		tags: ['Team'],
 		request: {
 			params: IdParamSchema
@@ -139,13 +131,13 @@ protectedTeamRoutes.openapi(
 	async (context) => {
 		const { id } = context.req.valid('param');
 
-		const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
+		const isTeamIdValid = await validateExistingId(context.env.Database, DBTables.TEAM, id);
 
 		if (!isTeamIdValid) {
 			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
 
-		const isDeleted = await deleteTeamById(context.env.database, id);
+		const isDeleted = await deleteTeamById(context.env.Database, id);
 
 		if (!isDeleted) {
 			return context.json({ message: 'Team not deleted' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
@@ -155,12 +147,11 @@ protectedTeamRoutes.openapi(
 	}
 );
 
-// POST new team
-protectedTeamRoutes.openapi(
+teamRoutes.openapi(
 	createRoute({
 		method: 'post',
 		path: '/',
-		operationId: 'createNewTeam',
+		operationId: 'Create team',
 		summary: 'Create new team',
 		description: 'Add a new team to the VMS including basic information about this team.',
 		tags: ['Team'],
@@ -181,7 +172,7 @@ protectedTeamRoutes.openapi(
 	}),
 	async (context) => {
 		const body = context.req.valid('json');
-		const { success } = await insertTeam(context.env.database, body);
+		const { success } = await insertTeam(context.env.Database, body);
 
 		if (!success) {
 			return context.json({ message: 'Team not saved' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
@@ -191,12 +182,11 @@ protectedTeamRoutes.openapi(
 	}
 );
 
-// PATCH team by ID
-protectedTeamRoutes.openapi(
+teamRoutes.openapi(
 	createRoute({
 		method: 'patch',
 		path: '/{id}',
-		operationId: 'updateTeam',
+		operationId: 'Update team',
 		summary: 'Update existing team',
 		description: "Update information for an existing team based on it's id.",
 		tags: ['Team'],
@@ -224,13 +214,13 @@ protectedTeamRoutes.openapi(
 		const { id } = context.req.valid('param');
 		const body = context.req.valid('json');
 
-		const isTeamIdValid = await validateExistingId(context.env.database, DBTables.TEAM, id);
+		const isTeamIdValid = await validateExistingId(context.env.Database, DBTables.TEAM, id);
 
 		if (!isTeamIdValid) {
 			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
 
-		const isUpdated = await updateTeamById(context.env.database, id, body);
+		const isUpdated = await updateTeamById(context.env.Database, id, body);
 
 		if (!isUpdated) {
 			return context.json({ message: 'Team not updated' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);

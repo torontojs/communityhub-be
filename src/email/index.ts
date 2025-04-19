@@ -1,6 +1,3 @@
-import sgMail from '@sendgrid/mail';
-import { generateEmailHtml } from '../email-templates/confirm-email.ts';
-
 interface AccountConfirmationEmailParams {
 	baseUrl: string;
 	token: string;
@@ -10,24 +7,32 @@ interface AccountConfirmationEmailParams {
 }
 
 export async function sendAccountConfirmationEmail({
-	baseUrl,
+	baseUrl: _baseUrl,
 	token,
 	email,
-	apiKey,
-	senderEmail
+	apiKey: _apiKey,
+	senderEmail: _senderEmail
 }: AccountConfirmationEmailParams) {
-	sgMail.setApiKey(apiKey);
+	console.log({
+		email,
+		token
+	});
 
-	const activationUrl = `${baseUrl}/auth/activate?token=${token}`;
-	const logoUrl = `${baseUrl}/assets/torontojs-logo.png`;
-	const emailText = `Please confirm your account by clicking the following link: ${activationUrl}`;
-	const emailHtmlTemplate = generateEmailHtml(activationUrl, logoUrl);
-	const msg = {
-		to: email,
-		from: senderEmail,
-		subject: '[TorontoJS] Confirm your account',
-		text: emailText,
-		html: emailHtmlTemplate
-	};
-	await sgMail.send(msg);
+	return Promise.resolve(undefined);
+
+	// TODO: update email service
+	// SgMail.setApiKey(apiKey);
+
+	// Const activationUrl = `${baseUrl}/auth/activate?token=${token}`;
+	// Const logoUrl = `${baseUrl}/assets/torontojs-logo.png`;
+	// Const emailText = `Please confirm your account by clicking the following link: ${activationUrl}`;
+	// Const emailHtmlTemplate = generateEmailHtml(activationUrl, logoUrl);
+	// Const msg = {
+	// 	To: email,
+	// 	From: senderEmail,
+	// 	Subject: '[TorontoJS] Confirm your account',
+	// 	Text: emailText,
+	// 	Html: emailHtmlTemplate
+	// };
+	// Await sgMail.send(msg);
 }

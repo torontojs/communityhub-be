@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { AccessLevel } from '../utils/auth.ts';
+import type { AccessLevel } from './auth.ts';
 
 export const SCHEMA_VERSION = 1;
 export const DEFAULT_TEAM_ID = 'b3410598-ecbc-41be-9f68-925da74bc613';
@@ -8,7 +8,9 @@ export const DBTables = {
 	PROFILE: 'profile',
 	TEAM: 'team',
 	ROLE: 'role',
-	ACCESS: 'access'
+	ACCESS: 'access',
+	PROFILE_SKILLS: 'profile_skills',
+	PROFILE_LINKS: 'profile_links'
 } as const;
 
 export const IdAndSchemaVersionSchema = z.object({
@@ -59,7 +61,7 @@ export function generateBaseDBfields() {
 }
 
 export interface AccessSchema extends IdAndSchemaVersion {
-	access_level: AccessLevel;
+	accessLevel: AccessLevel;
 	password: string;
 	email: string;
 }

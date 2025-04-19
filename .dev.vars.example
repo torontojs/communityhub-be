@@ -1,5 +1,11 @@
-# api key created in the SendGrid account
+# Api key created in the SendGrid account
+# THIS IS DEPRECATED UNTIL WE FIND ANOTHER EMAIL PROVIDER
 SENDGRID_API_KEY=
 
-# verified sender in the SendGrid account (Settings - Sender Authentication)
+# Email to use for sending confirmation and notification emails.
+# For local development, this must be set by the developer.
+#
+# If you want to tag your emails to a specific version or test,
+# Add a "+" and a string to the end of the email.
+# E.g.: email+special-test-2025-01-01@example.com
 SENDER_EMAIL=
