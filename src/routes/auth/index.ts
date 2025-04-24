@@ -108,7 +108,7 @@ authRoutes.openapi(
 		}
 
 		const userAlreadyActivated = await checkActiveEmail(context.env.Database, email);
-		if (!userAlreadyActivated) {
+		if (userAlreadyActivated) {
 			// INFO: Hide non existing emails to reduce attack surface from guessing registered emails.
 			return context.json({ message: 'Account activated successfully' } satisfies StatusResponse, StatusCodes.OKAY);
 		}

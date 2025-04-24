@@ -2,7 +2,9 @@ import type { Context } from 'hono';
 import { getCookie, setCookie } from 'hono/cookie';
 import type { CookieOptions } from 'hono/utils/cookie';
 
-const SESSION_LIFESPAN_IN_HOURS = 24;
+// eslint-disable-next-line @typescript-eslint/no-magic-numbers
+const SESSION_LIFESPAN_IN_SECONDS = 60 * 60 * 24;
+const MILISECONDS_IN_SECOND = 1000;
 const SESSION_COOKIE_NAME = 'auth_token';
 const DELETED_COOKIE_VALUE = 'DELETED';
 const DEFAULT_COOKIE_OPTIONS = {
@@ -24,12 +26,15 @@ export interface SessionData {
 	id: string;
 	email: string;
 	access: AccessLevel;
-	expiry: ISODate;
 	token: string;
 }
 
-function isSesionExpired(sessionExpiryISO: string) {
-	return new Date() > new Date(sessionExpiryISO);
+function getSessionExpiryAsDate() {
+	const now = new Date();
+
+	now.setTime(now.getTime() + SESSION_LIFESPAN_IN_SECONDS * MILISECONDS_IN_SECOND);
+
+	return now;
 }
 
 interface DeleteSessionParams {
@@ -68,18 +73,13 @@ async function extendExistingSession({
 	session,
 	context
 }: ExtendSessionParams) {
-	const tokenExpiry = new Date();
-	tokenExpiry.setHours(tokenExpiry.getHours() + SESSION_LIFESPAN_IN_HOURS);
-
-	const updatedSession: SessionData = {
-		...session,
-		expiry: tokenExpiry.toISOString()
-	};
-
 	// Update session on server
 	await context.env.SessionTokens.put(
 		sessionToken,
-		JSON.stringify(updatedSession)
+		JSON.stringify(session),
+		{
+			expirationTtl: SESSION_LIFESPAN_IN_SECONDS
+		}
 	);
 
 	// Update session on client
@@ -89,11 +89,10 @@ async function extendExistingSession({
 		sessionToken,
 		{
 			...DEFAULT_COOKIE_OPTIONS,
-			expires: tokenExpiry
+			expires: getSessionExpiryAsDate()
 		}
 	);
-
-	return updatedSession;
+	return session;
 }
 
 export async function revalidateSession(context: Context<EnvironmentBindings>) {
@@ -105,11 +104,6 @@ export async function revalidateSession(context: Context<EnvironmentBindings>) {
 	const session = await context.env.SessionTokens.get<SessionData>(sessionToken, 'json');
 	if (!session) {
 		// User has a session token but it's invalid so delete it
-		await deleteSession({ context, sessionToken });
-		return;
-	}
-
-	if (isSesionExpired(session.expiry)) {
 		await deleteSession({ context, sessionToken });
 		return;
 	}
@@ -137,8 +131,6 @@ export async function createSession({
 	context
 }: CreateSessionParams) {
 	const sessionToken = crypto.randomUUID();
-	const tokenExpiry = new Date();
-	tokenExpiry.setHours(tokenExpiry.getHours() + SESSION_LIFESPAN_IN_HOURS);
 
 	// Create session on server
 	await context.env.SessionTokens.put(
@@ -148,10 +140,12 @@ export async function createSession({
 				id,
 				email,
 				access,
-				expiry: tokenExpiry.toISOString(),
 				token: sessionToken
 			} satisfies SessionData
-		)
+		),
+		{
+			expirationTtl: SESSION_LIFESPAN_IN_SECONDS
+		}
 	);
 
 	// Send session to client
@@ -161,7 +155,7 @@ export async function createSession({
 		sessionToken,
 		{
 			...DEFAULT_COOKIE_OPTIONS,
-			expires: tokenExpiry
+			expires: getSessionExpiryAsDate()
 		}
 	);
 
