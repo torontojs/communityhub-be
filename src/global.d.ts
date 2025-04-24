@@ -11,7 +11,7 @@ interface EnvironmentBindings {
 	};
 
 	Variables: {
-		session: import('../utils/auth.ts').SessionData
+		session?: import('./utils/auth.ts').SessionData
 	};
 }
 
