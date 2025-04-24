@@ -3,7 +3,7 @@ import { getCookie, setCookie } from 'hono/cookie';
 import type { CookieOptions } from 'hono/utils/cookie';
 
 // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-const SESSION_LIFESPAN_IN_SECONDS_FROM_NOW = 60 * 60 * 24;
+const SESSION_LIFESPAN_IN_SECONDS = 60 * 60 * 24;
 const MILISECONDS_IN_SECOND = 1000;
 const SESSION_COOKIE_NAME = 'auth_token';
 const DELETED_COOKIE_VALUE = 'DELETED';
@@ -30,7 +30,11 @@ export interface SessionData {
 }
 
 function getSessionExpiryAsDate() {
-	return new Date(Date.now() + SESSION_LIFESPAN_IN_SECONDS_FROM_NOW * MILISECONDS_IN_SECOND);
+	const now = new Date();
+
+	now.setTime(now.getTime() + SESSION_LIFESPAN_IN_SECONDS * MILISECONDS_IN_SECOND);
+
+	return now;
 }
 
 interface DeleteSessionParams {
@@ -74,7 +78,7 @@ async function extendExistingSession({
 		sessionToken,
 		JSON.stringify(session),
 		{
-			expirationTtl: SESSION_LIFESPAN_IN_SECONDS_FROM_NOW
+			expirationTtl: SESSION_LIFESPAN_IN_SECONDS
 		}
 	);
 
@@ -140,7 +144,7 @@ export async function createSession({
 			} satisfies SessionData
 		),
 		{
-			expirationTtl: SESSION_LIFESPAN_IN_SECONDS_FROM_NOW
+			expirationTtl: SESSION_LIFESPAN_IN_SECONDS
 		}
 	);
 
