@@ -3,8 +3,10 @@ import { getCookie, setCookie } from 'hono/cookie';
 import type { CookieOptions } from 'hono/utils/cookie';
 
 // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-const SESSION_LIFESPAN_IN_SECONDS = 60 * 60 * 24;
-const MILISECONDS_IN_SECOND = 1000;
+const SESSION_LIFESPAN_IN_SECONDS = 60 * 60 * 24; // INFO: One day
+// eslint-disable-next-line @typescript-eslint/no-magic-numbers
+const SESSION_MAXIMUM_LIFETIME_IN_MILLISECONDS = 1000 * 60 * 60 * 24 * 7 * 2; // INFO: Two weeks
+const MILLISECONDS_IN_SECOND = 1000;
 const SESSION_COOKIE_NAME = 'auth_token';
 const DELETED_COOKIE_VALUE = 'DELETED';
 const DEFAULT_COOKIE_OPTIONS = {
@@ -27,12 +29,13 @@ export interface SessionData {
 	email: string;
 	access: AccessLevel;
 	token: string;
+	originalExpiry: string;
 }
 
 function getSessionExpiryAsDate() {
 	const now = new Date();
 
-	now.setTime(now.getTime() + SESSION_LIFESPAN_IN_SECONDS * MILISECONDS_IN_SECOND);
+	now.setTime(now.getTime() + SESSION_LIFESPAN_IN_SECONDS * MILLISECONDS_IN_SECOND);
 
 	return now;
 }
@@ -102,8 +105,18 @@ export async function revalidateSession(context: Context<EnvironmentBindings>) {
 	}
 
 	const session = await context.env.SessionTokens.get<SessionData>(sessionToken, 'json');
+
+	// User has a session token but it's invalid so delete it
 	if (!session) {
-		// User has a session token but it's invalid so delete it
+		await deleteSession({ context, sessionToken });
+		return;
+	}
+
+	const now = new Date().getTime();
+	const originalExpiryDate = new Date(session.originalExpiry).getTime();
+
+	// The session has been refreshed for longer than the maximum time limit
+	if (now - originalExpiryDate >= SESSION_MAXIMUM_LIFETIME_IN_MILLISECONDS) {
 		await deleteSession({ context, sessionToken });
 		return;
 	}
@@ -131,6 +144,7 @@ export async function createSession({
 	context
 }: CreateSessionParams) {
 	const sessionToken = crypto.randomUUID();
+	const sessionExpiryDate = getSessionExpiryAsDate();
 
 	// Create session on server
 	await context.env.SessionTokens.put(
@@ -140,7 +154,8 @@ export async function createSession({
 				id,
 				email,
 				access,
-				token: sessionToken
+				token: sessionToken,
+				originalExpiry: sessionExpiryDate.toISOString()
 			} satisfies SessionData
 		),
 		{
@@ -155,7 +170,7 @@ export async function createSession({
 		sessionToken,
 		{
 			...DEFAULT_COOKIE_OPTIONS,
-			expires: getSessionExpiryAsDate()
+			expires: sessionExpiryDate
 		}
 	);
 
