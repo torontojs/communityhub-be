@@ -1,11 +1,6 @@
 {
-	"include": [
-		"src/**/*.ts",
-		"src/types/global.d.ts"
-	],
-	"exclude": [
-		"dist/**/*"
-	],
+	"include": ["src/**/*"],
+	"exclude": ["node_modules/**/*", "dist/**/*"],
 	"compilerOptions": {
 		"allowImportingTsExtensions": true,
 		"allowJs": true,
