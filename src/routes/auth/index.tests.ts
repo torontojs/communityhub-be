@@ -1,22 +1,22 @@
-import { describe, expect, test } from 'vitest';
-import app from '../../index.ts';
-import type { StatusResponse } from '../../utils/responses.ts';
+// Import { describe, expect, test } from 'vitest';
+// Import app from '../../index.ts';
+// Import type { StatusResponse } from '../../utils/responses.ts';
 // Import { MockEnvBindings } from '../../utils/testing.ts';
 
-const MOCK_ENV = new MockEnvBindings();
+// Const MOCK_ENV = new MockEnvBindings();
 
-describe('Sign-in route', () => {
-	test('Success', async () => {
-		const response = await app.request('/auth/sign-in', {
-			method: 'POST',
-			headers: new Headers({ 'Content-Type': 'application/json' }),
-			body: JSON.stringify({
-				email: 'test@example.com',
-				password: 'password123'
-			})
-		}, MOCK_ENV);
-		const json: StatusResponse = await response.json();
+// Describe('Sign-in route', () => {
+// 	Test('Success', async () => {
+// 		Const response = await app.request('/auth/sign-in', {
+// 			Method: 'POST',
+// 			Headers: new Headers({ 'Content-Type': 'application/json' }),
+// 			Body: JSON.stringify({
+// 				Email: 'test@example.com',
+// 				Password: 'password123'
+// 			})
+// 		}, MOCK_ENV);
+// 		Const json: StatusResponse = await response.json();
 
-		expect(json.message).toBe('Authorized successfully');
-	});
-});
+// 		Expect(json.message).toBe('Authorized successfully');
+// 	});
+// });

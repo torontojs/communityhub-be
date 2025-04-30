@@ -19,7 +19,8 @@
 		"@hono/zod-openapi": "0.18.3",
 		"@sendgrid/mail": "^8.1.4",
 		"date-fns": "^4.1.0",
-		"hono": "^4.6.17"
+		"hono": "^4.6.17",
+		"miniflare": "^4.20250428.0"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.8.23",
