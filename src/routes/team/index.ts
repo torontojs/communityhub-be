@@ -2,6 +2,7 @@ import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { authMiddleware } from 'src/middleware/auth.ts';
 import { z } from 'zod';
 import { authorizeAdmin, authorizeOrganizer } from '../../middleware/access.ts';
+import { getSession } from '../../utils/auth.ts';
 import { DBTables } from '../../utils/db.ts';
 import {
 	type DataResponse,
@@ -14,7 +15,7 @@ import {
 	StatusResponseSchema
 } from '../../utils/responses.ts';
 import { IdParamSchema, validateExistingId } from '../../utils/validation.ts';
-import { deleteTeamById, getAllTeams, getTeamById, insertTeam, updateTeamById } from './data.ts';
+import { deleteTeamById, doesTeamExist, getAllTeams, getTeamById, insertTeam, updateTeamById } from './data.ts';
 import { CreateTeamSchema, TeamSchema, UpdateTeamSchema } from './validation.ts';
 
 export const teamRoutes = new OpenAPIHono<EnvironmentBindings>({
@@ -130,14 +131,15 @@ teamRoutes.openapi(
 	}),
 	async (context) => {
 		const { id } = context.req.valid('param');
+		const { id: profileId } = getSession(context);
 
-		const isTeamIdValid = await validateExistingId(context.env.Database, DBTables.TEAM, id);
+		const isTeamIdValid = await doesTeamExist(context.env.Database, id);
 
 		if (!isTeamIdValid) {
 			return context.json({ message: 'Team not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
 
-		const isDeleted = await deleteTeamById(context.env.Database, id);
+		const isDeleted = await deleteTeamById(context.env.Database, profileId, id);
 
 		if (!isDeleted) {
 			return context.json({ message: 'Team not deleted' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
@@ -171,8 +173,9 @@ teamRoutes.openapi(
 		middleware: [authMiddleware, authorizeAdmin] as const
 	}),
 	async (context) => {
+		const { id: profileId } = getSession(context);
 		const body = context.req.valid('json');
-		const { success } = await insertTeam(context.env.Database, body);
+		const { success } = await insertTeam(context.env.Database, profileId, body);
 
 		if (!success) {
 			return context.json({ message: 'Team not saved' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);

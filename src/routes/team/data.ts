@@ -1,4 +1,5 @@
 import { DBTables, generateBaseDBfields } from '../../utils/db.ts';
+import { EventLog } from '../event-log/data.ts';
 import type { CreateTeamData, Team, UpdateTeamData } from './validation.ts';
 
 export async function doesTeamExist(database: D1Database, id: string) {
@@ -10,25 +11,34 @@ export async function doesTeamExist(database: D1Database, id: string) {
 	return Boolean(existingTeam);
 }
 
-export async function insertTeam(database: D1Database, { name, description }: CreateTeamData) {
+export async function insertTeam(database: D1Database, profileId: string, { name, description }: CreateTeamData) {
 	const { id, schemaVersion, happenedAt, insertedAt } = generateBaseDBfields();
 
-	const { success } = await database.prepare(`
-		INSERT INTO ${DBTables.TEAM} (
-			id, schemaVersion, happenedAt, insertedAt,
-			name
-			${description ? ', descrition' : ''}
-		)
-		VALUES (
-			?, ?, ?, ?,
-			?
-			${description ? ', ?' : ''}
-		)
-	`)
-		.bind(id, schemaVersion, happenedAt, insertedAt, name, description)
-		.run();
+	const results = await database.batch([
+		database.prepare(`
+			INSERT INTO ${DBTables.TEAM} (
+				id, schemaVersion, happenedAt, insertedAt,
+				name
+				${description ? ', description' : ''}
+			)
+			VALUES (
+				?, ?, ?, ?,
+				?
+				${description ? ', ?' : ''}
+			)
+		`)
+			.bind(
+				id,
+				schemaVersion,
+				happenedAt,
+				insertedAt,
+				name,
+				description
+			),
+		EventLog.createTeam(database, profileId, id)
+	]);
 
-	return { success, id };
+	return { success: results.every(({ success }) => success), id };
 }
 
 export async function updateTeamById(database: D1Database, id: string, data: UpdateTeamData) {
@@ -73,19 +83,20 @@ export async function getAllTeams(database: D1Database) {
 	return results;
 }
 
-export async function deleteTeamById(database: D1Database, id: string) {
+export async function deleteTeamById(database: D1Database, profileId: string, id: string) {
 	const now = new Date().toISOString();
 
-	const { success } = await database
-		.prepare(`
+	const results = await database.batch([
+		database.prepare(`
 			UPDATE ${DBTables.TEAM}
 			SET
 				deletedAt = ?
 			WHERE
 				id = ?
 		`)
-		.bind(now, id)
-		.run();
+			.bind(now, id),
+		EventLog.closeTeam(database, profileId, id)
+	]);
 
-	return success;
+	return results.every(({ success }) => success);
 }

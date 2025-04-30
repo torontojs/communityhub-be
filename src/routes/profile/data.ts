@@ -1,4 +1,5 @@
 import { DBTables, DEFAULT_TEAM_ID, generateBaseDBfields } from '../../utils/db.ts';
+import { EventLog } from '../event-log/data.ts';
 import type { CreateProfileData, Profile, ProfileLink, ProfileSkill, UpdateProfileData } from './validation.ts';
 
 function transformProfile(profile: Profile) {
@@ -56,7 +57,7 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 				?, ?, ?, ?, ?
 			)
 		`).bind(id, schemaVersion, 'volunteer', password, email),
-
+		EventLog.joinTorontoJS(database, id),
 		database.prepare(`
 			INSERT INTO ${DBTables.ROLE} (
 				id, schemaVersion, happenedAt, insertedAt,
