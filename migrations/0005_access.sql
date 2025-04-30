@@ -10,12 +10,15 @@ CREATE TABLE IF NOT EXISTS access (
 	schemaVersion INTEGER NOT NULL DEFAULT 1,
 	-- The person's access level in the system
 	-- This determines what actions they can perform
-	access_level TEXT NOT NULL CHECK(access_level IN ('admin', 'organizer', 'volunteer')),
+	accessLevel TEXT NOT NULL CHECK(accessLevel IN ('admin', 'organizer', 'volunteer')),
 	-- The person's account password
 	password TEXT NOT NULL,
 	-- The person's email address
 	email TEXT NOT NULL UNIQUE,
 
 	PRIMARY KEY (id),
-	FOREIGN KEY (id) REFERENCES profile(id)
+	FOREIGN KEY (id) REFERENCES profile (id),
+	FOREIGN KEY (email) REFERENCES profile (email)
 );
+
+CREATE INDEX idx_access_email ON access (email);

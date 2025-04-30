@@ -1,13 +1,14 @@
+import { swaggerUI } from '@hono/swagger-ui';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import type { Context } from 'hono';
 import { cors } from 'hono/cors';
 import { ZodError } from 'zod';
 import packageJson from '../package.json';
-import { protectedAuthRoutes, publicAuthRoutes } from './routes/auth/index.ts';
+import { authRoutes } from './routes/auth/index.ts';
 import { healthCheckRoutes } from './routes/health-check/index.ts';
-import { protectedProfileRoutes, publicProfileRoutes } from './routes/profile/index.ts';
-import { protectedRolesRoutes, publicRoleRoutes } from './routes/role/index.ts';
-import { protectedTeamRoutes, publicTeamRoutes } from './routes/team/index.ts';
+import { profileRoutes } from './routes/profile/index.ts';
+import { teamMemberRoutes } from './routes/team-members/index.ts';
+import { teamRoutes } from './routes/team/index.ts';
 import { StatusCodes, statusResponseFormatter } from './utils/responses.ts';
 
 const app = new OpenAPIHono<EnvironmentBindings>({
@@ -61,20 +62,16 @@ app.doc('/open-api.json', {
 	}
 });
 
+app.get('/docs', swaggerUI({ url: '/open-api.json' }));
+
 // Handle static assets using Cloudflare Workers
-app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.env.ASSETS.fetch(context.req.raw));
+app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.env.Assets.fetch(context.req.raw));
 
-// Public routes
-app.route('/auth', publicAuthRoutes);
-app.route('/roles', publicRoleRoutes);
-app.route('/profiles', publicProfileRoutes);
-app.route('/teams', publicTeamRoutes);
-
-// Protected routes
-app.route('/health-check', healthCheckRoutes);
-app.route('/auth', protectedAuthRoutes);
-app.route('/profiles', protectedProfileRoutes);
-app.route('/teams', protectedTeamRoutes);
-app.route('/roles', protectedRolesRoutes);
+app.route('/', healthCheckRoutes);
+app.route('/auth', authRoutes);
+app.route('/profiles', profileRoutes);
+app.route('/teams', teamRoutes);
+// All routes follow the format /teams/{id}/members
+app.route('/teams', teamMemberRoutes);
 
 export default app;

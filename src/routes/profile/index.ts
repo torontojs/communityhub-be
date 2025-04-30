@@ -1,9 +1,8 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
 import { authMiddleware } from 'src/middleware/auth.ts';
 import { z } from 'zod';
-import { DBTables } from '../../constants/db.ts';
-import { canModifyProfile } from '../../middleware/canModifyProfile.ts';
-import { authorizeAdmin, authorizeOrganizer, authorizeVolunteer } from '../../middleware/createMiddleware.ts';
+import { authorizeAdmin, authorizeVolunteer } from '../../middleware/access.ts';
+import { Access, getSession } from '../../utils/auth.ts';
 import {
 	type DataResponse,
 	generateDataResponeSchema,
@@ -14,22 +13,20 @@ import {
 	statusResponseFormatter,
 	StatusResponseSchema
 } from '../../utils/responses.ts';
-import { IdParamSchema, validateExistingId } from '../../utils/validation.ts';
-import { deleteProfileById, getAllProfiles, getProfileById, insertProfile, updateProfileById, validateExistingEmail } from './data.ts';
-import { CreateProfileSchema, ProfileSchema, UpdateProfileSchema } from './validation.ts';
+import { IdParamSchema } from '../../utils/validation.ts';
+import { deleteProfileById, doesProfileExist, getAllProfiles, getProfileById, updateProfileById } from './data.ts';
+import { ProfileSchema, UpdateProfileSchema } from './validation.ts';
 
-// Public routes (GET only)
-export const publicProfileRoutes = new OpenAPIHono<EnvironmentBindings>({
+export const profileRoutes = new OpenAPIHono<EnvironmentBindings>({
 	defaultHook: statusResponseFormatter
 });
 
-// GET all profiles
-publicProfileRoutes.openapi(
+profileRoutes.openapi(
 	createRoute({
 		method: 'get',
 		path: '/',
-		operationId: 'getProfiles',
-		summary: 'Get profiles',
+		operationId: 'List profiles',
+		summary: 'List profiles',
 		description: 'Retrieves a list of profiles',
 		tags: ['Profile'],
 		responses: {
@@ -40,7 +37,7 @@ publicProfileRoutes.openapi(
 		}
 	}),
 	async (context) => {
-		const profiles = await getAllProfiles(context.env.database);
+		const profiles = await getAllProfiles(context.env.Database);
 
 		return context.json(
 			{
@@ -62,12 +59,11 @@ publicProfileRoutes.openapi(
 	}
 );
 
-// GET profile by ID
-publicProfileRoutes.openapi(
+profileRoutes.openapi(
 	createRoute({
 		method: 'get',
 		path: '/{id}',
-		operationId: 'getProfile',
+		operationId: 'Get profile',
 		summary: 'Get profile by ID',
 		description: "Retrieves a single profile based on it's id.",
 		tags: ['Profile'],
@@ -88,7 +84,7 @@ publicProfileRoutes.openapi(
 	async (context) => {
 		const { id } = context.req.valid('param');
 
-		const profile = await getProfileById(context.env.database, id);
+		const profile = await getProfileById(context.env.Database, id);
 
 		if (!profile) {
 			return context.json({ message: 'Profile not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
@@ -98,64 +94,11 @@ publicProfileRoutes.openapi(
 	}
 );
 
-// Protected routes (POST, PATCH, DELETE)
-export const protectedProfileRoutes = new OpenAPIHono<EnvironmentBindings>({
-	defaultHook: statusResponseFormatter
-});
-
-// POST new profile
-protectedProfileRoutes.openapi(
-	createRoute({
-		method: 'post',
-		path: '/',
-		operationId: 'createNewProfile',
-		summary: 'Create new profile',
-		description: 'Add a new profile to the VMS including basic information about this person.',
-		tags: ['Profile'],
-		request: {
-			body: { content: { 'application/json': { schema: CreateProfileSchema } }, required: true }
-		},
-		responses: {
-			[StatusCodes.CREATED]: {
-				description: 'Successful response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			},
-			[StatusCodes.BAD_REQUEST]: {
-				description: 'Error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			},
-			[StatusCodes.INTERNAL_SERVER_ERROR]: {
-				description: 'Server Error response',
-				content: { 'application/json': { schema: StatusResponseSchema } }
-			}
-		},
-		middleware: [authMiddleware, authorizeOrganizer] as const
-	}),
-	async (context) => {
-		const body = context.req.valid('json');
-
-		const isEmailExisting = await validateExistingEmail(context.env.database, body.email);
-
-		if (isEmailExisting) {
-			return context.json({ message: 'Email already exists' } satisfies StatusResponse, StatusCodes.BAD_REQUEST);
-		}
-
-		const { success } = await insertProfile(context.env.database, body);
-
-		if (!success) {
-			return context.json({ message: 'Profile not created' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
-		}
-
-		return context.json({ message: 'Profile created successfully' } satisfies StatusResponse, StatusCodes.CREATED);
-	}
-);
-
-// PATCH profile
-protectedProfileRoutes.openapi(
+profileRoutes.openapi(
 	createRoute({
 		method: 'patch',
 		path: '/{id}',
-		operationId: 'updateProfile',
+		operationId: 'Update Profile',
 		summary: 'Update existing profile',
 		description: "Update information for an existing profile based on it's id.",
 		tags: ['Profile'],
@@ -175,21 +118,30 @@ protectedProfileRoutes.openapi(
 			[StatusCodes.INTERNAL_SERVER_ERROR]: {
 				description: 'Server Error response',
 				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.FORBIDDEN]: {
+				description: 'Users can only edit their own profiles.',
+				content: { 'application/json': { schema: StatusResponseSchema } }
 			}
 		},
-		middleware: [authMiddleware, authorizeVolunteer, canModifyProfile] as const
+		middleware: [authMiddleware, authorizeVolunteer] as const
 	}),
 	async (context) => {
 		const { id } = context.req.valid('param');
-		const body = context.req.valid('json');
+		const session = getSession(context);
 
-		const isProfileIdValid = await validateExistingId(context.env.database, DBTables.PROFILE, id);
-
-		if (!isProfileIdValid) {
-			return context.json({ message: 'Profile not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
+		// For volunteers, only allow if it's their own profile
+		if (session.id !== id && session.access !== Access.ADMIN) {
+			return context.json({ message: 'Can only modify own profile' }, StatusCodes.FORBIDDEN);
 		}
 
-		const isUpdated = await updateProfileById(context.env.database, id, body);
+		const isProfileIdValid = await doesProfileExist(context.env.Database, id);
+		if (!isProfileIdValid) {
+			return context.json({ message: 'Profile does not exist' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
+		}
+
+		const body = context.req.valid('json');
+		const isUpdated = await updateProfileById(context.env.Database, id, body);
 
 		if (!isUpdated) {
 			return context.json({ message: 'Profile not updated' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
@@ -199,12 +151,11 @@ protectedProfileRoutes.openapi(
 	}
 );
 
-// DELETE profile
-protectedProfileRoutes.openapi(
+profileRoutes.openapi(
 	createRoute({
 		method: 'delete',
 		path: '/{id}',
-		operationId: 'deleteProfile',
+		operationId: 'Delete Profile',
 		summary: 'Delete profile by ID',
 		description: "Deletes a single profile based on it's id",
 		tags: ['Profile'],
@@ -230,13 +181,12 @@ protectedProfileRoutes.openapi(
 	async (context) => {
 		const { id } = context.req.valid('param');
 
-		const isProfileIdValid = await validateExistingId(context.env.database, DBTables.PROFILE, id);
-
+		const isProfileIdValid = await doesProfileExist(context.env.Database, id);
 		if (!isProfileIdValid) {
-			return context.json({ message: 'Profile not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
+			return context.json({ message: 'Profile does not exist' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
 		}
 
-		const isDeleted = await deleteProfileById(context.env.database, id);
+		const isDeleted = await deleteProfileById(context.env.Database, id);
 
 		if (!isDeleted) {
 			return context.json({ message: 'Profile not deleted' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);

@@ -31,10 +31,8 @@ CREATE TABLE IF NOT EXISTS profile (
 	-- The person's birthday, saved as month and day only
 	-- In the format: MM-DD
 	birthday TEXT,
-	-- The user avatar reference,
+	-- The user avatar url for the user.
 	avatar TEXT,
-	-- The avatar may be a url, or an id for a file hosted on the platform
-	avatarSource TEXT DEFAULT 'id' CHECK(avatarSource IS NULL OR avatarSource IN ('id', 'url')),
 	-- The date this person has joined Toronto JS, saved as an ISO timestamp
 	happenedAt DATETIME NOT NULL,
 	-- The date this profile was added to the database, saved as an ISO timestamp
@@ -53,12 +51,14 @@ CREATE TABLE IF NOT EXISTS profile (
 	--
 	-- In the future, we may use this flag as a potential "ban list" for spammers and similar situations.
 	-- If a person thinks it was mistakenly flagged as spam, then contatcing one of the organizers should resolve the issue.
-	deactivatedAt DATETIME DEFAULT NULL,
+	deletedAt DATETIME DEFAULT NULL,
 	-- When a profile is deactivated, this fields enables us to keep notes for other organizers in a future moment.
-	deactivatedReason TEXT DEFAULT NULL,
+	deletedReason TEXT DEFAULT NULL,
 
 	PRIMARY KEY (id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_profile_email ON profile (email);
 
 DROP TABLE IF EXISTS profile_links;
 
@@ -66,13 +66,15 @@ CREATE TABLE IF NOT EXISTS profile_links (
 	-- The UUID of the link, stored as text
 	id TEXT NOT NULL UNIQUE COLLATE BINARY,
 	-- The UUID of the profile this link belongs to
-	profile_id TEXT NOT NULL,
+	profileId TEXT NOT NULL,
 	-- The URL of the link
 	url TEXT NOT NULL,
 
 	PRIMARY KEY (id),
-	FOREIGN KEY (profile_id) REFERENCES profile(id)
+	FOREIGN KEY (profileId) REFERENCES profile(id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_links_profileId ON profile_links (profileId);
 
 DROP TABLE IF EXISTS profile_skills;
 
@@ -80,10 +82,12 @@ CREATE TABLE IF NOT EXISTS profile_skills (
 	-- The UUID of the skill, stored as text
 	id TEXT NOT NULL UNIQUE COLLATE BINARY,
 	-- The UUID of the profile this skill belongs to
-	profile_id TEXT NOT NULL,
+	profileId TEXT NOT NULL,
 	-- The name of the skill
-	skill_name TEXT NOT NULL,
+	skill TEXT NOT NULL,
 
 	PRIMARY KEY (id),
-	FOREIGN KEY (profile_id) REFERENCES profile(id)
+	FOREIGN KEY (profileId) REFERENCES profile(id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_skills_profileId ON profile_skills (profileId);

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { DBTables } from '../constants/db.ts';
+import type { DBTables } from './db.ts';
 
 export const IdParamSchema = z.object({
 	id: z.string().uuid('Invalid ID format')
@@ -7,7 +7,7 @@ export const IdParamSchema = z.object({
 
 export type IdParam = z.infer<typeof IdParamSchema>;
 
-export async function validateExistingId(database: D1Database, table: DBTables, id: string) {
+export async function validateExistingId(database: D1Database, table: typeof DBTables[keyof typeof DBTables], id: string) {
 	try {
 		const { id: existingId } = await database
 			.prepare(`SELECT id FROM ${table} WHERE id = ? LIMIT 1`)

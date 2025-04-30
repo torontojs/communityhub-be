@@ -8,8 +8,8 @@ const rules = {
 	'array-callback-return': 'error',
 	'arrow-body-style': 'error',
 	'block-scoped-var': 'warn',
-	'camelcase': 'warn',
-	'capitalized-comments': 'warn',
+	'camelcase': ['warn', { allow: ['required_error|invalid_type_error'] }],
+	'capitalized-comments': ['warn', 'always', { ignorePattern: 'dprint' }],
 	'class-methods-use-this': 'off',
 	'complexity': 'error',
 	'consistent-return': 'off',
@@ -37,7 +37,6 @@ const rules = {
 	}],
 	'id-match': 'off',
 	'init-declarations': 'off',
-	'line-comment-position': ['error', { position: 'above' }],
 	'logical-assignment-operators': ['error', 'always', { enforceForIfStatements: true }],
 	'max-classes-per-file': 'off',
 	'max-depth': 'warn',
@@ -94,7 +93,7 @@ const rules = {
 	'no-implicit-globals': 'warn',
 	'no-implied-eval': 'off',
 	'no-import-assign': 'error',
-	'no-inline-comments': ['warn', { ignorePattern: '(?:@vite-ignore|@ts-expect-error).+' }],
+	'no-inline-comments': ['warn', { ignorePattern: '@vite-ignore|@ts-expect-error|dprint|INFO' }],
 	'no-inner-declarations': ['error', 'both'],
 	'no-invalid-regexp': 'error',
 	'no-invalid-this': 'off',
@@ -249,7 +248,7 @@ const rules = {
 		leadingUnderscore: 'allow',
 		trailingUnderscore: 'forbid',
 		filter: {
-			regex: '^(_id|__v|_links)$',
+			regex: '(?:^(_id|__v|_links)$)|(?:_id$)',
 			match: false
 		}
 	}, {
@@ -263,7 +262,7 @@ const rules = {
 		leadingUnderscore: 'forbid',
 		trailingUnderscore: 'forbid',
 		filter: {
-			regex: '^(_id|__v|_links)$',
+			regex: '(?:^(_id|__v|_links)$)|(?:_id$)',
 			match: false
 		}
 	}, {
@@ -283,7 +282,7 @@ const rules = {
 		leadingUnderscore: 'forbid',
 		trailingUnderscore: 'forbid',
 		filter: {
-			regex: '^(_id|__v|_links)$',
+			regex: '(?:^(_id|__v|_links)$)|(?:_id$)',
 			match: false
 		}
 	}, {
@@ -292,7 +291,7 @@ const rules = {
 		leadingUnderscore: 'forbid',
 		trailingUnderscore: 'forbid',
 		filter: {
-			regex: '^(_id|__v|_links)$',
+			regex: '(?:^(_id|__v|_links)$)|(?:_id$)',
 			match: false
 		}
 	}, {

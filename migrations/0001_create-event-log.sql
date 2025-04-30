@@ -28,3 +28,8 @@ CREATE TABLE IF NOT EXISTS event_log (
 
 	PRIMARY KEY (id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_event_log_subject ON event_log (subject);
+CREATE INDEX IF NOT EXISTS idx_event_log_verb ON event_log (verb);
+CREATE INDEX IF NOT EXISTS idx_event_log_object ON event_log (object);
+CREATE INDEX IF NOT EXISTS idx_event_log_svo ON event_log (subject, verb, object);
