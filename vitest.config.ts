@@ -5,11 +5,11 @@ export default defineWorkersConfig({
 		poolOptions: {
 			workers: {
 				wrangler: {
-					configPath: './wrangler.toml' // Automatically reads your bindings
+					configPath: './wrangler.toml'
 				},
 				miniflare: {
-					d1Persist: true, // Optional persistence
-					kvPersist: true // Optional persistence
+					d1Persist: './.wrangler/state/d1',
+					kvPersist: './.wrangler/state/kv'
 				}
 			}
 		}

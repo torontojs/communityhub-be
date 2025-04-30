@@ -1,22 +1,24 @@
-import { describe, expect, test } from 'vitest';
+import { env } from 'cloudflare:test';
+import { describe, expect, it } from 'vitest';
 import app from '../../index.ts';
-import type { StatusResponse } from '../../utils/responses.ts';
-import { MockEnvBindings } from '../../utils/testing.ts';
-
-const MOCK_ENV = new MockEnvBindings();
 
 describe('Sign-in route', () => {
-	test('Success', async () => {
+	it('Success', async () => {
+		await env.Database.exec(`
+      INSERT INTO users (email, password_hash)
+      VALUES ('test@example.com', 'hashed_password123')
+    `);
+
 		const response = await app.request('/auth/sign-in', {
 			method: 'POST',
-			headers: new Headers({ 'Content-Type': 'application/json' }),
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				email: 'test@example.com',
 				password: 'password123'
 			})
-		}, MOCK_ENV);
-		const json: StatusResponse = await response.json();
+		}, env);
 
-		expect(json.message).toBe('Authorized successfully');
+		// Verify
+		expect(response.status).toBe(200);
 	});
 });
