@@ -21,6 +21,7 @@
 		"hono": "^4.7.6"
 	},
 	"devDependencies": {
+		"@cloudflare/vitest-pool-workers": "^0.8.23",
 		"@cloudflare/workers-types": "^4.20250412.0",
 		"@types/node": "^22.14.1",
 		"@typescript-eslint/eslint-plugin": "8.29.1",
@@ -30,7 +31,7 @@
 		"globals": "16.0.0",
 		"husky": "9.1.7",
 		"typescript": "5.8.3",
-		"vitest": "^3.1.1",
+		"vitest": "^3.1.2",
 		"wrangler": "^4.10.0",
 		"zod": "^3.24.2"
 	},

@@ -1,19 +1,16 @@
-import { defineConfig } from 'vitest/config';
+import { defineWorkersConfig } from '@cloudflare/vitest-pool-workers/config';
 
-export default defineConfig({
+export default defineWorkersConfig({
 	test: {
-		environment: 'miniflare',
-		globals: true,
-		include: ['src/**/*.test.ts'],
-		environmentOptions: {
-			kvNamespaces: ['SESSION_TOKENS', 'ACTIVATION_TOKENS'],
-			d1Databases: {
-				database: { path: './test-d1.sqlite' }
-			},
-			vars: {
-				NODE_ENV: 'local',
-				NODE_VERSION: '22.12.0',
-				BASE_URL: 'http://localhost:8787'
+		poolOptions: {
+			workers: {
+				wrangler: {
+					configPath: './wrangler.toml' // Automatically reads your bindings
+				},
+				miniflare: {
+					d1Persist: true, // Optional persistence
+					kvPersist: true // Optional persistence
+				}
 			}
 		}
 	}
