@@ -1,16 +1,11 @@
 import type { Context, Next } from 'hono';
-import {
-	getSession
-} from 'src/utils/auth.ts';
+import { revalidateSession } from 'src/utils/auth.ts';
 import { StatusCodes } from '../utils/responses.ts';
 
-export const authMiddleware = async (context: Context, next: Next) => {
-	const session = await getSession(context);
-
-	const invalidSessionResponse = { message: 'Invalid session' };
-
+export const authMiddleware = async (context: Context<EnvironmentBindings>, next: Next) => {
+	const session = await revalidateSession(context);
 	if (!session) {
-		return context.json(invalidSessionResponse, StatusCodes.UNAUTHORIZED);
+		return context.json({ message: 'Invalid session' }, StatusCodes.UNAUTHORIZED);
 	}
 
 	context.set('session', session);

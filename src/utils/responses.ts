@@ -202,7 +202,10 @@ export const StatusCodes = {
 export const StatusResponseSchema = z.object({
 	message: z.string()
 		.describe('A message reporting the status of the operation.'),
-	errors: z.record(z.string(), z.array(z.string()))
+	warnings: z.array(z.record(z.string(), z.string()))
+		.optional()
+		.describe('A warning message regarding the status of the operation.'),
+	errors: z.array(z.record(z.string(), z.string()))
 		.optional()
 		.describe('An object where the keys are the fields and the values are a list of errors for each field')
 }).describe('Response for an operation status, it does not include data, only a message and potential validation errors.');
@@ -297,14 +300,3 @@ export function generatePaginatedResponseSchema<T extends unknown[]>(data: ZodTy
 }
 
 export type PaginatedResponse<T extends unknown[]> = z.infer<ReturnType<typeof generatePaginatedResponseSchema<T>>>;
-
-export const HeartbeatResponseSchema = z.object({
-	access: z.string()
-		.describe('Acces level.'),
-	name: z.string()
-		.describe('Name of the user.'),
-	avatar: z.string()
-		.describe('URL where avatar located.')
-}).describe('Response for an operation status, it does not include data, only a message and potential validation errors.');
-
-export type HeartbeatResponse = z.infer<typeof HeartbeatResponseSchema>;
