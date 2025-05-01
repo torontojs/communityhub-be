@@ -103,3 +103,10 @@ INSERT INTO access (id, accessLevel, password, email)
 VALUES
 ('3227114d-43c4-42ed-8aea-f3860fe42222', 'volunteer', 'hashed_password_1', 'profile1@example.com'),
 ('aa7e8915-8034-43d9-b910-a2e3ebdb947f', 'organizer', 'hashed_password_2', 'profile2@example.com');
+
+UPDATE profile SET activatedAt = CASE id
+	WHEN 'e1f2a3b4-c5d6-2345-6789-123456789010' THEN '2025-02-02T04:10:00Z'
+	WHEN 'f2a3b4c5-d6e7-3456-7890-234567890120' THEN '2025-02-02T04:35:00Z'
+	WHEN 'a3b4c5d6-e7f8-4567-8901-345678901230' THEN '2025-02-02T05:03:00Z'
+END
+WHERE id IN ('e1f2a3b4-c5d6-2345-6789-123456789010', 'f2a3b4c5-d6e7-3456-7890-234567890120', 'a3b4c5d6-e7f8-4567-8901-345678901230');
