@@ -17,8 +17,7 @@ export const EnvSchema = z.object({
 	SENDER_EMAIL: z
 		.string({ message: 'Required for emails to be sent.' })
 		.email({ message: 'Must be a valid email address.' }),
-	/** @deprecated */
-	SENDGRID_API_KEY: z
+	RESEND_API_KEY: z
 		.string({ message: 'Required for emails to be sent.' })
 		.min(1, { message: 'Required for emails to be sent.' }),
 	NODE_ENV: NodeEnvSchema
