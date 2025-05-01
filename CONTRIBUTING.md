@@ -66,7 +66,7 @@ Our editor of choice is Visual Studio Code (VS Code), it is not required for wor
    ```
 4. Set up SendGrid secrets
 
-- Copy the API Key and paste it in the `.dev.vars` file under the `SENDGRID_API_KEY` variable.
+- Copy the API Key and paste it in the `.dev.vars` file under the `RESEND_API_KEY` variable.
 - Also, in the `.dev.vars` file, update the `SENDER_EMAIL` variable to be the email you used for your SendGrid account.
 
 5. Run migrations to create your tables and seed the database with some initial data.
