@@ -1,3 +1,5 @@
+import { Resend } from 'resend';
+
 interface AccountConfirmationEmailParams {
 	baseUrl: string;
 	token: string;
@@ -7,32 +9,31 @@ interface AccountConfirmationEmailParams {
 }
 
 export async function sendAccountConfirmationEmail({
-	baseUrl: _baseUrl,
+	baseUrl,
 	token,
 	email,
-	apiKey: _apiKey,
-	senderEmail: _senderEmail
+	apiKey,
+	senderEmail
 }: AccountConfirmationEmailParams) {
+	const resend = new Resend(apiKey);
+	const activationUrl = `${baseUrl}/auth/activate?token=${token}`;
+
+	const emailResponse = await resend.emails.send({
+		from: senderEmail,
+		to: email,
+		subject: '[TorontoJS] Confirm your account',
+		text: `You are now one of us!\n\nPlease activate your account by visiting: ${activationUrl}`,
+		html: `
+			<h2>You are now one of us!</h2>
+			<p>Please activate your account by visiting the link below</p>
+			<p><a href="${activationUrl}">${activationUrl}</a></p>
+		`
+	});
+
 	console.log({
 		email,
 		token
 	});
 
-	return Promise.resolve(undefined);
-
-	// TODO: update email service
-	// SgMail.setApiKey(apiKey);
-
-	// Const activationUrl = `${baseUrl}/auth/activate?token=${token}`;
-	// Const logoUrl = `${baseUrl}/assets/torontojs-logo.png`;
-	// Const emailText = `Please confirm your account by clicking the following link: ${activationUrl}`;
-	// Const emailHtmlTemplate = generateEmailHtml(activationUrl, logoUrl);
-	// Const msg = {
-	// 	To: email,
-	// 	From: senderEmail,
-	// 	Subject: '[TorontoJS] Confirm your account',
-	// 	Text: emailText,
-	// 	Html: emailHtmlTemplate
-	// };
-	// Await sgMail.send(msg);
+	return emailResponse;
 }

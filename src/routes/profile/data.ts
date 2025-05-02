@@ -29,7 +29,8 @@ export async function doesProfileExist(database: D1Database, id: string) {
 }
 
 export async function insertProfile(database: D1Database, { email, name, password }: CreateProfileData) {
-	const { id, schemaVersion, happenedAt, insertedAt } = generateBaseDBfields();
+	const { id: profileId, schemaVersion, happenedAt, insertedAt } = generateBaseDBfields();
+	const { id: roleId } = generateBaseDBfields();
 
 	const results = await database.batch([
 		database.prepare(`
@@ -42,7 +43,7 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 				?, ?
 			)
 		`).bind(
-			id,
+			profileId,
 			schemaVersion,
 			happenedAt,
 			insertedAt,
@@ -56,8 +57,8 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 			VALUES (
 				?, ?, ?, ?, ?
 			)
-		`).bind(id, schemaVersion, 'volunteer', password, email),
-		EventLog.joinTorontoJS(database, id),
+		`).bind(profileId, schemaVersion, 'volunteer', password, email),
+		EventLog.joinTorontoJS(database, profileId),
 		database.prepare(`
 			INSERT INTO ${DBTables.ROLE} (
 				id, schemaVersion, happenedAt, insertedAt,
@@ -68,18 +69,18 @@ export async function insertProfile(database: D1Database, { email, name, passwor
 				?, ?, ?, ?
 			)
 		`).bind(
-			id,
+			roleId,
 			schemaVersion,
 			happenedAt,
 			insertedAt,
 			'volunteer',
 			'Volunteer at Toronto JS',
 			DEFAULT_TEAM_ID,
-			id
+			profileId
 		)
 	]);
 
-	return { success: results.every(({ success }) => success), id };
+	return { success: results.every(({ success }) => success), id: profileId };
 }
 
 export async function updateProfileById(

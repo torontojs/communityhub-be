@@ -9,7 +9,7 @@ const rules = {
 	'arrow-body-style': 'error',
 	'block-scoped-var': 'warn',
 	'camelcase': ['warn', { allow: ['required_error|invalid_type_error'] }],
-	'capitalized-comments': ['warn', 'always', { ignorePattern: 'dprint' }],
+	'capitalized-comments': 'off',
 	'class-methods-use-this': 'off',
 	'complexity': 'error',
 	'consistent-return': 'off',

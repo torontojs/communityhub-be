@@ -55,7 +55,7 @@ authRoutes.openapi(
 		);
 
 		await sendAccountConfirmationEmail({
-			apiKey: context.env.SENDGRID_API_KEY,
+			apiKey: context.env.RESEND_API_KEY,
 			baseUrl: context.env.BASE_URL,
 			senderEmail: context.env.SENDER_EMAIL,
 			token,

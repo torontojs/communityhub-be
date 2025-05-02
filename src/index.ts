@@ -47,7 +47,7 @@ app.doc('/open-api.json', {
 			description: 'Production server.'
 		},
 		{
-			url: 'http://localhost:8787/',
+			url: 'http://localhost:4242/',
 			description: 'Local server for development.'
 		}
 	],

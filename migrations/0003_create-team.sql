@@ -20,3 +20,6 @@ CREATE TABLE IF NOT EXISTS team (
 
 	PRIMARY KEY (id)
 );
+
+INSERT INTO team (id, name, description, happenedAt, insertedAt)
+VALUES ('b3410598-ecbc-41be-9f68-925da74bc613', 'TorontoJS', 'This is Toronto JS main team, it represents the organization itself.', '2025-01-20T10:00:00Z', '2025-01-20T10:00:00Z');

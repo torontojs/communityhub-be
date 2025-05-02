@@ -1,6 +1,6 @@
-# Api key created in the SendGrid account
-# THIS IS DEPRECATED UNTIL WE FIND ANOTHER EMAIL PROVIDER
-SENDGRID_API_KEY=
+# Api key created in the Resend account
+# This is used for sending emails
+RESEND_API_KEY=
 
 # Email to use for sending confirmation and notification emails.
 # For local development, this must be set by the developer.
