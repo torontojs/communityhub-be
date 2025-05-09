@@ -14,7 +14,7 @@
 		"lint:js": "eslint",
 		"lint": "npm run typecheck && npm run lint:js",
 		"db:setup": "wrangler d1 migrations apply vms-local --local --persist-to=.wrangler/state",
-		"db:seed": "wrangler d1 execute vms-local --local --persist-to=.wrangler/state --file=./seeds/seed-data.sql"
+		"db:seed": "wrangler d1 execute vms-local --local --persist-to=.wrangler/state --file=./seeds/seed-data-that-works.sql"
 	},
 	"dependencies": {
 		"@hono/swagger-ui": "0.5.1",
@@ -23,7 +23,6 @@
 		"resend": "^4.5.0"
 	},
 	"devDependencies": {
-		"@cloudflare/vitest-pool-workers": "^0.8.23",
 		"@cloudflare/workers-types": "^4.20250430.0",
 		"@types/node": "^22.14.1",
 		"@typescript-eslint/eslint-plugin": "8.29.1",
@@ -33,7 +32,6 @@
 		"globals": "16.0.0",
 		"husky": "9.1.7",
 		"typescript": "5.8.3",
-		"vitest": "^3.1.2",
 		"wrangler": "^4.10.0",
 		"zod": "^3.24.2"
 	},
