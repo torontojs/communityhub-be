@@ -12,6 +12,7 @@
 		"typecheck": "tsc --noEmit",
 		"lint:js": "eslint",
 		"lint": "npm run typecheck && npm run lint:js",
+		"test": "vitest",
 		"db:setup": "wrangler d1 migrations apply vms-local --local --persist-to=.wrangler/state",
 		"db:seed": "wrangler d1 execute vms-local --local --persist-to=.wrangler/state --file=./seeds/seed-data.sql"
 	},
