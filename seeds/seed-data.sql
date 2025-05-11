@@ -55,7 +55,7 @@ VALUES
 
 INSERT INTO team (id, name, description, happenedAt, insertedAt)
 VALUES
-('b3410598-ecbc-41be-9f68-925da74bc613', 'TorontoJS', 'This is a default team', '2025-01-20T10:00:00Z', '2025-01-20T10:00:00Z'),
+-- ('b3410598-ecbc-41be-9f68-925da74bc613', 'TorontoJS', 'This is a default team', '2025-01-20T10:00:00Z', '2025-01-20T10:00:00Z'), // Added in migrations
 ('9a633d13-8095-48a8-9bf1-08ea40f5faa0', 'Team A', 'This is team A', '2025-01-20T10:00:00Z', '2025-01-20T10:00:00Z'),
 ('fc596eaf-896d-4247-a880-92ec5019d4bd', 'Team B', 'This is team B', '2025-01-20T11:00:00Z', '2025-01-20T11:00:00Z');
 
@@ -99,14 +99,26 @@ VALUES
 ('eda2a43f-ef85-4de6-a6dc-7cee0d9d4af7', '3227114d-43c4-42ed-8aea-f3860fe42222', 'profile', 'created', '9a633d13-8095-48a8-9bf1-08ea40f5faa0', 'team', '2025-01-20T10:00:00Z', '2025-01-20T10:00:00Z'),
 ('0c27ba8d-d5b8-4dad-ae0f-70cfda5429a0', 'aa7e8915-8034-43d9-b910-a2e3ebdb947f', 'profile', 'assigned', '3ad040f0-2d52-43d1-a1d7-54d9560453d5', 'role', '2025-01-20T11:00:00Z', '2025-01-20T11:00:00Z');
 
+-- The following profiles are activated in the respective order
+-- 1. profile1@example.com
+-- 2. profile2@example.com
+-- 3. user41@example.com
+-- 4. user42@example.com
+-- 5. user43@example.com
+-- They all use the password 'abcd' that translates to the password hashes used below
 INSERT INTO access (id, accessLevel, password, email)
 VALUES
-('3227114d-43c4-42ed-8aea-f3860fe42222', 'volunteer', 'hashed_password_1', 'profile1@example.com'),
-('aa7e8915-8034-43d9-b910-a2e3ebdb947f', 'organizer', 'hashed_password_2', 'profile2@example.com');
+('3227114d-43c4-42ed-8aea-f3860fe42222', 'volunteer', '1shhkNv9H2WqpMfYb39FdQ==:VeEvXdAosVYB3eX/yw4UHnpHBkoOWQvOIEELto1RFxkreGtJE4+U3LD+0TVgqXnMQDSbc+hH1gIuQetfysi9cw==', 'profile1@example.com'),
+('aa7e8915-8034-43d9-b910-a2e3ebdb947f', 'organizer', 'MGAmHV1tmkrtgrVRMwGC9Q==:1glo6UGrlXuhYD73SL4yGnGFSdoRzR3bl8X6H+a3kHgGNFEgkrk+/b7ob6V/XfIQ2+AalGvbpdY26IIMeXcnZA==', 'profile2@example.com'),
+('e1f2a3b4-c5d6-2345-6789-123456789010', 'volunteer', 'MGAmHV1tmkrtgrVRMwGC9Q==:1glo6UGrlXuhYD73SL4yGnGFSdoRzR3bl8X6H+a3kHgGNFEgkrk+/b7ob6V/XfIQ2+AalGvbpdY26IIMeXcnZA==', 'user41@example.com'),
+('f2a3b4c5-d6e7-3456-7890-234567890120', 'volunteer', 'MGAmHV1tmkrtgrVRMwGC9Q==:1glo6UGrlXuhYD73SL4yGnGFSdoRzR3bl8X6H+a3kHgGNFEgkrk+/b7ob6V/XfIQ2+AalGvbpdY26IIMeXcnZA==', 'user42@example.com'),
+('a3b4c5d6-e7f8-4567-8901-345678901230', 'volunteer', 'MGAmHV1tmkrtgrVRMwGC9Q==:1glo6UGrlXuhYD73SL4yGnGFSdoRzR3bl8X6H+a3kHgGNFEgkrk+/b7ob6V/XfIQ2+AalGvbpdY26IIMeXcnZA==', 'user43@example.com');
 
 UPDATE profile SET activatedAt = CASE id
+	WHEN '3227114d-43c4-42ed-8aea-f3860fe42222' THEN '2025-01-20T10:05:00Z'
+	WHEN 'aa7e8915-8034-43d9-b910-a2e3ebdb947f' THEN '2025-01-20T11:10:00Z'
 	WHEN 'e1f2a3b4-c5d6-2345-6789-123456789010' THEN '2025-02-02T04:10:00Z'
 	WHEN 'f2a3b4c5-d6e7-3456-7890-234567890120' THEN '2025-02-02T04:35:00Z'
 	WHEN 'a3b4c5d6-e7f8-4567-8901-345678901230' THEN '2025-02-02T05:03:00Z'
 END
-WHERE id IN ('e1f2a3b4-c5d6-2345-6789-123456789010', 'f2a3b4c5-d6e7-3456-7890-234567890120', 'a3b4c5d6-e7f8-4567-8901-345678901230');
+WHERE id IN ('3227114d-43c4-42ed-8aea-f3860fe42222', 'aa7e8915-8034-43d9-b910-a2e3ebdb947f', 'e1f2a3b4-c5d6-2345-6789-123456789010', 'f2a3b4c5-d6e7-3456-7890-234567890120', 'a3b4c5d6-e7f8-4567-8901-345678901230');
