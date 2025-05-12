@@ -54,9 +54,8 @@ authRoutes.openapi(
 			{ expirationTtl: TEN_MINUTES_IN_SECONDS }
 		);
 
-		await sendAccountConfirmationEmail({
+		await sendAccountConfirmationEmail(context, {
 			apiKey: context.env.RESEND_API_KEY,
-			baseUrl: context.env.BASE_URL,
 			senderEmail: context.env.SENDER_EMAIL,
 			token,
 			email

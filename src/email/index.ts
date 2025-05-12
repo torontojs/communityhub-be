@@ -1,14 +1,6 @@
 import type { Context } from 'hono';
 import { type CreateEmailResponse, Resend } from 'resend';
 
-interface AccountConfirmationEmailParams {
-	baseUrl: string;
-	token: string;
-	email: string;
-	apiKey: string;
-	senderEmail: string;
-}
-
 interface EmailSendingParams {
 	apiKey: string;
 	from: string;
@@ -37,14 +29,20 @@ async function sendEmail(context: Context<{ Bindings: Env }>, { apiKey, from, to
 	return emailResponse;
 }
 
+interface AccountConfirmationEmailParams {
+	token: string;
+	email: string;
+	apiKey: string;
+	senderEmail: string;
+}
+
 export async function sendAccountConfirmationEmail(context: Context, {
-	baseUrl,
 	token,
 	email,
 	apiKey,
 	senderEmail
 }: AccountConfirmationEmailParams) {
-	const activationUrl = `${baseUrl}/auth/activate?token=${token}`;
+	const activationUrl = new URL(`/auth/activate?token=${token}`, context.req.url).toString();
 
 	return sendEmail(context, {
 		apiKey,
