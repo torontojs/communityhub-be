@@ -55,7 +55,6 @@ VALUES
 
 INSERT INTO team (id, name, description, happenedAt, insertedAt)
 VALUES
--- ('b3410598-ecbc-41be-9f68-925da74bc613', 'TorontoJS', 'This is a default team', '2025-01-20T10:00:00Z', '2025-01-20T10:00:00Z'), // Added in migrations
 ('9a633d13-8095-48a8-9bf1-08ea40f5faa0', 'Team A', 'This is team A', '2025-01-20T10:00:00Z', '2025-01-20T10:00:00Z'),
 ('fc596eaf-896d-4247-a880-92ec5019d4bd', 'Team B', 'This is team B', '2025-01-20T11:00:00Z', '2025-01-20T11:00:00Z');
 
