@@ -1,9 +1,8 @@
 import { swaggerUI } from '@hono/swagger-ui';
 import { OpenAPIHono } from '@hono/zod-openapi';
-import type { Context } from 'hono';
 import { cors } from 'hono/cors';
 import { ZodError } from 'zod';
-import packageJson from '../package.json';
+import packageJson from '../package.json' with { type: 'json' };
 import { authRoutes } from './routes/auth/index.ts';
 import { healthCheckRoutes } from './routes/health-check/index.ts';
 import { profileRoutes } from './routes/profile/index.ts';
@@ -65,7 +64,7 @@ app.doc('/open-api.json', {
 app.get('/docs', swaggerUI({ url: '/open-api.json' }));
 
 // Handle static assets using Cloudflare Workers
-app.get('/assets/*', async (context: Context<EnvironmentBindings>) => context.env.Assets.fetch(context.req.raw));
+app.get('/assets/*', async (context) => context.env.Assets.fetch(context.req.raw));
 
 app.route('/', healthCheckRoutes);
 app.route('/auth', authRoutes);

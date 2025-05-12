@@ -1,7 +1,6 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
-import type { Context } from 'hono';
-import { StatusCodes, type StatusResponse, statusResponseFormatter, StatusResponseSchema } from 'src/utils/responses';
-import { checkEnvVars } from './validation';
+import { StatusCodes, type StatusResponse, statusResponseFormatter, StatusResponseSchema } from '../../utils/responses.ts';
+import { checkEnvVars } from './validation.ts';
 
 export const healthCheckRoutes = new OpenAPIHono<EnvironmentBindings>({
 	defaultHook: statusResponseFormatter
@@ -30,7 +29,7 @@ healthCheckRoutes.openapi(
 			}
 		}
 	}),
-	(context: Context<EnvironmentBindings>) => {
+	(context) => {
 		const { message, warnings, errors } = checkEnvVars(context.env);
 
 		if (context.env.NODE_ENV === 'production') {
