@@ -2,6 +2,7 @@
 	"name": "vms",
 	"version": "0.0.1",
 	"private": true,
+	"type": "module",
 	"scripts": {
 		"prepare": "husky",
 		"start": "npm run dev",
