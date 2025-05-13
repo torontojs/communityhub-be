@@ -26,6 +26,8 @@ binding = "Assets"
 
 [vars]
 NODE_ENV = "local"
+BASE_URL = "http://localhost:4242"
+FRONTEND_URL = "http://localhost:3000"
 
 [[d1_databases]]
 binding = "Database"
@@ -54,6 +56,8 @@ preview_urls = false
 [env.dev.vars]
 NODE_ENV = "development"
 SENDER_EMAIL="organizers+dev@torontojs.com"
+BASE_URL = "https://vms-dev.torontojs.com"
+FRONTEND_URL = "https://volunteer-dev.torontojs.com"
 
 [[env.dev.d1_databases]]
 binding = "Database"
@@ -79,6 +83,8 @@ preview_urls = false
 [env.production.vars]
 NODE_ENV = "production"
 SENDER_EMAIL="organizers@torontojs.com"
+BASE_URL = "https://vms.torontojs.com"
+FRONTEND_URL = "https://volunteer.torontojs.com"
 
 [[env.production.d1_databases]]
 binding = "Database"
