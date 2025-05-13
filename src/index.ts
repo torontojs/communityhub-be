@@ -1,3 +1,5 @@
+import { env } from 'cloudflare:workers';
+
 import { swaggerUI } from '@hono/swagger-ui';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { cors } from 'hono/cors';
@@ -31,8 +33,8 @@ app.onError((err, context) => {
 app.use(
 	'/*',
 	cors({
-		// FIXME: We want to block origins external to Toronto JS
-		origin: '*',
+		origin: [env.BASE_URL, env.FRONTEND_URL],
+		credentials: true,
 		allowMethods: ['POST', 'GET', 'OPTIONS', 'DELETE', 'PATCH'],
 		allowHeaders: ['Content-Type']
 	})
