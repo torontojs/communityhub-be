@@ -1,8 +1,8 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
-import { createSession, deleteSession, getSession, revalidateSession } from 'src/utils/auth.ts';
 import { sendAccountConfirmationEmail } from '../../email/index.ts';
 import { authorizeVolunteer } from '../../middleware/access.ts';
 import { authMiddleware } from '../../middleware/auth.ts';
+import { createSession, deleteSession, getSession, revalidateSession } from '../../utils/auth.ts';
 import { hashPassword, validatePassword } from '../../utils/password-hashing.ts';
 import { StatusCodes, type StatusResponse, statusResponseFormatter, StatusResponseSchema } from '../../utils/responses.ts';
 import { insertProfile } from '../profile/data.ts';
@@ -54,9 +54,8 @@ authRoutes.openapi(
 			{ expirationTtl: TEN_MINUTES_IN_SECONDS }
 		);
 
-		await sendAccountConfirmationEmail({
+		await sendAccountConfirmationEmail(context, {
 			apiKey: context.env.RESEND_API_KEY,
-			baseUrl: context.env.BASE_URL,
 			senderEmail: context.env.SENDER_EMAIL,
 			token,
 			email

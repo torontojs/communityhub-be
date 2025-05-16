@@ -1,7 +1,6 @@
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
-import type { Context } from 'hono';
-import { StatusCodes, type StatusResponse, statusResponseFormatter, StatusResponseSchema } from 'src/utils/responses';
-import { checkEnvVars } from './validation';
+import { StatusCodes, type StatusResponse, statusResponseFormatter, StatusResponseSchema } from '../../utils/responses.ts';
+import { checkEnvVars } from './validation.ts';
 
 export const healthCheckRoutes = new OpenAPIHono<EnvironmentBindings>({
 	defaultHook: statusResponseFormatter
@@ -30,19 +29,34 @@ healthCheckRoutes.openapi(
 			}
 		}
 	}),
-	(context: Context<EnvironmentBindings>) => {
-		const { message, warnings, errors } = checkEnvVars(context.env);
+	(context) => {
+		const { warnings, errors } = checkEnvVars(context.env);
 
 		if (context.env.NODE_ENV === 'production') {
-			if (errors) {
+			if (errors.length > 0) {
 				return context.json({ message: '❌ Something is wrong with the server configuration' } satisfies StatusResponse, StatusCodes.INTERNAL_SERVER_ERROR);
 			}
+
 			return context.json({ message: '✅ OK' } satisfies StatusResponse, StatusCodes.OKAY);
 		}
 
-		if (errors) {
-			return context.json({ message, errors } satisfies StatusResponse, StatusCodes.UNPROCESSABLE_CONTENT);
+		if (errors.length > 0) {
+			return context.json(
+				{
+					message: '❌ Required variables missing',
+					warnings,
+					errors
+				} satisfies StatusResponse,
+				StatusCodes.UNPROCESSABLE_CONTENT
+			);
 		}
-		return context.json({ message, warnings } satisfies StatusResponse, StatusCodes.OKAY);
+
+		return context.json(
+			{
+				message: '✅ All required environment variables are set',
+				warnings
+			} satisfies StatusResponse,
+			StatusCodes.OKAY
+		);
 	}
 );
