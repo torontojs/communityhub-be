@@ -118,7 +118,9 @@ export class MockEnvBindings {
 			closed: Promise.resolve(),
 			opened: Promise.resolve({}),
 			close: async () => Promise.resolve(),
-			startTls: () => socket
+			startTls: () => socket,
+			upgraded: true,
+			secureTransport: 'on'
 		};
 
 		this.Assets = {
