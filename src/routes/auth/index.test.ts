@@ -24,7 +24,7 @@ describe('Sign-up route', () => {
 
 	test('Failure: registration should be valid email', async () => {
 		const json: StatusResponse = await signUpResponse('vitest', 'hashed_password_1', 'Vitest');
-		expect(json.message).toBe('');
+		expect(json.errors).toHaveProperty('email');
 	});
 
 	test.todo('Failure: registration should fail if email is already registered');
@@ -84,4 +84,9 @@ describe('Sign-in route', () => {
 
 		expect(json.message).toBe('Authorized successfully');
 	});
+});
+
+describe('Sign-out route', () => {
+	test.todo('Bad request if invalid token provided');
+	test.todo('User is successfully logged out');
 });
