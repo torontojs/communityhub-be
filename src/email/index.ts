@@ -1,24 +1,51 @@
-import { Resend } from 'resend';
+import type { Context } from 'hono';
+import { type CreateEmailResponse, Resend } from 'resend';
+
+interface EmailSendingParams {
+	apiKey: string;
+	from: string;
+	to: string;
+	subject: string;
+	html: string;
+	text?: string;
+}
+
+async function sendEmail(context: Context<{ Bindings: Env }>, { apiKey, from, to, subject, text, html }: EmailSendingParams) {
+	if (context.env.ARE_EMAILS_LOCAL_ONLY === 'true') {
+		/* eslint-disable no-console */
+		console.log(`[📨] You got mail!`);
+		console.log({ from, to, subject, html, text });
+		/* eslint-enable no-console */
+
+		return {
+			data: { id: crypto.randomUUID() },
+			error: null
+		} satisfies CreateEmailResponse;
+	}
+
+	const resend = new Resend(apiKey);
+	const emailResponse = await resend.emails.send({ from, to, subject, text, html });
+
+	return emailResponse;
+}
 
 interface AccountConfirmationEmailParams {
-	baseUrl: string;
 	token: string;
 	email: string;
 	apiKey: string;
 	senderEmail: string;
 }
 
-export async function sendAccountConfirmationEmail({
-	baseUrl,
+export async function sendAccountConfirmationEmail(context: Context, {
 	token,
 	email,
 	apiKey,
 	senderEmail
 }: AccountConfirmationEmailParams) {
-	const resend = new Resend(apiKey);
-	const activationUrl = `${baseUrl}/auth/activate?token=${token}`;
+	const activationUrl = new URL(`/auth/activate?token=${token}`, context.req.url).toString();
 
-	const emailResponse = await resend.emails.send({
+	return sendEmail(context, {
+		apiKey,
 		from: senderEmail,
 		to: email,
 		subject: '[TorontoJS] Confirm your account',
@@ -29,11 +56,4 @@ export async function sendAccountConfirmationEmail({
 			<p><a href="${activationUrl}">${activationUrl}</a></p>
 		`
 	});
-
-	console.log({
-		email,
-		token
-	});
-
-	return emailResponse;
 }

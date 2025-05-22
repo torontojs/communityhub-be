@@ -22,6 +22,8 @@ export const Access = {
 	VOLUNTEER: 'volunteer'
 } as const;
 
+type ContextWithBindings = Context<EnvironmentBindings>;
+
 export type AccessLevel = typeof Access[keyof typeof Access];
 
 export interface SessionData {
@@ -41,7 +43,7 @@ function getSessionExpiryAsDate() {
 }
 
 interface DeleteSessionParams {
-	context: Context<EnvironmentBindings>;
+	context: ContextWithBindings;
 	sessionToken: string;
 }
 
@@ -61,14 +63,14 @@ export async function deleteSession({ context, sessionToken }: DeleteSessionPara
 	);
 }
 
-export function getSession(context: Context<EnvironmentBindings>) {
+export function getSession(context: ContextWithBindings) {
 	return context.get('session');
 }
 
 interface ExtendSessionParams {
 	sessionToken: string;
 	session: SessionData;
-	context: Context<EnvironmentBindings>;
+	context: ContextWithBindings;
 }
 
 async function extendExistingSession({
@@ -98,7 +100,7 @@ async function extendExistingSession({
 	return session;
 }
 
-export async function revalidateSession(context: Context<EnvironmentBindings>) {
+export async function revalidateSession(context: ContextWithBindings) {
 	const sessionToken = getCookie(context, SESSION_COOKIE_NAME);
 	if (!sessionToken) {
 		return undefined;
@@ -134,7 +136,7 @@ interface CreateSessionParams {
 	id: string;
 	email: string;
 	access: AccessLevel;
-	context: Context<EnvironmentBindings>;
+	context: ContextWithBindings;
 }
 
 export async function createSession({

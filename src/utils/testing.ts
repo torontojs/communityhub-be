@@ -112,6 +112,7 @@ export class MockEnvBindings {
 	}
 
 	setAssets() {
+		// @ts-expect-error
 		const socket: Socket = {
 			readable: new ReadableStream(),
 			writable: new WritableStream(),
