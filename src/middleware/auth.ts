@@ -1,5 +1,5 @@
 import type { Context, Next } from 'hono';
-import { revalidateSession } from 'src/utils/auth.ts';
+import { revalidateSession } from '../utils/auth.ts';
 import { StatusCodes } from '../utils/responses.ts';
 
 export const authMiddleware = async (context: Context<EnvironmentBindings>, next: Next) => {

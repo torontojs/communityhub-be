@@ -60,7 +60,7 @@ export const UpdateProfileSchema = ProfileSchema
 	.omit({ ...BaseDBFieldsToOmit, email: true })
 	.partial()
 	.refine(
-		(data) => Object.keys(data).length === 0,
+		(data) => Object.keys(data).length > 0,
 		{ message: 'At least one property is required' }
 	);
 

@@ -1,9 +1,9 @@
 // FIXME: readd checks for existing ids, based on the doesTeamExist function
 
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi';
-import { authMiddleware } from 'src/middleware/auth.ts';
 import { z } from 'zod';
 import { authorizeAdmin, authorizeVolunteer } from '../../middleware/access.ts';
+import { authMiddleware } from '../../middleware/auth.ts';
 import { Access, getSession } from '../../utils/auth.ts';
 import {
 	type DataResponse,
@@ -58,6 +58,42 @@ profileRoutes.openapi(
 			} satisfies PaginatedResponse<typeof profiles>,
 			StatusCodes.OKAY
 		);
+	}
+);
+
+profileRoutes.openapi(
+	createRoute({
+		method: 'get',
+		path: '/self',
+		operationId: 'Get profile data',
+		summary: 'Get profile data of logged-in user',
+		description: 'Retrieves the profile data of the currently logged-in user',
+		tags: ['Profile'],
+		responses: {
+			[StatusCodes.NOT_FOUND]: {
+				description: 'Internal error getting profile that should exist',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.UNAUTHORIZED]: {
+				description: 'No cookies found, invalid or missing token, invalid session or session expired. ',
+				content: { 'application/json': { schema: StatusResponseSchema } }
+			},
+			[StatusCodes.OKAY]: {
+				description: 'Successful response',
+				content: { 'application/json': { schema: generateDataResponeSchema(ProfileSchema) } }
+			}
+		},
+		middleware: [authMiddleware] as const
+	}),
+	async (context) => {
+		const sessionData = getSession(context);
+		const profile = await getProfileById(context.env.Database, sessionData.id);
+
+		if (!profile || profile.id !== sessionData.id) {
+			return context.json({ message: 'Profile not found' } satisfies StatusResponse, StatusCodes.NOT_FOUND);
+		}
+
+		return context.json({ data: profile, _links: { self: { href: context.req.url } } } satisfies DataResponse<typeof profile>, StatusCodes.OKAY);
 	}
 );
 

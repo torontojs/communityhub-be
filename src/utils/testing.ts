@@ -1,130 +1,131 @@
-// /* eslint-disable camelcase */
+/* eslint-disable camelcase */
 
-// Interface DatabaseMocks {
-// 	Run?<T>(): T[];
-// 	First?<T>(): T;
-// 	Batch?<T>(): T[][];
-// 	All?<T>(): T[];
-// }
+interface DatabaseMocks {
+	run?<T>(): T[];
+	first?<T>(): T;
+	batch?<T>(): T[][];
+	all?<T>(): T[];
+}
 
-// Interface KVMocks {
-// 	Get?<T>(): T;
-// 	List?<T>(): T[];
-// }
+interface KVMocks {
+	get?<T>(): T;
+	list?<T>(): T[];
+}
 
-// Interface MockConstructorParams {
-// 	Database?: DatabaseMocks;
-// 	Sessions?: KVMocks;
-// 	Activations?: KVMocks;
-// }
+interface MockConstructorParams {
+	database?: DatabaseMocks;
+	sessions?: KVMocks;
+	activations?: KVMocks;
+}
 
-// Export class MockEnvBindings {
-// 	Database = undefined as unknown as D1Database;
-// 	Assets = undefined as unknown as Fetcher;
-// 	SessionTokens = undefined as unknown as KVNamespace;
-// 	ActivationTokens = undefined as unknown as KVNamespace;
+export class MockEnvBindings {
+	Database = undefined as unknown as D1Database;
+	Assets = undefined as unknown as Fetcher;
+	SessionTokens = undefined as unknown as KVNamespace;
+	ActivationTokens = undefined as unknown as KVNamespace;
 
-// 	Constructor({ database, activations, sessions }: MockConstructorParams = {}) {
-// 		This.setDatabase(database);
-// 		This.setKV('ActivationTokens', activations);
-// 		This.setKV('SessionTokens', sessions);
-// 		This.setAssets();
-// 	}
+	constructor({ database, activations, sessions }: MockConstructorParams = {}) {
+		this.setDatabase(database);
+		this.setKV('ActivationTokens', activations);
+		this.setKV('SessionTokens', sessions);
+		this.setAssets();
+	}
 
-// 	SetDatabase({ run, first, batch, all }: DatabaseMocks = {}) {
-// 		Const resultsBase: D1Response = {
-// 			Success: true,
-// 			Meta: {
-// 				Duration: 0,
-// 				Size_after: 0,
-// 				Rows_read: 0,
-// 				Rows_written: 0,
-// 				Last_row_id: 0,
-// 				Changed_db: true,
-// 				Changes: 0
-// 			}
-// 		};
+	setDatabase({ run, first, batch, all }: DatabaseMocks = {}) {
+		const resultsBase: D1Response = {
+			success: true,
+			meta: {
+				duration: 0,
+				size_after: 0,
+				rows_read: 0,
+				rows_written: 0,
+				last_row_id: 0,
+				changed_db: true,
+				changes: 0
+			}
+		};
 
-// 		Const preparedStatement: D1PreparedStatement = {
-// 			Bind: (..._values: unknown[]) => preparedStatement,
-// 			First: async (_colName?: string) => Promise.resolve(first?.() ?? null),
-// 			Run: async () =>
-// 				Promise.resolve({
-// 					...resultsBase,
-// 					Results: (run?.() ?? [])
-// 				}),
-// 			All: async () =>
-// 				Promise.resolve({
-// 					...resultsBase,
-// 					Results: (all?.() ?? [])
-// 				}),
-// 			Raw: async (_options?: { columnNames?: boolean }) => Promise.resolve([[]])
-// 		};
+		const preparedStatement: D1PreparedStatement = {
+			bind: (..._values: unknown[]) => preparedStatement,
+			first: async (_colName?: string) => Promise.resolve(first?.() ?? null),
+			run: async () =>
+				Promise.resolve({
+					...resultsBase,
+					results: (run?.() ?? [])
+				}),
+			all: async () =>
+				Promise.resolve({
+					...resultsBase,
+					results: (all?.() ?? [])
+				}),
+			raw: async (_options?: { columnNames?: boolean }) => Promise.resolve([[]])
+		};
 
-// 		This.Database = {
-// 			Prepare: () => preparedStatement,
-// 			Batch: async <T>() =>
-// 				Promise.resolve(
-// 					(batch?.() ?? []).map((result) => ({
-// 						...resultsBase,
-// 						Results: result as T[]
-// 					}))
-// 				),
-// 			Exec: async () =>
-// 				Promise.resolve({
-// 					Count: 0,
-// 					Duration: 0
-// 				}),
-// 			WithSession: () => ({
-// 				Prepare: () => preparedStatement,
-// 				Batch: async <T>() =>
-// 					Promise.resolve(
-// 						(batch?.() ?? []).map((result) => ({
-// 							...resultsBase,
-// 							Results: result as T[]
-// 						}))
-// 					),
-// 				GetBookmark: () => null
-// 			}),
-// 			Dump: async () => Promise.resolve(new ArrayBuffer(0))
-// 		};
-// 	}
+		this.Database = {
+			prepare: () => preparedStatement,
+			batch: async <T>() =>
+				Promise.resolve(
+					(batch?.() ?? []).map((result) => ({
+						...resultsBase,
+						results: result as T[]
+					}))
+				),
+			exec: async () =>
+				Promise.resolve({
+					count: 0,
+					duration: 0
+				}),
+			withSession: () => ({
+				prepare: () => preparedStatement,
+				batch: async <T>() =>
+					Promise.resolve(
+						(batch?.() ?? []).map((result) => ({
+							...resultsBase,
+							results: result as T[]
+						}))
+					),
+				getBookmark: () => null
+			}),
+			dump: async () => Promise.resolve(new ArrayBuffer(0))
+		};
+	}
 
-// 	SetKV(namespace: 'ActivationTokens' | 'SessionTokens', { get, list }: KVMocks = {}) {
-// 		This[namespace] = {
-// 			Get: async <T>() => Promise.resolve((get?.() ?? null) as T),
-// 			// @ts-expect-error
-// 			GetWithMetadata: async () =>
-// 				Promise.resolve({
-// 					Value: null,
-// 					Metadata: null,
-// 					CacheStatus: null
-// 				}),
-// 			List: async () =>
-// 				Promise.resolve({
-// 					List_complete: true,
-// 					Keys: (list?.() ?? []),
-// 					CacheStatus: null
-// 				}),
-// 			Put: async () => Promise.resolve(),
-// 			Delete: async () => Promise.resolve()
-// 		};
-// 	}
+	setKV(namespace: 'ActivationTokens' | 'SessionTokens', { get, list }: KVMocks = {}) {
+		this[namespace] = {
+			get: async <T>() => Promise.resolve((get?.() ?? null) as T),
+			// @ts-expect-error
+			getWithMetadata: async () =>
+				Promise.resolve({
+					value: null,
+					metadata: null,
+					cacheStatus: null
+				}),
+			list: async () =>
+				Promise.resolve({
+					list_complete: true,
+					keys: (list?.() ?? []),
+					cacheStatus: null
+				}),
+			put: async () => Promise.resolve(),
+			delete: async () => Promise.resolve()
+		};
+	}
 
-// 	SetAssets() {
-// 		Const socket: Socket = {
-// 			Readable: new ReadableStream(),
-// 			Writable: new WritableStream(),
-// 			Closed: Promise.resolve(),
-// 			Opened: Promise.resolve({}),
-// 			Close: async () => Promise.resolve(),
-// 			StartTls: () => socket
-// 		};
+	setAssets() {
+		// @ts-expect-error
+		const socket: Socket = {
+			readable: new ReadableStream(),
+			writable: new WritableStream(),
+			closed: Promise.resolve(),
+			opened: Promise.resolve({}),
+			close: async () => Promise.resolve(),
+			startTls: () => socket
+		};
 
-// 		This.Assets = {
-// 			Fetch: async () => Promise.resolve(new Response()),
-// 			// @ts-expect-error
-// 			Connect: async () => Promise.resolve(socket)
-// 		};
-// 	}
-// }
+		this.Assets = {
+			fetch: async () => Promise.resolve(new Response()),
+			// @ts-expect-error
+			connect: async () => Promise.resolve(socket)
+		};
+	}
+}
