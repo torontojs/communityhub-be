@@ -8,7 +8,6 @@
 		"start": "npm run dev",
 		"dev": "wrangler dev src/index.ts",
 		"generate:types": "wrangler types src/env.d.ts",
-		"test": "vitest",
 		"deploy:dev": "wrangler deploy --minify --env dev",
 		"deploy:prod": "wrangler deploy --minify --env production",
 		"format": "dprint fmt --staged",
