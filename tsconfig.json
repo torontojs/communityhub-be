@@ -43,8 +43,7 @@
 		"useUnknownInCatchVariables": false,
 		"verbatimModuleSyntax": true,
 		"types": [
-			"@cloudflare/workers-types/2023-07-01",
-			"vitest/globals",
+			"./src/env.d.ts",
 			"node"
 		],
 		"paths": {
