@@ -112,14 +112,15 @@ export class MockEnvBindings {
 	}
 
 	setAssets() {
-		// @ts-expect-error
 		const socket: Socket = {
 			readable: new ReadableStream(),
 			writable: new WritableStream(),
 			closed: Promise.resolve(),
 			opened: Promise.resolve({}),
 			close: async () => Promise.resolve(),
-			startTls: () => socket
+			startTls: () => socket,
+			upgraded: true,
+			secureTransport: 'on'
 		};
 
 		this.Assets = {

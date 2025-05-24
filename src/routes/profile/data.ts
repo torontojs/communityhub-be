@@ -97,17 +97,17 @@ export async function updateProfileById(
 			pronouns,
 			birthday,
 			avatar
-		}).filter(([, value]) => value)
+		}).filter(([, value]) => value !== null && value !== undefined)
 	);
 
 	const existingData = await database.batch([
-		database.prepare(`SELECT url FROM ${DBTables.PROFILE_LINKS} WHERE profileId = ?`).bind(id),
+		database.prepare(`SELECT platform, url FROM ${DBTables.PROFILE_LINKS} WHERE profileId = ?`).bind(id),
 		database.prepare(`SELECT skill FROM ${DBTables.PROFILE_SKILLS} WHERE profileId = ?`).bind(id)
 	]);
 
 	// Filter links to add based on existing ones.
-	const existingLinks = (existingData[0]?.results as ProfileLink[] | undefined ?? []).map(({ url }) => url);
-	const filteredLinks = (links ?? []).filter((url) => !existingLinks.includes(url));
+	const existingLinks = (existingData[0]?.results as ProfileLink[] | undefined ?? []).map(({ platform }) => platform);
+	const filteredLinks = (links ?? []).filter(({ platform }) => !existingLinks.includes(platform));
 
 	// Filter skills to add based on existing ones.
 	const existingSkills = (existingData[1]?.results as ProfileSkill[] | undefined ?? []).map(({ skill }) => skill);
@@ -124,22 +124,22 @@ export async function updateProfileById(
 				AND deletedAt IS NULL
 
 		`).bind(...Object.values(fieldsToUpdate), id),
-		...filteredLinks.map((url) => {
+		...filteredLinks.map(({ platform, url }) => {
 			const { id: linkId } = generateBaseDBfields();
 
 			return database.prepare(`
 				INSERT INTO ${DBTables.PROFILE_LINKS} (
-					id, url, profileId
+					id, platform, url, profileId
 				)
 				SELECT
-					?, ?, id
+					?, ?, ?, id
 				FROM ${DBTables.PROFILE}
 				WHERE
 					id = ?
 					AND activatedAt IS NOT NULL
 					AND deletedAt IS NULL
 				LIMIT 1
-			`).bind(linkId, url, id);
+			`).bind(linkId, platform, url, id);
 		}),
 		...filteredSkills.map((skill) => {
 			const { id: skillId } = generateBaseDBfields();
@@ -175,7 +175,7 @@ export async function getProfileById(database: D1Database, id: string) {
 				AND deletedAt IS NULL
 			LIMIT 1
 		`).bind(id),
-		database.prepare(`SELECT url FROM ${DBTables.PROFILE_LINKS} WHERE profileId = ?`).bind(id),
+		database.prepare(`SELECT platform, url FROM ${DBTables.PROFILE_LINKS} WHERE profileId = ?`).bind(id),
 		database.prepare(`SELECT skill FROM ${DBTables.PROFILE_SKILLS} WHERE profileId = ?`).bind(id)
 	]);
 
@@ -185,7 +185,7 @@ export async function getProfileById(database: D1Database, id: string) {
 		return undefined;
 	}
 
-	profile.links = (results[1]?.results as ProfileLink[] | undefined ?? []).map(({ url }) => url);
+	profile.links = (results[1]?.results as ProfileLink[] | undefined ?? []).map((link) => link);
 	profile.skills = (results[2]?.results as ProfileSkill[] | undefined ?? []).map(({ skill }) => skill);
 
 	return transformProfile(profile);
@@ -201,7 +201,7 @@ export async function getAllProfiles(database: D1Database) {
 				AND deletedAt IS NULL
 		`),
 		// TODO: narrow down queries to only active profiles
-		database.prepare(`SELECT profileId, url FROM ${DBTables.PROFILE_LINKS}`),
+		database.prepare(`SELECT profileId, platform, url FROM ${DBTables.PROFILE_LINKS}`),
 		database.prepare(`SELECT profileId, skill FROM ${DBTables.PROFILE_SKILLS}`)
 	]);
 
@@ -211,12 +211,12 @@ export async function getAllProfiles(database: D1Database) {
 	);
 
 	// Assign links to profiles
-	(results[1]?.results as ProfileLink[] | undefined ?? []).forEach(({ profileId, url }) => {
+	(results[1]?.results as ProfileLink[] | undefined ?? []).forEach(({ profileId, platform, url }) => {
 		const profile = profiles.get(profileId);
 
 		if (profile) {
 			profile.links ??= [];
-			profile.links.push(url);
+			profile.links.push({ platform, url });
 		}
 	});
 

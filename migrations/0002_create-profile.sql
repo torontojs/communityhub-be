@@ -67,6 +67,8 @@ CREATE TABLE IF NOT EXISTS profile_links (
 	id TEXT NOT NULL UNIQUE COLLATE BINARY,
 	-- The UUID of the profile this link belongs to
 	profileId TEXT NOT NULL,
+	-- The platform name for the link
+	platform TEXT NOT NULL,
 	-- The URL of the link
 	url TEXT NOT NULL,
 
