@@ -35,5 +35,7 @@ certs
 # Typescript build info
 *.tsbuildinfo
 
+# Test Coverage
+coverage
 # Generated env file
 src/env.d.ts
