@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { BaseDbEntitySchema, BaseDBFieldsToOmit } from '../../utils/db.ts';
 
+export const PlatformEnum = z.enum(['Slack', 'LinkedIn', 'GitHub', 'Portfolio', 'Instagram', 'Threads', 'Facebook', 'BlueSky', 'Mastadon', 'Twitter', 'Dev']);
+
 export const ProfileSchema = BaseDbEntitySchema.merge(z.object({
 	email: z
 		.string()
@@ -38,9 +40,14 @@ export const ProfileSchema = BaseDbEntitySchema.merge(z.object({
 		.url('Must be a valid URL.')
 		.optional()
 		.describe("The user's avatar URL."),
-	links: z.array(z.string().url('Invalid url.'))
+	links: z.array(
+		z.object({
+			platform: PlatformEnum,
+			url: z.string().url('Invalid url.')
+		})
+	)
 		.optional()
-		.describe('A list of links for social media and platforms the person want to make available on the Community Hub.'),
+		.describe('A list of objects containing platform names and respective links for social media and platforms the person want to make available on the Community Hub.'),
 	skills: z.array(z.string())
 		.optional()
 		.describe('A list of skills the person has provided.'),
@@ -75,6 +82,8 @@ export const ProfileLinkSchema = z.object({
 		.string()
 		.uuid()
 		.describe('The profile id.'),
+	platform: PlatformEnum
+		.describe('The name of the platform for the URL.'),
 	url: z
 		.string()
 		.url()
