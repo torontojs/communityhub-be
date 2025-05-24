@@ -12,7 +12,7 @@ Here is a list of the tools used to develop the project, followed by details on 
 
 - **Required:** [`node.js`](https://nodejs.org/en/download/prebuilt-installer) (Preferably managed by [`volta`](https://docs.volta.sh/guide/getting-started))
 - **Required:** [Commit signing configured](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits), without it, the pull requests **WILL NOT BE ACCEPTED!**
-- **Required:** [SendGrid account](https://sendgrid.com) (Used for sending emails)
+- **Required:** [Resend account](https://resend.com) (Used for sending emails)
 - _Recommended:_ [VS Code](https://code.visualstudio.com/Download)
 
 ### `node.js` and `volta`
@@ -38,14 +38,13 @@ In order to improve the trust and security of the code contributed we require th
 
 Our editor of choice is Visual Studio Code (VS Code), it is not required for working with the code, but is recommended for sharing code and contributing with others.
 
-### SendGrid
+### Resend
 
-1. Go to [SendGrid](https://sendgrid.com/) and create an account and complete your email verification.
-2. Once you have created your account, log in
-3. Send Grid may show a 3-step process when you first log in which you can skip. There will be a button on the top-right corner to "Skip to dashboard". Click on it.
-4. Click on "Settings" dropdown on the left sidebar and click "API Keys".
-5. Generate a new API key with "Full Access" and click "Create & View".
-6. Keep the API key handy, you will need it later.
+1. Go to [Resend](https://resend.com/) and create an account.
+2. Once logged in, navigate to "API Keys" in the left sidebar.
+3. Click "Create API Key" and give it a name (e.g., "VMS Development").
+4. Copy the API key immediately as it won't be shown again.
+5. Keep the API key handy, you will need it later.
 
 ## Setting up the project
 
@@ -64,10 +63,10 @@ Our editor of choice is Visual Studio Code (VS Code), it is not required for wor
    ```shell
    cp .dev.vars.example .dev.vars
    ```
-4. Set up SendGrid secrets
+4. Set up Resend secrets
 
 - Copy the API Key and paste it in the `.dev.vars` file under the `RESEND_API_KEY` variable.
-- Also, in the `.dev.vars` file, update the `SENDER_EMAIL` variable to be the email you used for your SendGrid account.
+- Update the `SENDER_EMAIL` variable to `onboarding@resend.dev` for testing, or use an email from your verified domain.
 
 5. Run migrations to create your tables and seed the database with some initial data.
 

@@ -43,9 +43,12 @@
 		"useUnknownInCatchVariables": false,
 		"verbatimModuleSyntax": true,
 		"types": [
-			"@cloudflare/workers-types/2023-07-01",
+			"./src/env.d.ts",
 			"node"
 		],
+		"paths": {
+			"cloudflare:test": ["./src/types/cloudflare-test.d.ts"]
+		},
 		"jsx": "react-jsx",
 		"jsxImportSource": "hono/jsx"
 	}
